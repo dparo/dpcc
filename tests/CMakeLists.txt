@@ -1,7 +1,10 @@
-set(TEST_SOURCES_LIST "scanner_test")
+set(TEST_SOURCES_LIST
+  "scanner_test.c"
 
+  )
 
 foreach(V IN LISTS TEST_SOURCES_LIST)
-  add_executable("${V}" "${V}.c")
-  add_test(NAME "${V}" COMMAND "${V}")
+  get_filename_component(name "${V}" NAME_WE)
+  add_executable("${name}" "${V}")
+  add_test(NAME "${name}" COMMAND "${V}")
 endforeach(V)
