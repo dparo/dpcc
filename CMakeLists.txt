@@ -3,11 +3,6 @@ cmake_minimum_required(VERSION 3.2)
 project(dpcc)
 
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
-
-enable_testing()
-
-
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 
