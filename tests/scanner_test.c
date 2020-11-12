@@ -12,7 +12,7 @@
 /* A test case that does nothing and succeeds. */
 static void number_lexing_test(void **state)
 {
-    assert_int_equal(lex(FS("0b0"), 0));
+    assert_int_equal(lex(FS("0b0")), 0);
 }
 
 int main(void) {
