@@ -2,6 +2,7 @@ build
 logs
 .cache
 cache
+.gdb_history
 
 CMakeLists.txt.user
 CMakeCache.txt

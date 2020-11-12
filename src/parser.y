@@ -1,18 +1,41 @@
+%define parse.error detailed
+
+%code requires {
+    /* This code block will be exported to the generated header file by bison */
+    #include <stddef.h>
+    #include <stdint.h>
+
+    typedef struct YYLTYPE
+    {
+        int32_t line;
+        int32_t column;
+    } YYLTYPE;
+
+    extern YYLTYPE yylloc;
+ }
 %{
+
+#include "parser.h"
+#define YYERROR_VERBOSE 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 void yyerror(char const *s);
 int  yylex(void);
+
+YYLTYPE yylloc = {0};
+
 %}
 
-%define parse.error detailed
 
-%token                  END_OF_FILE
 %token                  ID
 %token                  ASSIGN
 %token                  PLUS
 %token                  NUMBER
+
+%token                  OPEN_PAREN
+%token                  CLOSE_PAREN
 
 %left                   ASSIGN
 %left                   PLUS
@@ -20,23 +43,25 @@ int  yylex(void);
 %%
 
 
-line:           expr
-        |       END_OF_FILE
-        ;
-
-
-expr:           ID { printf("PARSER: Got ID\n");}
-        |       NUMBER {printf("PARSER: Got Number\n"); }
+statement:
+                ID ASSIGN expr ";" { printf("statement\n"); }
+                YYEOF
                 ;
 
+expr:
+        |       expr PLUS expr { printf("OP PLUS\n"); }
+        |       OPEN_PAREN expr CLOSE_PAREN { printf("EXPR BEGIN\n"); }
+        |       ID { printf("ID\n");}
+        |       NUMBER {printf("NUMBER\n"); }
+                ;
 
 %%
 
 void yyerror (char const *s)
 {
-    fprintf (stderr, "%s\n", s);
+    extern int yylineno;
+    fprintf(stderr, "Error at yylineno: %d, yylloc=(%d, %d)\n\t%s\n", yylineno, yylloc.line, yylloc.column, s);
 }
-
 
 // yywrap: return 1 to stop the parser/lexer upon encountering EOF
 int yywrap(void)
