@@ -4,14 +4,20 @@
 #include <stdint.h>
 #include <cmocka.h>
 
+#include "dpcc.h"
+
+
+#define FS(X) open_from_string(X)
+
 /* A test case that does nothing and succeeds. */
-static void null_test_success(void **state) {
-    (void) state; /* unused */
+static void number_lexing_test(void **state)
+{
+    assert_int_equal(lex(FS("0b0"), 0));
 }
 
 int main(void) {
     const struct CMUnitTest tests[] = {
-        cmocka_unit_test(null_test_success),
+        cmocka_unit_test(number_lexing_test),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
