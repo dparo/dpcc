@@ -29,23 +29,30 @@ YYLTYPE yylloc = {0};
 %}
 
 
+
 %token                  ID
 %token                  ASSIGN
 %token                  PLUS
 %token                  NUMBER
 
+
+%token                  SEMICOLON
 %token                  OPEN_PAREN
 %token                  CLOSE_PAREN
 
 %left                   ASSIGN
 %left                   PLUS
 
+
 %%
 
+lines:          statement YYEOF
+        |       statement statement
+        ;
 
 statement:
-                ID ASSIGN expr ";" { printf("statement\n"); }
-                YYEOF
+        |       ID ASSIGN expr SEMICOLON { printf("statement\n"); }
+        |       SEMICOLON
                 ;
 
 expr:

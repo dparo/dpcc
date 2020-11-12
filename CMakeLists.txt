@@ -14,7 +14,6 @@ BISON_TARGET(parser src/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.c DEFINES_FI
 FLEX_TARGET(scanner  src/scanner.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.c
   DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/scanner.h)
 ADD_FLEX_BISON_DEPENDENCY(scanner parser)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 
 add_library(libdpcc STATIC
@@ -23,6 +22,7 @@ add_library(libdpcc STATIC
   ${FLEX_scanner_OUTPUTS}
   )
 target_include_directories(libdpcc PUBLIC src)
+target_include_directories(libdpcc PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(dpcc src/main.c )
 target_link_libraries(dpcc libdpcc)

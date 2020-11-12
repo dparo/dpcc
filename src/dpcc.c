@@ -8,18 +8,31 @@
 #include <stddef.h>
 #include <stdint.h>
 
+
+FILE* open_from_string(char *string)
+{
+    FILE *result = fmemopen(string, strlen(string), "r");
+    if (result == NULL) {
+        fprintf(stderr, "Failed create FILE* stream from string\n");
+        abort();
+    }
+
+    return result;
+}
+
 FILE* open_file_for_reading(char *filepath)
 {
     FILE *result = fopen(filepath, "r");
     if (result == NULL) {
         fprintf(stderr, "Failed to open file for reading (%s)\n", filepath);
+        abort();
     }
 
     return result;
 }
 
 
-void lex(FILE *input_stream)
+int lex(FILE *input_stream)
 {
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::lex() --- NULL input_stream\n");
@@ -38,16 +51,18 @@ void lex(FILE *input_stream)
                yylloc.column
             );
     }
+    return 0;
 }
 
 
-void parse(FILE *input_stream)
+int parse(FILE *input_stream)
 {
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::parse() --- NULL input_stream\n");
+        abort();
     }
 
     yyin = input_stream;
 
-    yyparse();
+    return yyparse() != 0;
 }
