@@ -117,12 +117,11 @@ int parse(FILE *input_stream)
 
     yyin = input_stream;
 
-
     int result = yyparse();
 
     if (result == 0) {
         assert(yybis_error_occured == false);
-    } else if (1) {
+    } else if (result == 1) {
         assert(yybis_error_occured == true);
     }
 
