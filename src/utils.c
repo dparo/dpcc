@@ -1,5 +1,6 @@
 #include "utils.h"
-#include "stdlib.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 /// Equivalent to malloc
 void* dallnew(mctx_t* ctx, size_t size)
@@ -7,11 +8,13 @@ void* dallnew(mctx_t* ctx, size_t size)
     ctx->allocs = realloc(ctx->allocs, sizeof(void*) * (ctx->num_allocs + 1));
     ctx->allocs[ctx->num_allocs] = calloc(1, size);
     ctx->num_allocs += 1;
+    return ctx->allocs[ctx->num_allocs - 1];
 }
 
 /// Equivalent to realloc
 void* dallrsz(mctx_t* ctx, void* ptr, size_t new_size)
 {
+    printf("dparo --- ctx->num_allocs = %d\n", ctx->num_allocs);
     i32 alloc_idx = -1;
     for (i32 i = 0; i < ctx->num_allocs; i++) {
         if (ctx->allocs[i] == ptr) {
@@ -21,7 +24,7 @@ void* dallrsz(mctx_t* ctx, void* ptr, size_t new_size)
     }
 
     if (alloc_idx == -1) {
-        return NULL;
+        return dallnew(ctx, new_size);
     }
 
     ptr = realloc(ptr, new_size);
@@ -34,6 +37,8 @@ void* dallrsz(mctx_t* ctx, void* ptr, size_t new_size)
 /// Equivalent to free
 void dalldel(mctx_t* ctx, void* ptr)
 {
+    if (!ptr) return;
+
     i32 alloc_idx = -1;
     for (i32 i = 0; i < ctx->num_allocs; i++) {
         if (ctx->allocs[i] == ptr) {
@@ -54,10 +59,13 @@ void dalldel(mctx_t* ctx, void* ptr)
 /// Clears all memory allocations
 void dallclr(mctx_t* ctx)
 {
-    for (i32 i = 0; i < ctx->num_allocs; i++) {
-        free(ctx->allocs[i]);
-    }
+    if (ctx->allocs) {
+        for (i32 i = 0; i < ctx->num_allocs; i++) {
+            free(ctx->allocs[i]);
+        }
 
-    free(ctx->allocs);
-    ctx->num_allocs = 0;
+        free(ctx->allocs);
+        ctx->allocs = NULL;
+        ctx->num_allocs = 0;
+    }
 }

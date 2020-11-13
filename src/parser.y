@@ -6,6 +6,7 @@
  }
 %{
 
+#include "lexer.h"
 #include "parser.h"
 #define YYERROR_VERBOSE 1
 
@@ -15,9 +16,12 @@ int  yylex(void);
 
 
 
+
+
 #define PARSER_FWD(X) \
     do { \
         yybis_debug_ret_val = (#X); \
+        ast_node_t *node = ast_push(&G_ast, yytext, (X), (#X)); \
         printf("BISON: Got %s [id = %d]\n", (#X), (X)); \
     } while(0)
 

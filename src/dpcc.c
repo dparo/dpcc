@@ -1,6 +1,7 @@
 #include "dpcc.h"
 #include "lexer.h"
 #include "parser.h"
+#include "parser_utils.h"
 #include "globals.h"
 
 #include <assert.h>
@@ -8,6 +9,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+
 
 FILE* open_from_string(char* string)
 {
@@ -31,17 +34,24 @@ FILE* open_file_for_reading(char* filepath)
     return result;
 }
 
-static void lexer_reset(void)
+static void reset(void)
 {
     yyprevcol = 0;
     yylloc.line = 1;
     yylloc.column = 0;
     yylex_destroy();
+
+    yybis_error_occured = false;
+
+
+    ast_clear(&G_ast);
+    dallclr(&G_allctx);
+    clear_all_global_vars();
 }
 
 int lex_once(FILE* input_stream)
 {
-    lexer_reset();
+    reset();
 
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::lex_once() --- NULL input_stream\n");
@@ -55,8 +65,7 @@ int lex_once(FILE* input_stream)
 
 int lex(FILE* input_stream)
 {
-
-    lexer_reset();
+    reset();
 
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::lex() --- NULL input_stream\n");
@@ -84,14 +93,9 @@ int lex(FILE* input_stream)
     return result;
 }
 
-static void parser_reset(void)
-{
-    yybis_error_occured = false;
-}
-
 int parse_once(FILE* input_stream)
 {
-    parser_reset();
+    reset();
 
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::parse_once() --- NULL input_stream\n");
@@ -105,7 +109,7 @@ int parse_once(FILE* input_stream)
 
 int parse(FILE* input_stream)
 {
-    parser_reset();
+    reset();
 
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::parse() --- NULL input_stream\n");

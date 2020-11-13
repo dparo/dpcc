@@ -1,10 +1,11 @@
-#include "parser_utils.h"
-#include "stdlib.h"
-#include "types.h"
-
+#include <stdlib.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <string.h>
+
+#include "parser_utils.h"
+#include "types.h"
+#include "globals.h"
 
 bool str_to_i32(char* string, i32* out)
 {
@@ -65,15 +66,26 @@ bool str_to_f32(char* string, f32* out)
     return result;
 }
 
-ast_node_t *ast_push(mctx_t *mctx, ast_t *ast, char *lexeme, i32 kind, char *skind)
+
+void ast_clear(ast_t *ast)
 {
+    dalldel(ast->mctx, ast->nodes);
+    ast->nodes = NULL;
+    ast->nodes_cnt = 0;
+}
+
+
+ast_node_t *ast_push(ast_t *ast, char *lexeme, i32 kind, char *skind)
+{
+    ast->mctx = &G_allctx;
+
     ast_node_t node = {
         .lexeme = lexeme,
         .kind = kind,
         .skind = skind,
     };
 
-    void* ptr = dallrsz(mctx, ast->nodes, (ast->nodes_cnt + 1) * sizeof(*ast->nodes));
+    void* ptr = dallrsz(ast->mctx, ast->nodes, (ast->nodes_cnt + 1) * sizeof(*ast->nodes));
 
     if (ptr == NULL) {
         fprintf(stderr, "ast_push :: Failed memory allocation\n");

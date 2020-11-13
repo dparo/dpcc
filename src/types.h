@@ -37,3 +37,25 @@ typedef struct mctx {
     void **allocs;
     i32  num_allocs;
 } mctx_t;
+
+
+
+typedef struct {
+    char *lexeme;
+
+    i32 kind;          /// look at parser.c :: enum yysymbol_kind_t
+    char *skind;       /// same as kind, but it's string representation
+
+    union {
+        i32 i;
+        f32 f;
+        bool b;
+    } val;
+} ast_node_t;
+
+
+typedef struct {
+    mctx_t     *mctx;
+    ast_node_t *nodes;
+    i32         nodes_cnt;
+} ast_t;

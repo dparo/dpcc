@@ -13,4 +13,8 @@ extern bool  yybis_error_occured;
 extern char *yybis_debug_ret_val;
 
 
-extern mctx_t GALLOC;
+extern mctx_t G_allctx;
+extern ast_t  G_ast;
+
+
+void clear_all_global_vars(void);
