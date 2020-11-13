@@ -2,16 +2,14 @@
 #include "stdlib.h"
 #include "types.h"
 
+#include <errno.h>
 #include <inttypes.h>
 #include <string.h>
-#include <errno.h>
 
-
-bool str_to_i32(char *string, i32 *out)
+bool str_to_i32(char* string, i32* out)
 {
     size_t len = strlen(string);
     int base = 10;
-
 
     bool is_negated = false;
     if (len >= 1 && (string[0] == '-' || string[0] == '+')) {
@@ -31,7 +29,7 @@ bool str_to_i32(char *string, i32 *out)
         len -= 2;
     }
 
-    char *endptr = NULL;
+    char* endptr = NULL;
     intmax_t conv_ret_val = strtoimax(string, &endptr, base);
 
     bool out_of_range = (errno == ERANGE);
@@ -39,7 +37,7 @@ bool str_to_i32(char *string, i32 *out)
     bool result = !failed && *endptr == '\0';
 
     if (result) {
-        *out = (is_negated ? (u32) -1 : (u32) 1) * (u32) conv_ret_val;
+        *out = (is_negated ? (u32)-1 : (u32)1) * (u32)conv_ret_val;
     } else {
         *out = INT32_MIN;
     }
@@ -47,13 +45,12 @@ bool str_to_i32(char *string, i32 *out)
     return result;
 }
 
-
-bool str_to_f32(char *string, f32 *out)
+bool str_to_f32(char* string, f32* out)
 {
     size_t len = strlen(string);
 
-    char *endptr = NULL;
-    f32  conv_ret_val = strtof(string, &endptr);
+    char* endptr = NULL;
+    f32 conv_ret_val = strtof(string, &endptr);
 
     bool out_of_range = (errno == ERANGE);
     bool failed = len == 0 || out_of_range || endptr == string || endptr == NULL;

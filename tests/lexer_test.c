@@ -1,18 +1,16 @@
+#include <cmocka.h>
+#include <setjmp.h>
 #include <stdarg.h>
 #include <stddef.h>
-#include <setjmp.h>
 #include <stdint.h>
-#include <cmocka.h>
 
-
-#include "parser.h"
 #include "dpcc.h"
+#include "parser.h"
 #include "tests_common.h"
-
 
 #define FS(X) open_from_string(X)
 
-static void number_lexing_test(void **state)
+static void number_lexing_test(void** state)
 {
     for (i32 i = 0; i < ARRAY_LEN(i32_tests); i++) {
         assert_int_equal(lex_once(open_from_string(i32_tests[i].string)), I32_LIT);

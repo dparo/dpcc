@@ -1,19 +1,16 @@
-#include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
+#include "dpcc.h"
 #include "lexer.h"
 #include "parser.h"
-#include "dpcc.h"
 
-
-
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-    char *filepath = "in/input.txt";
-    char *mode = "compile";
-
+    char* filepath = "in/input.txt";
+    char* mode = "compile";
 
     if (argc >= 2) {
         if (argc >= 3) {
@@ -24,8 +21,7 @@ int main(int argc, char **argv)
         }
     }
 
-
-    FILE *input_stream = open_file_for_reading(filepath);
+    FILE* input_stream = open_file_for_reading(filepath);
 
     if (0 == strcmp(mode, "lex")) {
         return lex(input_stream);

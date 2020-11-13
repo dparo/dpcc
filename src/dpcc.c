@@ -2,16 +2,15 @@
 #include "lexer.h"
 #include "parser.h"
 
-
-#include <stdio.h>
-#include <stdlib.h>
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-FILE* open_from_string(char *string)
+FILE* open_from_string(char* string)
 {
-    FILE *result = fmemopen(string, strlen(string), "r");
+    FILE* result = fmemopen(string, strlen(string), "r");
     if (result == NULL) {
         fprintf(stderr, "Failed create FILE* stream from string\n");
         abort();
@@ -20,9 +19,9 @@ FILE* open_from_string(char *string)
     return result;
 }
 
-FILE* open_file_for_reading(char *filepath)
+FILE* open_file_for_reading(char* filepath)
 {
-    FILE *result = fopen(filepath, "r");
+    FILE* result = fopen(filepath, "r");
     if (result == NULL) {
         fprintf(stderr, "Failed to open file for reading (%s)\n", filepath);
         abort();
@@ -39,7 +38,7 @@ static void lexer_reset(void)
     yylex_destroy();
 }
 
-int lex_once(FILE *input_stream)
+int lex_once(FILE* input_stream)
 {
     lexer_reset();
 
@@ -53,7 +52,7 @@ int lex_once(FILE *input_stream)
     return retval;
 }
 
-int lex(FILE *input_stream)
+int lex(FILE* input_stream)
 {
 
     lexer_reset();
@@ -64,19 +63,17 @@ int lex(FILE *input_stream)
     }
     yyin = input_stream;
 
-
     int result = 0;
     int c = 0;
 
     while ((c = yylex()) != YYEOF) {
         printf("Lex got: {%s}\t\t[retval = %s, yylval = %d, yylineno: %d, yylloc=(%d, %d)]\n",
-               yytext,
-               yylex_debug_ret_val,
-               yylval,
-               yylineno,
-               yylloc.line,
-               yylloc.column
-            );
+            yytext,
+            yylex_debug_ret_val,
+            yylval,
+            yylineno,
+            yylloc.line,
+            yylloc.column);
         if (c == YYUNDEF || c == YYerror) {
             result = c;
             break;
@@ -86,13 +83,12 @@ int lex(FILE *input_stream)
     return result;
 }
 
-
 static void parser_reset(void)
 {
     yybis_error_occured = false;
 }
 
-int parse_once(FILE *input_stream)
+int parse_once(FILE* input_stream)
 {
     parser_reset();
 
@@ -106,7 +102,7 @@ int parse_once(FILE *input_stream)
     return yyparse() != 0;
 }
 
-int parse(FILE *input_stream)
+int parse(FILE* input_stream)
 {
     parser_reset();
 
