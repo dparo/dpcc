@@ -1,5 +1,5 @@
 #include "dpcc.h"
-#include "scanner.h"
+#include "lexer.h"
 #include "parser.h"
 
 

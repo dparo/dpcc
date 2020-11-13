@@ -1,5 +1,5 @@
 set(TEST_SOURCES_LIST
-  "scanner_test.c"
+  "lexer_test.c"
   "parser_test.c"
   )
 

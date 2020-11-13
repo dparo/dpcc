@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
-#include "scanner.h"
+#include <string.h>
+
+#include "lexer.h"
 #include "parser.h"
 #include "dpcc.h"
-#include <string.h>
-// #include "scanner.c"
 
 int main(int argc, char **argv)
 {

@@ -7,7 +7,7 @@
 
 #include "dpcc.h"
 
-#include "tests.h"
+#include "tests_common.h"
 
 #define FS(X) open_from_string(X)
 
