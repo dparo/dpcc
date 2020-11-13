@@ -14,8 +14,8 @@ bool parse_i32(char *string, i32 *out)
 
 
     bool is_negated = false;
-    if (len >= 1 && string[0] == '-') {
-        is_negated = true;
+    if (len >= 1 && (string[0] == '-' || string[0] == '+')) {
+        is_negated = string[0] == '-';
 
         len -= 1;
         string += 1;

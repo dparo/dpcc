@@ -25,10 +25,13 @@ ws       [\t\n\v" "]
 digit    [0-9]
 alpha    [a-zA-Z_]
 alphanum {alpha}|{digit}
-number   {digit}*
 id       {alpha}{alphanum}*
 assign  "="
 plus    "+"
+
+i32_lit      [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
+f32_lit      [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)
+
 
 /* Handling utf-8 characters: specifying illegal chars */
 /* UTF-8 might be: */
@@ -54,7 +57,9 @@ EOF              { LEX_FWD(YYEOF); }
 
 {ws}             { COLUMN_UPDATE(); }
 {id}             { LEX_FWD(ID); }
-{number}         { LEX_FWD(NUMBER); }
+
+{i32_lit}        { LEX_FWD(I32_LIT); }
+{f32_lit}        { LEX_FWD(F32_LIT); }
 
 
 ";"              { LEX_FWD(SEMICOLON); }

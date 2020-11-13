@@ -40,7 +40,10 @@ int lex(FILE *input_stream)
     }
     yyin = input_stream;
 
+
+    int result = 0;
     int c = 0;
+
     while ((c = yylex()) != YYEOF) {
         printf("Lex got: %s (id = %d, yylval = %d, yylineno: %d, yylloc=(%d, %d)\n",
                yytext,
@@ -50,8 +53,13 @@ int lex(FILE *input_stream)
                yylloc.line,
                yylloc.column
             );
+        if (c == YYUNDEF || c == YYerror) {
+            result = c;
+            break;
+        }
     }
-    return 0;
+
+    return result;
 }
 
 

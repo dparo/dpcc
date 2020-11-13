@@ -26,12 +26,15 @@ int main(int argc, char **argv)
     FILE *input_stream = open_file_for_reading(filepath);
 
     if (0 == strcmp(mode, "lex")) {
-        lex(input_stream);
+        return lex(input_stream);
     } else if (0 == strcmp(mode, "parse")) {
-        parse(input_stream);
+        return parse(input_stream);
     } else {
-        parse(input_stream);
+        return parse(input_stream);
     }
 
-    return 0;
+
+    fprintf(stderr, "Invalid code path\n");
+    fflush(stderr);
+    return -1;
 }

@@ -29,11 +29,14 @@ YYLTYPE yylloc = {0};
 %}
 
 
-
 %token                  ID
+%token                  I32_LIT
+%token                  F32_LIT
+
+
+
 %token                  ASSIGN
 %token                  PLUS
-%token                  NUMBER
 
 
 %token                  SEMICOLON
@@ -59,7 +62,8 @@ expr:
         |       expr PLUS expr { printf("OP PLUS\n"); }
         |       OPEN_PAREN expr CLOSE_PAREN { printf("EXPR BEGIN\n"); }
         |       ID { printf("ID\n");}
-        |       NUMBER {printf("NUMBER\n"); }
+        |       I32_LIT {printf("I32_LIT\n"); }
+        |       F32_LIT {printf("F32_LIT\n"); }
                 ;
 
 %%
