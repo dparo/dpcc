@@ -46,6 +46,8 @@ typedef struct {
     i32 kind;          /// look at parser.c :: enum yysymbol_kind_t
     char *skind;       /// same as kind, but it's string representation
 
+    YYLTYPE yylloc;
+
     union {
         i32 i;
         f32 f;

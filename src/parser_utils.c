@@ -75,7 +75,7 @@ void ast_clear(ast_t *ast)
 }
 
 
-ast_node_t *ast_push(ast_t *ast, char *lexeme, i32 kind, char *skind)
+ast_node_t *ast_push(ast_t *ast, YYLTYPE yylloc, char *lexeme, i32 kind, char *skind)
 {
     ast->mctx = &G_allctx;
 
@@ -83,6 +83,7 @@ ast_node_t *ast_push(ast_t *ast, char *lexeme, i32 kind, char *skind)
         .lexeme = (char*) dallstl(ast->mctx, strdup(lexeme)),
         .kind = kind,
         .skind = skind,
+        .yylloc = yylloc,
     };
 
     void* ptr = dallrsz(ast->mctx, ast->nodes, (ast->nodes_cnt + 1) * sizeof(*ast->nodes));

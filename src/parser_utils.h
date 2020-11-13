@@ -5,8 +5,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
-void ast_clear(ast_t *ast);
-ast_node_t *ast_push(ast_t *ast, char *lexeme, i32 kind, char *skind);
+void ast_clear(ast_t* ast);
+ast_node_t *ast_push(ast_t *ast, YYLTYPE yylloc, char *lexeme, i32 kind, char *skind);
 
 
 bool str_to_i32(char* string, i32* out);

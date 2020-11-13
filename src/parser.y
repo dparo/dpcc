@@ -21,7 +21,7 @@ int  yylex(void);
 #define PARSER_FWD(X) \
     do { \
         yybis_debug_ret_val = (#X); \
-        ast_node_t *node = ast_push(&G_ast, yytext, (X), (#X)); \
+        ast_node_t *node = ast_push(&G_ast, yylloc, yytext, (X), (#X)); \
         if(0) printf("BISON: Got %s [id = %d]\n", (#X), (X)); \
     } while(0)
 
