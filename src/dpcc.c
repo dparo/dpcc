@@ -32,6 +32,17 @@ FILE* open_file_for_reading(char *filepath)
 }
 
 
+int lex_once(FILE *input_stream)
+{
+    if (input_stream == NULL) {
+        fprintf(stderr, "dpcc::lex_once() --- NULL input_stream\n");
+        abort();
+    }
+    yyin = input_stream;
+
+    return yylex();
+}
+
 int lex(FILE *input_stream)
 {
     if (input_stream == NULL) {
@@ -63,8 +74,25 @@ int lex(FILE *input_stream)
 }
 
 
+
+int parse_once(FILE *input_stream)
+{
+    yyerror_occured = false;
+    if (input_stream == NULL) {
+        fprintf(stderr, "dpcc::parse_once() --- NULL input_stream\n");
+        abort();
+    }
+
+    yyin = input_stream;
+
+    return yyparse() != 0;
+}
+
 int parse(FILE *input_stream)
 {
+
+    yyerror_occured = false;
+
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::parse() --- NULL input_stream\n");
         abort();
@@ -72,5 +100,16 @@ int parse(FILE *input_stream)
 
     yyin = input_stream;
 
-    return yyparse() != 0;
+
+    int result = 0;
+    int c = 0;
+    while ((c = yyparse()) != YYEOF) {
+        if (c == YYerror) {
+            result = 1;
+            break;
+        }
+
+    }
+
+    return result == 0 ? yyerror_occured : 0;
 }

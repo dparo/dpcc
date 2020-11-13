@@ -7,6 +7,8 @@
 #include "parser.h"
 #include "dpcc.h"
 
+
+
 int main(int argc, char **argv)
 {
     char *filepath = "in/input.txt";
@@ -32,7 +34,6 @@ int main(int argc, char **argv)
     } else {
         return parse(input_stream);
     }
-
 
     fprintf(stderr, "Invalid code path\n");
     fflush(stderr);

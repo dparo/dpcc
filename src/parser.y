@@ -4,6 +4,7 @@
     /* This code block will be exported to the generated header file by bison */
     #include <stddef.h>
     #include <stdint.h>
+    #include <stdbool.h>
 
     typedef struct YYLTYPE
     {
@@ -12,6 +13,7 @@
     } YYLTYPE;
 
     extern YYLTYPE yylloc;
+    extern bool yyerror_occured;
  }
 %{
 
@@ -25,7 +27,7 @@ void yyerror(char const *s);
 int  yylex(void);
 
 YYLTYPE yylloc = {0};
-
+bool yyerror_occured = false;
 %}
 
 
@@ -72,6 +74,7 @@ void yyerror (char const *s)
 {
     extern int yylineno;
     fprintf(stderr, "Error at yylineno: %d, yylloc=(%d, %d)\n\t%s\n", yylineno, yylloc.line, yylloc.column, s);
+    yyerror_occured = false;
 }
 
 // yywrap: return 1 to stop the parser/lexer upon encountering EOF

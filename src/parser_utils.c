@@ -7,7 +7,7 @@
 #include <errno.h>
 
 
-bool parse_i32(char *string, i32 *out)
+bool str_to_i32(char *string, i32 *out)
 {
     size_t len = strlen(string);
     int base = 10;
@@ -48,7 +48,7 @@ bool parse_i32(char *string, i32 *out)
 }
 
 
-bool parse_f32(char *string, f32 *out)
+bool str_to_f32(char *string, f32 *out)
 {
     size_t len = strlen(string);
 

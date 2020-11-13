@@ -6,5 +6,5 @@
 #include "utils.h"
 
 
-bool parse_i32(char *string, i32 *out);
-bool parse_f32(char *string, f32 *out);
+bool str_to_i32(char *string, i32 *out);
+bool str_to_f32(char *string, f32 *out);
