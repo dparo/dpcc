@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
-
+#include <assert.h>
 
 FILE* open_from_string(char *string)
 {
@@ -118,15 +118,12 @@ int parse(FILE *input_stream)
     yyin = input_stream;
 
 
-    int result = 0;
-    int c = 0;
+    int result = yyparse();
 
-    while ((c = yyparse()) != YYEOF) {
-        if (c == YYerror || yybis_error_occured) {
-            c = YYerror;
-            result = -1;
-            break;
-        }
+    if (result == 0) {
+        assert(yybis_error_occured == false);
+    } else if (1) {
+        assert(yybis_error_occured == true);
     }
 
     return result;

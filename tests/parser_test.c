@@ -16,21 +16,9 @@
 /* A test case that does nothing and succeeds. */
 static void basic_tests(void **state)
 {
-
-    // Empty File test
-    assert_int_equal(parse(FS("")), 0);
-
-    // Empty Statement test
-    assert_int_equal(parse(FS(";")), 0);
-
-    // Simple assignment test
     assert_int_equal(parse(FS("a = b;")), 0);
-
-
-    // A Non trivial expression assignment
+    assert_int_equal(parse(FS("a = b + c;")), 0);
     assert_int_equal(parse(FS("a = ((1 + 2) + b);")), 0);
-
-    // Multiply test
     assert_int_equal(parse(FS("a = b * c * d;")), 0);
 }
 

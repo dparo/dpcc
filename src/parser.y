@@ -39,7 +39,10 @@ bool  yybis_error_occured = false;
 char *yybis_debug_ret_val = NULL;
 
 #define PARSER_FWD(X) \
-    do { yybis_debug_ret_val = (#X); return (X); } while(0)
+    do { \
+        yybis_debug_ret_val = (#X); \
+        printf("BISON: Got %s [id = %d]\n", (#X), (X)); \
+    } while(0)
 
 %}
 
@@ -64,13 +67,16 @@ char *yybis_debug_ret_val = NULL;
 
 %%
 
-lines:          statement YYEOF
-        |       statement statement
+lines:           line lines
+        |        YYEOF                   { PARSER_FWD(YYEOF); }
+        ;
+
+line:            statement
         ;
 
 statement:      ID ASSIGN expr SEMICOLON { PARSER_FWD(STATEMENT); }
         |       SEMICOLON                { PARSER_FWD(STATEMENT); }
-                ;
+        ;
 
 expr:           expr PLUS expr { PARSER_FWD(PLUS); }
         |       expr MUL expr { PARSER_FWD(MUL); }
