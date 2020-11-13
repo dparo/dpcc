@@ -13,6 +13,13 @@ find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
 
+if(MSVC)
+  add_compile_options(/W4 /WX)
+else()
+  add_compile_options(-Wall -Wextra)
+endif()
+
+
 BISON_TARGET(parser src/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.c DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.h)
 FLEX_TARGET(lexer  src/lexer.l ${CMAKE_CURRENT_BINARY_DIR}/lexer.c
   DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/lexer.h)
