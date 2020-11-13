@@ -31,20 +31,33 @@ FILE* open_file_for_reading(char *filepath)
     return result;
 }
 
+static void lexer_reset(void)
+{
+    yyprevcol = 0;
+    yylloc.line = 1;
+    yylloc.column = 0;
+    yylex_destroy();
+}
 
 int lex_once(FILE *input_stream)
 {
+    lexer_reset();
+
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::lex_once() --- NULL input_stream\n");
         abort();
     }
-    yyin = input_stream;
 
-    return yylex();
+    yyin = input_stream;
+    int retval = yylex();
+    return retval;
 }
 
 int lex(FILE *input_stream)
 {
+
+    lexer_reset();
+
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::lex() --- NULL input_stream\n");
         abort();
@@ -56,9 +69,9 @@ int lex(FILE *input_stream)
     int c = 0;
 
     while ((c = yylex()) != YYEOF) {
-        printf("Lex got: %s (id = %d, yylval = %d, yylineno: %d, yylloc=(%d, %d)\n",
+        printf("Lex got: {%s}\t\t[retval = %s, yylval = %d, yylineno: %d, yylloc=(%d, %d)]\n",
                yytext,
-               c,
+               yydebugretval,
                yylval,
                yylineno,
                yylloc.line,
@@ -74,10 +87,15 @@ int lex(FILE *input_stream)
 }
 
 
+static void parser_reset(void)
+{
+    yyerror_occured = false;
+}
 
 int parse_once(FILE *input_stream)
 {
-    yyerror_occured = false;
+    parser_reset();
+
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::parse_once() --- NULL input_stream\n");
         abort();
@@ -90,8 +108,7 @@ int parse_once(FILE *input_stream)
 
 int parse(FILE *input_stream)
 {
-
-    yyerror_occured = false;
+    parser_reset();
 
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::parse() --- NULL input_stream\n");
@@ -103,13 +120,14 @@ int parse(FILE *input_stream)
 
     int result = 0;
     int c = 0;
+
     while ((c = yyparse()) != YYEOF) {
-        if (c == YYerror) {
-            result = 1;
+        if (c == YYerror || yyerror_occured) {
+            c = YYerror;
+            result = -1;
             break;
         }
-
     }
 
-    return result == 0 ? yyerror_occured : 0;
+    return result;
 }

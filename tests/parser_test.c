@@ -5,8 +5,9 @@
 #include <cmocka.h>
 #include "parser_utils.h"
 
-#include "dpcc.h"
 
+#include "parser.h"
+#include "dpcc.h"
 #include "tests_common.h"
 
 #define FS(X) open_from_string(X)
@@ -30,9 +31,8 @@ static void basic_tests(void **state)
     assert_int_equal(parse(FS("a = ((1 + 2) + b);")), 0);
 
     // Multiply test
-    // assert_int_equal(parse(FS("a = b * c;")), 0);
+    // assert_int_equal(parse(FS("a = b * c asdsdsasd;")), 0);
 }
-
 
 
 static void str_to_i32_assert(char *string, i32 expected, bool negated_test)
@@ -76,13 +76,13 @@ static void str_to_literal_test(void **state)
 
 static void literal_parsing_test(void **state)
 {
-    for (i32 i = 0; i < ARRAY_LEN(i32_tests); i++) {
-        assert_int_equal(parse(open_from_string(i32_tests[i].string)), 0);
-    }
+    /* for (i32 i = 0; i < ARRAY_LEN(i32_tests); i++) { */
+    /*     assert_int_equal(parse_once(open_from_string(i32_tests[i].string)), I32_LIT); */
+    /* } */
 
-    for (i32 i = 0; i < ARRAY_LEN(f32_tests); i++) {
-        assert_int_equal( parse(open_from_string(f32_tests[i].string)), 0);
-    }
+    /* for (i32 i = 0; i < ARRAY_LEN(f32_tests); i++) { */
+    /*     assert_int_equal( parse_once(open_from_string(f32_tests[i].string)), F32_LIT); */
+    /* } */
 
 }
 

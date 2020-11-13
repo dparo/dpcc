@@ -8,20 +8,20 @@
 
 
 #define COLUMN_UPDATE() \
-    do { /* EMPTY FOR NOW */ } while(0)
+    do { yylloc.column += yyprevcol; yyprevcol = yyleng; } while(0)
 
 #define LEX_FWD(X) \
         do {  \
             COLUMN_UPDATE();                    \
             yylval = (X);                       \
+            yydebugretval = (#X);               \
         return (X);   \
     } while(0)
 
 %}
 
 
-
-ws       [\t\n\v" "]
+ws       [\t\v" "]
 digit    [0-9]
 alpha    [a-zA-Z_]
 alphanum {alpha}|{digit}
@@ -54,6 +54,8 @@ NASCII      {UTF8_H2}|{UTF8_H3}|{UTF8_H4}
 NASCII           { LEX_FWD(YYUNDEF); }
 EOF              { LEX_FWD(YYEOF); }
 
+\r\n             { yylloc.line += 1; yylloc.column = 0; yyprevcol = 0; }
+\n               { yylloc.line += 1; yylloc.column = 0; yyprevcol = 0; }
 
 {ws}             { COLUMN_UPDATE(); }
 {id}             { LEX_FWD(ID); }
