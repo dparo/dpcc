@@ -71,7 +71,7 @@ int lex(FILE *input_stream)
     while ((c = yylex()) != YYEOF) {
         printf("Lex got: {%s}\t\t[retval = %s, yylval = %d, yylineno: %d, yylloc=(%d, %d)]\n",
                yytext,
-               yydebugretval,
+               yylex_debug_ret_val,
                yylval,
                yylineno,
                yylloc.line,
@@ -89,7 +89,7 @@ int lex(FILE *input_stream)
 
 static void parser_reset(void)
 {
-    yyerror_occured = false;
+    yybis_error_occured = false;
 }
 
 int parse_once(FILE *input_stream)
@@ -122,7 +122,7 @@ int parse(FILE *input_stream)
     int c = 0;
 
     while ((c = yyparse()) != YYEOF) {
-        if (c == YYerror || yyerror_occured) {
+        if (c == YYerror || yybis_error_occured) {
             c = YYerror;
             result = -1;
             break;

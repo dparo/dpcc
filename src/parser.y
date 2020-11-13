@@ -13,10 +13,12 @@
     } YYLTYPE;
 
     extern YYLTYPE yylloc;
-    extern bool yyerror_occured;
     extern int32_t yyprevcol;
+    extern char*   yylex_debug_ret_val;
 
-    extern char *yydebugretval;
+    extern bool  yybis_error_occured;
+    extern char* yybis_debug_ret_val;
+
  }
 %{
 
@@ -29,13 +31,15 @@
 void yyerror(char const *s);
 int  yylex(void);
 
-char *yydebugretval = NULL;
+char *yylex_debug_ret_val = NULL;
 int32_t yyprevcol = 0;
 YYLTYPE yylloc = {1, 0};
-bool yyerror_occured = false;
+
+bool  yybis_error_occured = false;
+char *yybis_debug_ret_val = NULL;
 
 #define PARSER_FWD(X) \
-    do { return (X); } while(0)
+    do { yybis_debug_ret_val = (#X); return (X); } while(0)
 
 %}
 
@@ -43,7 +47,6 @@ bool yyerror_occured = false;
 %token                  ID
 %token                  I32_LIT
 %token                  F32_LIT
-
 
 %token                  ASSIGN
 %token                  PLUS
@@ -53,6 +56,7 @@ bool yyerror_occured = false;
 %token                  SEMICOLON
 %token                  OPEN_PAREN
 %token                  CLOSE_PAREN
+%token                  STATEMENT
 
 %left                   ASSIGN
 %left                   PLUS
@@ -62,31 +66,19 @@ bool yyerror_occured = false;
 
 lines:          statement YYEOF
         |       statement statement
-        |       debug_temporary_delete_me
         ;
 
-debug_temporary_delete_me:
-                leaf
-        ;
+statement:      ID ASSIGN expr SEMICOLON { PARSER_FWD(STATEMENT); }
+        |       SEMICOLON                { PARSER_FWD(STATEMENT); }
+                ;
 
-leaf:           ID      { PARSER_FWD(ID); }
+expr:           expr PLUS expr { PARSER_FWD(PLUS); }
+        |       expr MUL expr { PARSER_FWD(MUL); }
+        |       OPEN_PAREN expr CLOSE_PAREN { PARSER_FWD(OPEN_PAREN); }
+        |       ID { PARSER_FWD(ID); }
         |       I32_LIT { PARSER_FWD(I32_LIT); }
         |       F32_LIT { PARSER_FWD(F32_LIT); }
         ;
-
-statement:
-        |       ID ASSIGN expr SEMICOLON {  }
-        |       SEMICOLON
-                ;
-
-expr:
-        |       expr PLUS expr {  }
-        |       expr MUL expr {  }
-        |       OPEN_PAREN expr CLOSE_PAREN {  }
-        |       ID {  }
-        |       I32_LIT {  }
-        |       F32_LIT {  }
-                ;
 
 %%
 
@@ -94,7 +86,7 @@ void yyerror (char const *s)
 {
     extern int yylineno;
     fprintf(stderr, "Error at yylineno: %d, yylloc=(%d, %d)\n\t%s\n", yylineno, yylloc.line, yylloc.column, s);
-    yyerror_occured = true;
+    yybis_error_occured = true;
 }
 
 // yywrap: return 1 to stop the parser/lexer upon encountering EOF

@@ -14,7 +14,7 @@
         do {  \
             COLUMN_UPDATE();                    \
             yylval = (X);                       \
-            yydebugretval = (#X);               \
+            yylex_debug_ret_val = (#X);               \
         return (X);   \
     } while(0)
 
@@ -26,9 +26,9 @@ digit    [0-9]
 alpha    [a-zA-Z_]
 alphanum {alpha}|{digit}
 id       {alpha}{alphanum}*
-assign  "="
-plus    "+"
-mul     "*"
+assign   "="
+plus     "+"
+mul      "*"
 
 i32_lit      [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
 f32_lit      [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)
