@@ -64,3 +64,26 @@ bool str_to_f32(char* string, f32* out)
 
     return result;
 }
+
+ast_node_t *ast_push(mctx_t *mctx, ast_t *ast, char *lexeme, i32 kind, char *skind)
+{
+    ast_node_t node = {
+        .lexeme = lexeme,
+        .kind = kind,
+        .skind = skind,
+    };
+
+    void* ptr = dallrsz(mctx, ast->nodes, (ast->nodes_cnt + 1) * sizeof(*ast->nodes));
+
+    if (ptr == NULL) {
+        fprintf(stderr, "ast_push :: Failed memory allocation\n");
+        fflush(stderr);
+        abort();
+    }
+
+    ast->nodes = ptr;
+    ast->nodes_cnt += 1;
+
+    memcpy(&ast->nodes[ast->nodes_cnt - 1], &node, sizeof(node));
+    return &ast->nodes[ast->nodes_cnt - 1];
+}

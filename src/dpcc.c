@@ -1,6 +1,7 @@
 #include "dpcc.h"
 #include "lexer.h"
 #include "parser.h"
+#include "globals.h"
 
 #include <assert.h>
 #include <stddef.h>

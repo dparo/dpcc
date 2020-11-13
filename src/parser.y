@@ -2,41 +2,18 @@
 
 %code requires {
     /* This code block will be exported to the generated header file by bison */
-    #include <stddef.h>
-    #include <stdint.h>
-    #include <stdbool.h>
-
-    typedef struct YYLTYPE
-    {
-        int32_t line;
-        int32_t column;
-    } YYLTYPE;
-
-    extern YYLTYPE yylloc;
-    extern int32_t yyprevcol;
-    extern char*   yylex_debug_ret_val;
-
-    extern bool  yybis_error_occured;
-    extern char* yybis_debug_ret_val;
-
+    #include "globals.h"
  }
 %{
 
 #include "parser.h"
 #define YYERROR_VERBOSE 1
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stddef.h>
+#include "parser_utils.h"
 void yyerror(char const *s);
 int  yylex(void);
 
-char *yylex_debug_ret_val = NULL;
-int32_t yyprevcol = 0;
-YYLTYPE yylloc = {1, 0};
 
-bool  yybis_error_occured = false;
-char *yybis_debug_ret_val = NULL;
 
 #define PARSER_FWD(X) \
     do { \

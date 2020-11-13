@@ -24,3 +24,16 @@ typedef struct {
     char* cstr;
     i32 length;
 } str;
+
+
+
+typedef struct YYLTYPE {
+    i32 line;
+    i32 column;
+} YYLTYPE;
+
+
+typedef struct mctx {
+    void **allocs;
+    i32  num_allocs;
+} mctx_t;
