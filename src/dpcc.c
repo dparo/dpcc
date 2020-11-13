@@ -126,5 +126,17 @@ int parse(FILE* input_stream)
         assert(yybis_error_occured == true);
     }
 
+    if (result == 0) {
+        for (i32 i = 0; i < G_ast.nodes_cnt; i++) {
+            ast_node_t *node = &G_ast.nodes[i];
+            printf("NODE: {idx: %d, lexeme: \"%s\", kind = %d, skind = %s}\n",
+                   i,
+                   node->lexeme,
+                   node->kind,
+                   node->skind
+                );
+        }
+    }
+
     return result;
 }

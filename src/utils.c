@@ -14,7 +14,6 @@ void* dallnew(mctx_t* ctx, size_t size)
 /// Equivalent to realloc
 void* dallrsz(mctx_t* ctx, void* ptr, size_t new_size)
 {
-    printf("dparo --- ctx->num_allocs = %d\n", ctx->num_allocs);
     i32 alloc_idx = -1;
     for (i32 i = 0; i < ctx->num_allocs; i++) {
         if (ctx->allocs[i] == ptr) {
@@ -68,4 +67,14 @@ void dallclr(mctx_t* ctx)
         ctx->allocs = NULL;
         ctx->num_allocs = 0;
     }
+}
+
+
+void* dallstl(mctx_t *ctx, void *ptr)
+{
+    ctx->allocs = realloc(ctx->allocs, sizeof(void*) * (ctx->num_allocs + 1));
+    ctx->allocs[ctx->num_allocs] = ptr;
+    ctx->num_allocs += 1;
+    return ctx->allocs[ctx->num_allocs - 1];
+
 }

@@ -80,7 +80,7 @@ ast_node_t *ast_push(ast_t *ast, char *lexeme, i32 kind, char *skind)
     ast->mctx = &G_allctx;
 
     ast_node_t node = {
-        .lexeme = lexeme,
+        .lexeme = (char*) dallstl(ast->mctx, strdup(lexeme)),
         .kind = kind,
         .skind = skind,
     };

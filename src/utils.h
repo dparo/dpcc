@@ -13,3 +13,6 @@ void *dallrsz(mctx_t *ctx, void *ptr, size_t new_size);
 void dalldel(mctx_t *ctx, void *ptr);
 /// Clears all memory allocations
 void dallclr(mctx_t *ctx);
+
+/// Steal memory allocations from typical malloc
+void* dallstl(mctx_t* ctx, void* ptr);

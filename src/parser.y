@@ -22,7 +22,7 @@ int  yylex(void);
     do { \
         yybis_debug_ret_val = (#X); \
         ast_node_t *node = ast_push(&G_ast, yytext, (X), (#X)); \
-        printf("BISON: Got %s [id = %d]\n", (#X), (X)); \
+        if(0) printf("BISON: Got %s [id = %d]\n", (#X), (X)); \
     } while(0)
 
 %}
@@ -49,7 +49,7 @@ int  yylex(void);
 %%
 
 lines:           line lines
-        |        YYEOF                   { PARSER_FWD(YYEOF); }
+        |        YYEOF                   {      }
         ;
 
 line:            statement
