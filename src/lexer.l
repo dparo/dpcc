@@ -28,6 +28,7 @@ alphanum {alpha}|{digit}
 id       {alpha}{alphanum}*
 assign  "="
 plus    "+"
+mul     "*"
 
 i32_lit      [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
 f32_lit      [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)
@@ -67,6 +68,8 @@ EOF              { LEX_FWD(YYEOF); }
 ";"              { LEX_FWD(SEMICOLON); }
 "="              { LEX_FWD(ASSIGN); }
 "+"              { LEX_FWD(PLUS); }
+"*"              { LEX_FWD(MUL); }
+
 "("              { LEX_FWD(OPEN_PAREN); }
 ")"              { LEX_FWD(CLOSE_PAREN); }
 

@@ -45,9 +45,9 @@ bool yyerror_occured = false;
 %token                  F32_LIT
 
 
-
 %token                  ASSIGN
 %token                  PLUS
+%token                  MUL
 
 
 %token                  SEMICOLON
@@ -56,7 +56,7 @@ bool yyerror_occured = false;
 
 %left                   ASSIGN
 %left                   PLUS
-
+%left                   MUL
 
 %%
 
@@ -69,23 +69,23 @@ debug_temporary_delete_me:
                 leaf
         ;
 
-
 leaf:           ID      { PARSER_FWD(ID); }
         |       I32_LIT { PARSER_FWD(I32_LIT); }
         |       F32_LIT { PARSER_FWD(F32_LIT); }
         ;
 
 statement:
-        |       ID ASSIGN expr SEMICOLON { printf("statement\n"); }
+        |       ID ASSIGN expr SEMICOLON {  }
         |       SEMICOLON
                 ;
 
 expr:
-        |       expr PLUS expr { printf("OP PLUS\n"); }
-        |       OPEN_PAREN expr CLOSE_PAREN { printf("EXPR BEGIN\n"); }
-        |       ID { printf("ID\n");}
-        |       I32_LIT {printf("I32_LIT\n"); }
-        |       F32_LIT {printf("F32_LIT\n"); }
+        |       expr PLUS expr {  }
+        |       expr MUL expr {  }
+        |       OPEN_PAREN expr CLOSE_PAREN {  }
+        |       ID {  }
+        |       I32_LIT {  }
+        |       F32_LIT {  }
                 ;
 
 %%

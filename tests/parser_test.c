@@ -31,7 +31,7 @@ static void basic_tests(void **state)
     assert_int_equal(parse(FS("a = ((1 + 2) + b);")), 0);
 
     // Multiply test
-    // assert_int_equal(parse(FS("a = b * c asdsdsasd;")), 0);
+    assert_int_equal(parse(FS("a = b * c * d;")), 0);
 }
 
 
