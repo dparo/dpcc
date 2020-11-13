@@ -20,7 +20,7 @@ ADD_FLEX_BISON_DEPENDENCY(scanner parser)
 
 
 add_library(libdpcc STATIC
-  src/dpcc.c src/dpcc.h
+  src/dpcc.c src/dpcc.h src/parser_utils.c
   ${BISON_parser_OUTPUTS}
   ${FLEX_scanner_OUTPUTS}
   )

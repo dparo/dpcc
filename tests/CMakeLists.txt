@@ -12,10 +12,12 @@ if (NOT ${CMOCKA_LIBRARIES})
     get_filename_component(TARGET "${SRC}" NAME_WE)
 
     add_executable("${TARGET}" "${SRC}")
+    set_target_properties("${TARGET}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests")
+
     target_include_directories("${TARGET}" PRIVATE ${CMOCKA_INCLUDE_DIRS})
+    target_include_directories("${TARGET}" PRIVATE ./)
     target_link_libraries("${TARGET}" PRIVATE ${CMOCKA_LIBRARIES})
     target_link_libraries("${TARGET}" PRIVATE libdpcc)
-    set_target_properties("${TARGET}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests")
 
     add_test(NAME "${TARGET}" COMMAND "${TARGET}"
       WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/run_tree"

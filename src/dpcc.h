@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+
+
 FILE* open_file_for_reading(char *filepath);
 
 FILE* open_from_string(char *string);

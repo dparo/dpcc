@@ -3,9 +3,11 @@
 #include <setjmp.h>
 #include <stdint.h>
 #include <cmocka.h>
+#include "parser_utils.h"
 
 #include "dpcc.h"
 
+#include "tests.h"
 
 #define FS(X) open_from_string(X)
 
@@ -28,20 +30,47 @@ static void basic_tests(void **state)
     assert_int_equal(parse(FS("a = ((1 + 2) + b);")), 0);
 
     // Multiply test
-    assert_int_equal(parse(FS("a = b * c;")), 0);
+    // assert_int_equal(parse(FS("a = b * c;")), 0);
+}
+
+
+
+static void correctly_parsed_i32(char *string, i32 expected, bool negated_test)
+{
+    i32 obtained = INT32_MIN;
+    bool success = parse_i32(string, &obtained);
+    if (!negated_test) {
+        assert_true(success);
+        assert_int_equal(obtained, expected);
+    } else {
+        assert_false(success);
+    }
+}
+
+
+static void correctly_parsed_f32(char *string, f32 expected, bool negated_test)
+{
+    const f32 EPSILON = 0.00001;
+    f32 obtained = NAN;
+    bool success = parse_f32(string, &obtained);
+    if (!negated_test) {
+        assert_true(success);
+        assert_float_equal(obtained, expected, EPSILON);
+    } else {
+        assert_false(success);
+    }
 }
 
 
 static void number_parsing_test(void **state)
 {
-    assert_int_equal(parse_i32("0"), 0);
-    assert_int_equal(parse_i32("1"), 1);
+    for (i32 i = 0; i < ARRAY_LEN(i32_tests); i++) {
+        correctly_parsed_i32(i32_tests[i].string, i32_tests[i].expected, false);
+    }
 
-    assert_int_equal(parse_i32("1"), 1);
-
-    const float eps = 0.0001;
-    assert_float_equal(parse_f32("0.0"), 0.0, eps);
-    assert_float_equal(parse_f32("0.0"), 0.0, eps);
+    for (i32 i = 0; i < ARRAY_LEN(f32_tests); i++) {
+        correctly_parsed_f32(f32_tests[i].string, f32_tests[i].expected, false);
+    }
 }
 
 int main(void) {
