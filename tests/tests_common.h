@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "parser.h"
 
 #include "types.h"
 #include "utils.h"
@@ -60,14 +61,12 @@ static str_f32_tuple_t f32_tests[] = {
 
 typedef struct {
     char *buffer;
+    i32 num_expected_tokens;
+    i32 *expected_tokens;
+} dpcc_test_t;
 
-    bool lex_should_fail;
-    i32 *lex_expected;
 
-    bool parser_should_fail;
-} fixture_t;
-
-static fixture_t fixture_tests[] = {
-    { "a = b; // A comment" },
-    { "a = b; // A comment\n" },
+static dpcc_test_t all_dpcc_tests[] = {
+    {"a = b; // A comment", 3, (int32_t[]) {ID, ASSIGN, ID, SEMICOLON}},
+    {"a = b; // A comment\n", 3, (int32_t[]) {ID, ASSIGN, ID, SEMICOLON}},
 };

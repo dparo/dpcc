@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include "types.h"
 
+
+#define ARG(...) __VA_ARGS__
+#define ARRAY(type, ...) (TYPE[]){ __VA_ARGS__ }
 #define ARRAY_LEN(A) (sizeof(A) / sizeof((A)[0]))
 
 /// Equivalent to malloc

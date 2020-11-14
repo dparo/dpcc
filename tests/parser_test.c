@@ -50,11 +50,11 @@ static void str_to_f32_assert(char* string, f32 expected, bool negated_test)
 
 static void str_to_literal_test(void)
 {
-    for (i32 i = 0; i < ARRAY_LEN(i32_tests); i++) {
+    for (size_t i = 0; i < ARRAY_LEN(i32_tests); i++) {
         str_to_i32_assert(i32_tests[i].string, i32_tests[i].expected, false);
     }
 
-    for (i32 i = 0; i < ARRAY_LEN(f32_tests); i++) {
+    for (size_t i = 0; i < ARRAY_LEN(f32_tests); i++) {
         str_to_f32_assert(f32_tests[i].string, f32_tests[i].expected, false);
     }
 }

@@ -40,19 +40,6 @@ static void reset(void)
     clear_all_global_vars();
 }
 
-int lex_once(FILE* input_stream)
-{
-    reset();
-
-    if (input_stream == NULL) {
-        fprintf(stderr, "dpcc::lex_once() --- NULL input_stream\n");
-        abort();
-    }
-
-    yyin = input_stream;
-    int retval = yylex();
-    return retval;
-}
 
 bool lex(FILE* input_stream)
 {

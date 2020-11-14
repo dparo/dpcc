@@ -16,9 +16,17 @@ int  yylex(void);
 
 
 #define PARSER_FWD(X) \
-    do { \
-        ast_node_t *node = ast_push(&G_ast, yylloc, yytext, yykind, yyskind); \
-    } while(0)
+        (void)ast_push(&G_ast, yylloc, yytext, yykind, yyskind)
+
+#define PARSER_FWD_I32(X, VAL) \
+        (void)ast_push(&G_ast, yylloc, yytext, yykind, yyskind)->val.i = (VAL)
+
+#define PARSER_FWD_F32(X, VAL) \
+        (void)ast_push(&G_ast, yylloc, yytext, yykind, yyskind)->val.f = (VAL)
+
+#define PARSER_FWD_BOOL(X, VAL) \
+        (void)ast_push(&G_ast, yylloc, yytext, yykind, yyskind)->val.f = (VAL)
+
 
 %}
 
