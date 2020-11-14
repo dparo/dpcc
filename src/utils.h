@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "types.h"
 
+#include <stb_ds.h>
 
 #define ARG(...) __VA_ARGS__
 #define ARRAY(type, ...) (TYPE[]){ __VA_ARGS__ }
@@ -23,9 +24,12 @@ void dallclr(mctx_t *ctx);
 void* dallstl(mctx_t* ctx, void* ptr);
 
 
+/// Used for string interning
+char *lexeme_intern(char *yytext);
 
-void     tokens_seq_clear(token_seq_t *tseq);
-token_t* token_push(YYLTYPE yylloc, char* lexeme, i32 kind, char* skind);
+
+void tokens_seq_clear(token_seq_t* tseq);
+token_t* token_push(YYLTYPE yylloc, char* yytext, int yychar, char *yychar_str);
 
 
 void ast_clear(ast_t* ast);

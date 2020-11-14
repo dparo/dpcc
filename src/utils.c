@@ -8,7 +8,6 @@
 #include "types.h"
 #include "globals.h"
 
-
 /// Equivalent to malloc
 void* dallnew(mctx_t* ctx, size_t size)
 {
@@ -170,15 +169,28 @@ void ast_clear(ast_t *ast)
 }
 
 
-token_t* token_push(YYLTYPE yylloc, char* lexeme, i32 kind, char* skind)
+#include <assert.h>
+
+char *lexeme_intern(char *yytext)
+{
+    char *intern = shget(G_str_intern, yytext);
+    if (intern == NULL) {
+        printf("Intern not found (%s)\n", yytext);
+        intern = dallstl(&G_allctx, strdup(yytext));
+    }
+    printf("intern value: %p -> %s\n", (void*) intern, intern);
+    return intern;
+}
+
+token_t* token_push(YYLTYPE yylloc, char* yytext, int yychar, char *yychar_str)
 {
     token_seq_t *tseq = &G_tok_seq;
     tseq->mctx = &G_allctx;
 
     token_t token = {
-        .lexeme = (char*) dallstl(tseq->mctx, strdup(lexeme)),
-        .kind = kind,
-        .skind = skind,
+        .lexeme = (char*) lexeme_intern(yytext),
+        .kind = yychar,
+        .skind = yychar_str,
         .yylloc = yylloc,
     };
 

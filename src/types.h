@@ -20,11 +20,9 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
-typedef struct {
-    char* cstr;
-    i32 length;
-} str;
 
+
+typedef char* cstr_t;
 
 
 typedef struct YYLTYPE {
@@ -70,6 +68,9 @@ typedef struct {
     i32         nodes_cnt;
 } ast_t;
 
-
+typedef struct {
+    char *key;
+    char *value;
+} str_str_key_value_t;
 
 #define YYSTYPE token_t*
