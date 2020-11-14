@@ -2,7 +2,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <setjmp.h>
-#include <cmocka.h>
+
+
 
 
 #include "dpcc.h"
@@ -10,16 +11,18 @@
 #include "parser_utils.h"
 #include "tests_common.h"
 
+#include <unity.h>
+#include <assert.h>
 
 #define FS(X) open_from_string(X)
 
 /* A test case that does nothing and succeeds. */
-static void basic_tests(void** state)
+static void basic_tests(void)
 {
-    assert_int_equal(parse(FS("a = b;")), 0);
-    assert_int_equal(parse(FS("a = b + c;")), 0);
-    assert_int_equal(parse(FS("a = ((1 + 2) + b);")), 0);
-    assert_int_equal(parse(FS("a = b * c * d;")), 0);
+    TEST_ASSERT_EQUAL_INT(parse(FS("a = b;")), 0);
+    TEST_ASSERT_EQUAL_INT(parse(FS("a = b + c;")), 0);
+    TEST_ASSERT_EQUAL_INT(parse(FS("a = ((1 + 2) + b);")), 0);
+    TEST_ASSERT_EQUAL_INT(parse(FS("a = b * c * d;")), 0);
 }
 
 static void str_to_i32_assert(char* string, i32 expected, bool negated_test)
@@ -27,10 +30,10 @@ static void str_to_i32_assert(char* string, i32 expected, bool negated_test)
     i32 obtained = INT32_MIN;
     bool success = str_to_i32(string, &obtained);
     if (!negated_test) {
-        assert_true(success);
-        assert_int_equal(obtained, expected);
+        TEST_ASSERT_TRUE(success);
+        TEST_ASSERT_EQUAL_INT(obtained, expected);
     } else {
-        assert_false(success);
+        TEST_ASSERT_FALSE(success);
     }
 }
 
@@ -40,14 +43,14 @@ static void str_to_f32_assert(char* string, f32 expected, bool negated_test)
     f32 obtained = NAN;
     bool success = str_to_f32(string, &obtained);
     if (!negated_test) {
-        assert_true(success);
-        assert_float_equal(obtained, expected, EPSILON);
+        TEST_ASSERT_TRUE(success);
+        TEST_ASSERT_FLOAT_WITHIN(EPSILON, expected, obtained);
     } else {
-        assert_false(success);
+        TEST_ASSERT_FALSE(success);
     }
 }
 
-static void str_to_literal_test(void** state)
+static void str_to_literal_test(void)
 {
     for (i32 i = 0; i < ARRAY_LEN(i32_tests); i++) {
         str_to_i32_assert(i32_tests[i].string, i32_tests[i].expected, false);
@@ -58,7 +61,7 @@ static void str_to_literal_test(void** state)
     }
 }
 
-static void literal_parsing_test(void** state)
+static void literal_parsing_test(void)
 {
     /* for (i32 i = 0; i < ARRAY_LEN(i32_tests); i++) { */
     /*     assert_int_equal(parse_once(open_from_string(i32_tests[i].string)), I32_LIT); */
@@ -71,11 +74,23 @@ static void literal_parsing_test(void** state)
 
 int main(void)
 {
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(basic_tests),
-        cmocka_unit_test(str_to_literal_test),
-        cmocka_unit_test(literal_parsing_test),
-    };
+    UNITY_BEGIN(); {
 
-    return cmocka_run_group_tests(tests, NULL, NULL);
+        RUN_TEST(basic_tests);
+        RUN_TEST(str_to_literal_test);
+        RUN_TEST(literal_parsing_test);
+
+    }
+
+    return UNITY_END();
+}
+
+/// Ran before each test
+void setUp(void)
+{
+}
+
+/// Ran after each test
+void tearDown(void)
+{
 }
