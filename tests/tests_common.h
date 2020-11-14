@@ -1,6 +1,12 @@
 #pragma once
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+
 #include "types.h"
 #include "utils.h"
+
 
 typedef struct str_i32_tuple {
     char* string;
@@ -49,4 +55,19 @@ static str_f32_tuple_t f32_tests[] = {
     { "-1e-3", -1e-3 },
     { "-1E-3", -1E-3 },
 
+};
+
+
+typedef struct {
+    char *buffer;
+
+    bool lex_should_fail;
+    i32 *lex_expected;
+
+    bool parser_should_fail;
+} fixture_t;
+
+static fixture_t fixture_tests[] = {
+    { "a = b; // A comment" },
+    { "a = b; // A comment\n" },
 };

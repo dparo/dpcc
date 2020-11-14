@@ -14,6 +14,9 @@ extern char *yybis_debug_ret_val;
 
 
 extern mctx_t G_allctx;
+
+
+extern token_seq_t G_tok_seq;
 extern ast_t  G_ast;
 
 

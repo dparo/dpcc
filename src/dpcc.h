@@ -6,6 +6,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "types.h"
+#include "globals.h"
+#include "utils.h"
+
+
 FILE* open_file_for_reading(char* filepath);
 
 FILE* open_from_string(char* string);

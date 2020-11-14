@@ -4,7 +4,6 @@
 
 #include "dpcc.h"
 #include "parser.h"
-#include "parser_utils.h"
 #include "tests_common.h"
 
 #include <unity.h>
@@ -24,11 +23,31 @@ static void number_lexing_test(void)
     }
 }
 
+static int lex_test(fixture_t *fix)
+{
+    int lexresult = lex();
+    bool lexsucc = lexresult == ;
+
+    if (lexresult == 0) {
+
+    } else {
+
+    }
+}
+
+static void fixture_lexing_test(void)
+{
+    for (int32_t i = 0; i < ARRAY_LEN(fixture_tests); i++) {
+        lex_test(&fixture_tests[i]);
+    }
+}
+
 int main(void)
 {
     UNITY_BEGIN(); {
 
         RUN_TEST(number_lexing_test);
+        RUN_TEST(fixture_lexing_test);
 
     }
 

@@ -27,7 +27,7 @@ ADD_FLEX_BISON_DEPENDENCY(lexer parser)
 
 
 add_library(libdpcc STATIC
-  src/dpcc.c src/dpcc.h src/parser_utils.c src/globals.c src/utils.c
+  src/dpcc.c src/dpcc.h src/globals.c src/utils.c
   ${BISON_parser_OUTPUTS}
   ${FLEX_lexer_OUTPUTS}
   )

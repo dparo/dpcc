@@ -8,7 +8,6 @@
 
 #include "dpcc.h"
 #include "parser.h"
-#include "parser_utils.h"
 #include "tests_common.h"
 
 #include <unity.h>
@@ -16,7 +15,6 @@
 
 #define FS(X) open_from_string(X)
 
-/* A test case that does nothing and succeeds. */
 static void basic_tests(void)
 {
     TEST_ASSERT_EQUAL_INT(parse(FS("a = b;")), 0);

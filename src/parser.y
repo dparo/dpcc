@@ -6,11 +6,11 @@
  }
 %{
 
+#include "utils.h"
 #include "lexer.h"
 #include "parser.h"
 #define YYERROR_VERBOSE 1
 
-#include "parser_utils.h"
 void yyerror(char const *s);
 int  yylex(void);
 

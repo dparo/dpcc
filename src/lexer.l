@@ -18,7 +18,11 @@
 %}
 
 
+eol      (\r\n)|\n
+ 
 ws       [\t\v" "]
+comment  "//".*
+
 digit    [0-9]
 alpha    [a-zA-Z_]
 alphanum {alpha}|{digit}
@@ -26,6 +30,7 @@ id       {alpha}{alphanum}*
 assign   "="
 plus     "+"
 mul      "*"
+
 
 i32_lit      [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
 f32_lit      [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)
@@ -52,10 +57,11 @@ NASCII      {UTF8_H2}|{UTF8_H3}|{UTF8_H4}
 NASCII           { LEX_FWD(YYUNDEF); }
 EOF              { LEX_FWD(YYEOF); }
 
-\r\n             { yylloc.line += 1; yylloc.column = 0; yyprevcol = 0; }
-\n               { yylloc.line += 1; yylloc.column = 0; yyprevcol = 0; }
+{eol}             { yylloc.line += 1; yylloc.column = 0; yyprevcol = 0; }
+{ws}              { COLUMN_UPDATE(); }
+{comment}         { COLUMN_UPDATE(); }
 
-{ws}             { COLUMN_UPDATE(); }
+
 {id}             { LEX_FWD(ID); }
 
 {i32_lit}        { LEX_FWD(I32_LIT); }

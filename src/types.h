@@ -42,11 +42,20 @@ typedef struct mctx {
 
 typedef struct {
     char *lexeme;
-
-    i32 kind;          /// look at parser.c :: enum yysymbol_kind_t
-    char *skind;       /// same as kind, but it's string representation
-
+    i32  kind;
+    char *skind;
     YYLTYPE yylloc;
+} token_t;
+
+typedef struct {
+    mctx_t  *mctx;
+    token_t *tokens;
+    i32      tokens_cnt;
+} token_seq_t;
+
+
+typedef struct {
+    token_t tok;
 
     union {
         i32 i;
@@ -54,7 +63,6 @@ typedef struct {
         bool b;
     } val;
 } ast_node_t;
-
 
 typedef struct {
     mctx_t     *mctx;

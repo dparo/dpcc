@@ -1,8 +1,6 @@
 #include "dpcc.h"
 #include "lexer.h"
 #include "parser.h"
-#include "parser_utils.h"
-#include "globals.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -131,9 +129,9 @@ int parse(FILE* input_stream)
             ast_node_t *node = &G_ast.nodes[i];
             printf("NODE: {idx: %d, lexeme: \"%s\", kind = %d, skind = %s}\n",
                    i,
-                   node->lexeme,
-                   node->kind,
-                   node->skind
+                   node->tok.lexeme,
+                   node->tok.kind,
+                   node->tok.skind
                 );
         }
     }
