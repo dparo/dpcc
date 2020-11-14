@@ -3,12 +3,9 @@
 #include "types.h"
 
 
-extern i32      yykind;
-extern char    *yyskind;
-extern int32_t  yyprevcol;
-extern YYLTYPE  yylloc;
-
-extern bool yy_errored_out;
+extern bool    yy_errored_out;
+extern int32_t yyprevcol;
+extern YYLTYPE yylloc;
 
 
 extern mctx_t      G_allctx;

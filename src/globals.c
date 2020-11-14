@@ -3,12 +3,9 @@
 
 #include "utils.h"
 
-i32      yykind    = 0;
-char    *yyskind   = NULL;
-int32_t  yyprevcol = 0;
-YYLTYPE  yylloc    = {1, 0};
-
-bool yy_errored_out = false;
+bool    yy_errored_out = false;
+int32_t yyprevcol = 0;
+YYLTYPE yylloc = {1, 0};
 
 mctx_t      G_allctx  = {0};
 ast_t       G_ast     = { 0 };
@@ -17,8 +14,6 @@ token_seq_t G_tok_seq = { 0 };
 
 void clear_all_global_vars()
 {
-    yykind = 0;
-    yyskind = NULL;
     yyprevcol = 0;
     yylloc.line = 1;
     yylloc.column = 0;

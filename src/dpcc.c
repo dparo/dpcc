@@ -11,7 +11,6 @@
 #include <stdlib.h>
 
 
-
 FILE* open_from_string(char* string)
 {
     FILE* result = fmemopen(string, strlen(string), "r");

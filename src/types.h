@@ -55,7 +55,7 @@ typedef struct {
 
 
 typedef struct {
-    token_t tok;
+    token_t *tok;
 
     union {
         i32 i;

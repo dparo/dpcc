@@ -5,16 +5,24 @@
 #include "utils.h"
 
 
-#define COLUMN_UPDATE() \
-    do { yylloc.column += yyprevcol; yyprevcol = yyleng; } while(0)
+#define STRIP() \
+    do { \
+        yylloc.column += yyprevcol; \
+        yyprevcol = yyleng; \
+    } while(0)
 
-#define LEX_FWD(X) \
-        do {  \
-            COLUMN_UPDATE();                    \
-            yylval = token_push(yylloc, yytext, (X), (#X)); \
-            yykind  = (X); \
-            yyskind = (#X); \
-            return (X);   \
+#define ERROR() \
+    do { \
+        STRIP(); \
+        fprintf(stderr, "LEXER UNRECOGNIZED CHAR {%s}\n", yytext);\
+        return YYUNDEF; \
+    } while(0)
+
+#define FWD(X) \
+    do {  \
+        STRIP();                    \
+        yylval = token_push(yylloc, yytext, (X), (#X)); \
+        return (X);   \
     } while(0)
 
 %}
@@ -56,30 +64,30 @@ NASCII      {UTF8_H2}|{UTF8_H3}|{UTF8_H4}
 %%
 
 
-NASCII           { LEX_FWD(YYUNDEF); }
-EOF              { LEX_FWD(YYEOF); }
+NASCII           { FWD(YYUNDEF); }
+EOF              { FWD(YYEOF); }
 
 {eol}             { yylloc.line += 1; yylloc.column = 0; yyprevcol = 0; }
-{ws}              { COLUMN_UPDATE(); }
-{comment}         { COLUMN_UPDATE(); }
+{ws}              { STRIP(); }
+{comment}         { STRIP(); }
 
 
-{id}             { LEX_FWD(ID); }
+{id}             { FWD(ID); }
 
-{i32_lit}        { LEX_FWD(I32_LIT); }
-{f32_lit}        { LEX_FWD(F32_LIT); }
-
-
-";"              { LEX_FWD(SEMICOLON); }
-"="              { LEX_FWD(ASSIGN); }
-"+"              { LEX_FWD(PLUS); }
-"*"              { LEX_FWD(MUL); }
-
-"("              { LEX_FWD(OPEN_PAREN); }
-")"              { LEX_FWD(CLOSE_PAREN); }
+{i32_lit}        { FWD(I32_LIT); }
+{f32_lit}        { FWD(F32_LIT); }
 
 
-.                { COLUMN_UPDATE(); printf("LEXER UNRECOGNIZED CHAR {%s}\n", yytext); return YYUNDEF; }
+";"              { FWD(SEMICOLON); }
+"="              { FWD(ASSIGN); }
+"+"              { FWD(PLUS); }
+"*"              { FWD(MUL); }
+
+"("              { FWD(OPEN_PAREN); }
+")"              { FWD(CLOSE_PAREN); }
+
+
+.                { ERROR(); }
 
 
 %%

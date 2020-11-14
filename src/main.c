@@ -50,9 +50,9 @@ int main(int argc, char** argv)
             ast_node_t *node = &G_ast.nodes[i];
             printf("NODE: {idx: %d, lexeme: \"%s\", kind = %d, skind = %s}\n",
                    i,
-                   node->tok.lexeme,
-                   node->tok.kind,
-                   node->tok.skind
+                   node->tok->lexeme,
+                   node->tok->kind,
+                   node->tok->skind
                 );
         }
     }

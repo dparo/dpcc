@@ -23,11 +23,13 @@ void dallclr(mctx_t *ctx);
 void* dallstl(mctx_t* ctx, void* ptr);
 
 
-void ast_clear(ast_t* ast);
-ast_node_t *ast_push(YYLTYPE yylloc, char *lexeme, i32 kind, char *skind);
 
 void     tokens_seq_clear(token_seq_t *tseq);
 token_t* token_push(YYLTYPE yylloc, char* lexeme, i32 kind, char* skind);
+
+
+void ast_clear(ast_t* ast);
+ast_node_t *ast_push(token_t *t);
 
 
 bool str_to_i32(char* string, i32* out);

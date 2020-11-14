@@ -16,3 +16,12 @@ FILE* open_from_string(char* string);
 
 bool lex(FILE* input_stream);
 bool parse(FILE* input_stream);
+
+
+static inline bool lex_string(char *string) {
+    return lex(open_from_string(string));
+}
+
+static inline bool parse_string(char *string) {
+    return parse(open_from_string(string));
+}
