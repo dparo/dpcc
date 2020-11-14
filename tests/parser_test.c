@@ -17,10 +17,10 @@
 
 static void basic_tests(void)
 {
-    TEST_ASSERT_EQUAL_INT(parse(FS("a = b;")), 0);
-    TEST_ASSERT_EQUAL_INT(parse(FS("a = b + c;")), 0);
-    TEST_ASSERT_EQUAL_INT(parse(FS("a = ((1 + 2) + b);")), 0);
-    TEST_ASSERT_EQUAL_INT(parse(FS("a = b * c * d;")), 0);
+    TEST_ASSERT_TRUE(parse(FS("a = b;")));
+    TEST_ASSERT_TRUE(parse(FS("a = b + c;")));
+    TEST_ASSERT_TRUE(parse(FS("a = ((1 + 2) + b);")));
+    TEST_ASSERT_TRUE(parse(FS("a = b * c * d;")));
 }
 
 static void str_to_i32_assert(char* string, i32 expected, bool negated_test)
@@ -61,13 +61,13 @@ static void str_to_literal_test(void)
 
 static void literal_parsing_test(void)
 {
-    /* for (i32 i = 0; i < ARRAY_LEN(i32_tests); i++) { */
-    /*     assert_int_equal(parse_once(open_from_string(i32_tests[i].string)), I32_LIT); */
-    /* } */
+    for (i32 i = 0; i < ARRAY_LEN(i32_tests); i++) {
+        TEST_ASSERT_FALSE(parse(open_from_string(i32_tests[i].string)));
+    }
 
-    /* for (i32 i = 0; i < ARRAY_LEN(f32_tests); i++) { */
-    /*     assert_int_equal( parse_once(open_from_string(f32_tests[i].string)), F32_LIT); */
-    /* } */
+    for (i32 i = 0; i < ARRAY_LEN(f32_tests); i++) {
+        TEST_ASSERT_FALSE(parse(open_from_string(f32_tests[i].string)));
+    }
 }
 
 int main(void)

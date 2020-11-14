@@ -67,6 +67,6 @@ typedef struct {
 
 
 static dpcc_test_t all_dpcc_tests[] = {
-    {"a = b; // A comment", 3, (int32_t[]) {ID, ASSIGN, ID, SEMICOLON}},
-    {"a = b; // A comment\n", 3, (int32_t[]) {ID, ASSIGN, ID, SEMICOLON}},
+    {"a = b; // A comment", 4, (int32_t[]) {ID, ASSIGN, ID, SEMICOLON}},
+    {"a = b; // A comment\n", 4, (int32_t[]) {ID, ASSIGN, ID, SEMICOLON}},
 };
