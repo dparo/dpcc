@@ -2,6 +2,7 @@
 
 %{
 #include "parser.h"
+#include "utils.h"
 
 
 #define COLUMN_UPDATE() \
@@ -10,6 +11,7 @@
 #define LEX_FWD(X) \
         do {  \
             COLUMN_UPDATE();                    \
+            yylval = token_push(yylloc, yytext, (X), (#X)); \
             yykind  = (X); \
             yyskind = (#X); \
             return (X);   \

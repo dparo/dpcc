@@ -54,7 +54,6 @@ bool lex(FILE* input_stream)
     int result = 0;
     int kind = 0;
     while ((kind = yylex()) != YYEOF) {
-        token_push(&G_tok_seq, yylloc, yytext, kind, yyskind);
         if (kind == YYUNDEF || kind == YYerror) {
             result = kind;
             break;

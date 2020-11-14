@@ -16,16 +16,16 @@ int  yylex(void);
 
 
 #define PARSER_FWD(X) \
-        (void)ast_push(&G_ast, yylloc, yytext, yykind, yyskind)
+        (void)ast_push(yylloc, yytext, yykind, yyskind)
 
 #define PARSER_FWD_I32(X, VAL) \
-        (void)ast_push(&G_ast, yylloc, yytext, yykind, yyskind)->val.i = (VAL)
+        (void)ast_push(yylloc, yytext, yykind, yyskind)->val.i = (VAL)
 
 #define PARSER_FWD_F32(X, VAL) \
-        (void)ast_push(&G_ast, yylloc, yytext, yykind, yyskind)->val.f = (VAL)
+        (void)ast_push(yylloc, yytext, yykind, yyskind)->val.f = (VAL)
 
 #define PARSER_FWD_BOOL(X, VAL) \
-        (void)ast_push(&G_ast, yylloc, yytext, yykind, yyskind)->val.f = (VAL)
+        (void)ast_push(yylloc, yytext, yykind, yyskind)->val.f = (VAL)
 
 
 %}
@@ -58,7 +58,7 @@ lines:           line lines
 line:            statement
         ;
 
-statement:      ID ASSIGN expr SEMICOLON { PARSER_FWD(STATEMENT); }
+statement:      ID ASSIGN expr SEMICOLON { printf("# debug(STATEMENT): yytext: %s, yylval: %d\n", yytext, yylval); PARSER_FWD(STATEMENT); }
         |       SEMICOLON                { PARSER_FWD(SEMICOLON); }
         ;
 

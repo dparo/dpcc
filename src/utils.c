@@ -170,8 +170,9 @@ void ast_clear(ast_t *ast)
 }
 
 
-token_t* token_push(token_seq_t* tseq, YYLTYPE yylloc, char* lexeme, i32 kind, char* skind)
+token_t* token_push(YYLTYPE yylloc, char* lexeme, i32 kind, char* skind)
 {
+    token_seq_t *tseq = &G_tok_seq;
     tseq->mctx = &G_allctx;
 
     token_t token = {
@@ -198,8 +199,9 @@ token_t* token_push(token_seq_t* tseq, YYLTYPE yylloc, char* lexeme, i32 kind, c
 }
 
 
-ast_node_t *ast_push(ast_t *ast, YYLTYPE yylloc, char *lexeme, i32 kind, char *skind)
+ast_node_t *ast_push(YYLTYPE yylloc, char *lexeme, i32 kind, char *skind)
 {
+    ast_t *ast = &G_ast;
     ast->mctx = &G_allctx;
 
     ast_node_t node = {

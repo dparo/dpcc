@@ -69,3 +69,7 @@ typedef struct {
     ast_node_t *nodes;
     i32         nodes_cnt;
 } ast_t;
+
+
+
+#define YYSTYPE token_t*
