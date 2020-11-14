@@ -3,8 +3,6 @@ set(TEST_SOURCES_LIST
   "parser_test.c"
   )
 
-add_subdirectory(Unity)
-
 foreach(SRC IN LISTS TEST_SOURCES_LIST)
   get_filename_component(TARGET "${SRC}" NAME_WE)
 

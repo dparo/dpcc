@@ -26,6 +26,11 @@ FLEX_TARGET(lexer  src/lexer.l ${CMAKE_CURRENT_BINARY_DIR}/lexer.c
 ADD_FLEX_BISON_DEPENDENCY(lexer parser)
 
 
+add_library(libstb STATIC
+  third_party/stb_impl.c
+  )
+target_include_directories(libstb PUBLIC third_party/stb)
+
 add_library(libdpcc STATIC
   src/dpcc.c src/dpcc.h src/globals.c src/utils.c
   ${BISON_parser_OUTPUTS}
@@ -33,6 +38,7 @@ add_library(libdpcc STATIC
   )
 target_include_directories(libdpcc PUBLIC src)
 target_include_directories(libdpcc PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(libdpcc PUBLIC libstb)
 
 add_executable(dpcc src/main.c )
 target_link_libraries(dpcc libdpcc)
@@ -41,5 +47,6 @@ target_link_libraries(dpcc libdpcc)
 include(CTest)
 
 if(BUILD_TESTING)
-    add_subdirectory(tests)
+  add_subdirectory("${CMAKE_SOURCE_DIR}/third_party/Unity")
+  add_subdirectory(tests)
 endif()
