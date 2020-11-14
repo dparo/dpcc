@@ -155,7 +155,7 @@ bool str_to_f32(char* string, f32* out)
 
 void tokens_seq_clear(token_seq_t *tseq)
 {
-    dalldel(tseq->mctx, tseq->tokens);
+    dalldel(&G_allctx, tseq->tokens);
     tseq->tokens = NULL;
     tseq->tokens_cnt = 0;
 }
@@ -163,7 +163,7 @@ void tokens_seq_clear(token_seq_t *tseq)
 
 void ast_clear(ast_t *ast)
 {
-    dalldel(ast->mctx, ast->nodes);
+    dalldel(&G_allctx, ast->nodes);
     ast->nodes = NULL;
     ast->nodes_cnt = 0;
 }
@@ -185,7 +185,6 @@ char *lexeme_intern(char *yytext)
 token_t* token_push(YYLTYPE yylloc, char* yytext, int yychar, char *yychar_str)
 {
     token_seq_t *tseq = &G_tok_seq;
-    tseq->mctx = &G_allctx;
 
     token_t token = {
         .lexeme = (char*) lexeme_intern(yytext),
@@ -194,7 +193,7 @@ token_t* token_push(YYLTYPE yylloc, char* yytext, int yychar, char *yychar_str)
         .yylloc = yylloc,
     };
 
-    void* ptr = dallrsz(tseq->mctx, tseq->tokens, (tseq->tokens_cnt + 1) * sizeof(*tseq->tokens));
+    void* ptr = dallrsz(&G_allctx, tseq->tokens, (tseq->tokens_cnt + 1) * sizeof(*tseq->tokens));
 
     if (ptr == NULL) {
         fprintf(stderr, "ast_push :: Failed memory allocation\n");
@@ -214,13 +213,12 @@ token_t* token_push(YYLTYPE yylloc, char* yytext, int yychar, char *yychar_str)
 ast_node_t *ast_push(token_t *t)
 {
     ast_t *ast = &G_ast;
-    ast->mctx = &G_allctx;
 
     ast_node_t node = {
         .tok = t,
     };
 
-    void* ptr = dallrsz(ast->mctx, ast->nodes, (ast->nodes_cnt + 1) * sizeof(*ast->nodes));
+    void* ptr = dallrsz(&G_allctx, ast->nodes, (ast->nodes_cnt + 1) * sizeof(*ast->nodes));
 
     if (ptr == NULL) {
         fprintf(stderr, "ast_push :: Failed memory allocation\n");

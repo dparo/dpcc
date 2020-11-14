@@ -46,7 +46,6 @@ typedef struct {
 } token_t;
 
 typedef struct {
-    mctx_t  *mctx;
     token_t *tokens;
     i32      tokens_cnt;
 } token_seq_t;
@@ -63,7 +62,6 @@ typedef struct {
 } ast_node_t;
 
 typedef struct {
-    mctx_t     *mctx;
     ast_node_t *nodes;
     i32         nodes_cnt;
 } ast_t;
