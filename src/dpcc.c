@@ -1,6 +1,8 @@
 #include "dpcc.h"
+#include "globals.h"
 #include "lexer.h"
 #include "parser.h"
+#include "utils.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -34,16 +36,7 @@ FILE* open_file_for_reading(char* filepath)
 
 static void reset(void)
 {
-    yyprevcol = 0;
-    yylloc.line = 1;
-    yylloc.column = 0;
     yylex_destroy();
-
-    yybis_error_occured = false;
-
-
-    ast_clear(&G_ast);
-    dallclr(&G_allctx);
     clear_all_global_vars();
 }
 
@@ -61,7 +54,7 @@ int lex_once(FILE* input_stream)
     return retval;
 }
 
-int lex(FILE* input_stream)
+bool lex(FILE* input_stream)
 {
     reset();
 
@@ -72,40 +65,19 @@ int lex(FILE* input_stream)
     yyin = input_stream;
 
     int result = 0;
-    int c = 0;
-
-    while ((c = yylex()) != YYEOF) {
-        printf("Lex got: {%s}\t\t[retval = %s, yylval = %d, yylineno: %d, yylloc=(%d, %d)]\n",
-            yytext,
-            yylex_debug_ret_val,
-            yylval,
-            yylineno,
-            yylloc.line,
-            yylloc.column);
-        if (c == YYUNDEF || c == YYerror) {
-            result = c;
+    int kind = 0;
+    while ((kind = yylex()) != YYEOF) {
+        token_push(&G_tok_seq, yylloc, yytext, kind, yyskind);
+        if (kind == YYUNDEF || kind == YYerror) {
+            result = kind;
             break;
         }
     }
 
-    return result;
+    return result == 0;
 }
 
-int parse_once(FILE* input_stream)
-{
-    reset();
-
-    if (input_stream == NULL) {
-        fprintf(stderr, "dpcc::parse_once() --- NULL input_stream\n");
-        abort();
-    }
-
-    yyin = input_stream;
-
-    return yyparse() != 0;
-}
-
-int parse(FILE* input_stream)
+bool parse(FILE* input_stream)
 {
     reset();
 
@@ -119,22 +91,10 @@ int parse(FILE* input_stream)
     int result = yyparse();
 
     if (result == 0) {
-        assert(yybis_error_occured == false);
+        assert(yy_errored_out == false);
     } else if (result == 1) {
-        assert(yybis_error_occured == true);
+        assert(yy_errored_out == true);
     }
 
-    if (result == 0) {
-        for (i32 i = 0; i < G_ast.nodes_cnt; i++) {
-            ast_node_t *node = &G_ast.nodes[i];
-            printf("NODE: {idx: %d, lexeme: \"%s\", kind = %d, skind = %s}\n",
-                   i,
-                   node->tok.lexeme,
-                   node->tok.kind,
-                   node->tok.skind
-                );
-        }
-    }
-
-    return result;
+    return result == 0;
 }

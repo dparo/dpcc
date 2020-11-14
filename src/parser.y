@@ -15,14 +15,9 @@ void yyerror(char const *s);
 int  yylex(void);
 
 
-
-
-
 #define PARSER_FWD(X) \
     do { \
-        yybis_debug_ret_val = (#X); \
-        ast_node_t *node = ast_push(&G_ast, yylloc, yytext, (X), (#X)); \
-        if(0) printf("BISON: Got %s [id = %d]\n", (#X), (X)); \
+        ast_node_t *node = ast_push(&G_ast, yylloc, yytext, yykind, yyskind); \
     } while(0)
 
 %}
@@ -73,7 +68,7 @@ void yyerror (char const *s)
 {
     extern int yylineno;
     fprintf(stderr, "Error at yylineno: %d, yylloc=(%d, %d)\n\t%s\n", yylineno, yylloc.line, yylloc.column, s);
-    yybis_error_occured = true;
+    yy_errored_out = true;
 }
 
 // yywrap: return 1 to stop the parser/lexer upon encountering EOF

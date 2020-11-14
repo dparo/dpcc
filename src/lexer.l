@@ -10,9 +10,9 @@
 #define LEX_FWD(X) \
         do {  \
             COLUMN_UPDATE();                    \
-            yylval = (X);                       \
-            yylex_debug_ret_val = (#X);               \
-        return (X);   \
+            yykind  = (X); \
+            yyskind = (#X); \
+            return (X);   \
     } while(0)
 
 %}

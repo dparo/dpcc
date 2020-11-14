@@ -153,11 +153,48 @@ bool str_to_f32(char* string, f32* out)
 }
 
 
+
+void tokens_seq_clear(token_seq_t *tseq)
+{
+    dalldel(tseq->mctx, tseq->tokens);
+    tseq->tokens = NULL;
+    tseq->tokens_cnt = 0;
+}
+
+
 void ast_clear(ast_t *ast)
 {
     dalldel(ast->mctx, ast->nodes);
     ast->nodes = NULL;
     ast->nodes_cnt = 0;
+}
+
+
+token_t* token_push(token_seq_t* tseq, YYLTYPE yylloc, char* lexeme, i32 kind, char* skind)
+{
+    tseq->mctx = &G_allctx;
+
+    token_t token = {
+        .lexeme = (char*) dallstl(tseq->mctx, strdup(lexeme)),
+        .kind = kind,
+        .skind = skind,
+        .yylloc = yylloc,
+    };
+
+    void* ptr = dallrsz(tseq->mctx, tseq->tokens, (tseq->tokens_cnt + 1) * sizeof(*tseq->tokens));
+
+    if (ptr == NULL) {
+        fprintf(stderr, "ast_push :: Failed memory allocation\n");
+        fflush(stderr);
+        abort();
+    }
+
+    tseq->tokens = ptr;
+    tseq->tokens_cnt += 1;
+
+    memcpy(&tseq->tokens[tseq->tokens_cnt - 1], &token, sizeof(token));
+    return &tseq->tokens[tseq->tokens_cnt - 1];
+
 }
 
 
