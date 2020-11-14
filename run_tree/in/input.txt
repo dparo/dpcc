@@ -1,3 +1,7 @@
-a = 0x10;
-b = c * d;
+
+
+
+  myidentifier_a = 0x10;
+  b = 0x20;
+b = c * d + complex_var_name;
 a = ((b + c) * d) + e;

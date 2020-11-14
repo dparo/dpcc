@@ -59,13 +59,13 @@ line:            statement
         ;
 
 statement:      ID ASSIGN expr SEMICOLON { PARSER_FWD(STATEMENT); }
-        |       SEMICOLON                { PARSER_FWD(STATEMENT); }
+        |       SEMICOLON                { PARSER_FWD(SEMICOLON); }
         ;
 
 expr:           expr PLUS expr { PARSER_FWD(PLUS); }
         |       expr MUL expr { PARSER_FWD(MUL); }
         |       OPEN_PAREN expr CLOSE_PAREN { PARSER_FWD(OPEN_PAREN); }
-        |       ID { PARSER_FWD(ID); }
+        |       ID { printf("# DEBUG: GOT TO ID (%s)\n", yytext); PARSER_FWD(ID); }
         |       I32_LIT { PARSER_FWD(I32_LIT); }
         |       F32_LIT { PARSER_FWD(F32_LIT); }
         ;

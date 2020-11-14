@@ -61,11 +61,11 @@ static void str_to_literal_test(void)
 
 static void literal_parsing_test(void)
 {
-    for (i32 i = 0; i < ARRAY_LEN(i32_tests); i++) {
+    for (size_t i = 0; i < ARRAY_LEN(i32_tests); i++) {
         TEST_ASSERT_FALSE(parse(open_from_string(i32_tests[i].string)));
     }
 
-    for (i32 i = 0; i < ARRAY_LEN(f32_tests); i++) {
+    for (size_t i = 0; i < ARRAY_LEN(f32_tests); i++) {
         TEST_ASSERT_FALSE(parse(open_from_string(f32_tests[i].string)));
     }
 }
