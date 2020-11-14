@@ -16,18 +16,21 @@
 static void number_lexing_test(void)
 {
     for (i32 i = 0; i < ARRAY_LEN(i32_tests); i++) {
-        TEST_ASSERT_EQUAL_INT32(I32_LIT, lex_once(open_from_string(i32_tests[i].string)));
+        TEST_ASSERT_TRUE(lex(open_from_string(i32_tests[i].string)));
+        TEST_ASSERT_EQUAL_INT32(1, G_tok_seq.tokens_cnt);
+        TEST_ASSERT_EQUAL_INT32(I32_LIT, G_tok_seq.tokens[0].kind);
     }
 
     for (i32 i = 0; i < ARRAY_LEN(f32_tests); i++) {
-        TEST_ASSERT_EQUAL_INT32(F32_LIT, lex_once(open_from_string(f32_tests[i].string)));
+        TEST_ASSERT_TRUE(lex(open_from_string(f32_tests[i].string)));
+        TEST_ASSERT_EQUAL_INT32(1, G_tok_seq.tokens_cnt);
+        TEST_ASSERT_EQUAL_INT32(F32_LIT, G_tok_seq.tokens[0].kind);
     }
 }
 
 static int lex_test(i32 fixture_idx, fixture_t *fix)
 {
-    int lexresult = lex();
-    bool lexsucc = false;
+    bool lexsucc = lex(open_from_string(fix->buffer));
 
     bool expected_lex_success = !fix->lex_should_fail;
     i32 expected_tokens_cnt = 0;
