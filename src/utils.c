@@ -116,6 +116,7 @@ bool str_to_i32(char* string, i32* out)
     }
 
     char* endptr = NULL;
+    errno = 0;
     intmax_t conv_ret_val = strtoimax(string, &endptr, base);
 
     bool out_of_range = (errno == ERANGE);
@@ -136,6 +137,8 @@ bool str_to_f32(char* string, f32* out)
     size_t len = strlen(string);
 
     char* endptr = NULL;
+
+    errno = 0;
     f32 conv_ret_val = strtof(string, &endptr);
 
     bool out_of_range = (errno == ERANGE);
