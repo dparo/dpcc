@@ -39,6 +39,7 @@ alphanum {alpha}|{digit}
 id       {alpha}{alphanum}*
 assign   "="
 plus     "+"
+minus     "+"
 mul      "*"
 
 
@@ -81,6 +82,7 @@ EOF              { FWD(YYEOF); }
 ";"              { FWD(SEMICOLON); }
 "="              { FWD(ASSIGN); }
 "+"              { FWD(PLUS); }
+"-"              { FWD(MINUS); }
 "*"              { FWD(MUL); }
 
 "("              { FWD(OPEN_PAREN); }

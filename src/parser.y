@@ -27,17 +27,25 @@ int  yylex(void);
 
 %token                  ASSIGN
 %token                  PLUS
+%token                  MINUS
 %token                  MUL
-
 
 %token                  SEMICOLON
 %token                  OPEN_PAREN
 %token                  CLOSE_PAREN
 %token                  STATEMENT
 
+
+// Precedence of the operators
+// From top to bottom:
+// - TOP: Lowest precedence
+// - Bottom: Higher precedence
+// Spaces can be used to separate operators on the same line,
+//  and assign the same precedence
 %left                   ASSIGN
-%left                   PLUS
+%left                   PLUS MINUS
 %left                   MUL
+%right                  NEG
 
 %%
 
@@ -53,7 +61,9 @@ statement:      ID ASSIGN expr SEMICOLON { PARSER_FWD(STATEMENT); }
         ;
 
 expr:           expr PLUS expr { PARSER_FWD(PLUS); }
+        |       expr MINUS expr { PARSER_FWD(MINUS); }
         |       expr MUL expr { PARSER_FWD(MUL); }
+        |       MINUS expr  %prec NEG { PARSER_FWD(NEG); }
         |       OPEN_PAREN expr CLOSE_PAREN { PARSER_FWD(OPEN_PAREN); }
         |       ID { PARSER_FWD(ID); }
         |       I32_LIT { PARSER_FWD(I32_LIT); }
