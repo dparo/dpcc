@@ -21,6 +21,9 @@ typedef float f32;
 typedef double f64;
 
 
+typedef size_t    usize;
+typedef ptrdiff_t isize;
+
 
 typedef char* cstr_t;
 
@@ -51,8 +54,10 @@ typedef struct {
 } token_seq_t;
 
 
-typedef struct {
+typedef struct ast_node {
     token_t *tok;
+
+    struct ast_node **childs;
 
     union {
         i32 i;

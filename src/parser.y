@@ -16,7 +16,7 @@ int  yylex(void);
 
 
 #define PARSER_FWD(X) \
-        (void)ast_push(yylval)
+        (void) ast_push(yylval, (isize) 0, NULL)
 
 %}
 
@@ -55,7 +55,7 @@ statement:      ID ASSIGN expr SEMICOLON { PARSER_FWD(STATEMENT); }
 expr:           expr PLUS expr { PARSER_FWD(PLUS); }
         |       expr MUL expr { PARSER_FWD(MUL); }
         |       OPEN_PAREN expr CLOSE_PAREN { PARSER_FWD(OPEN_PAREN); }
-        |       ID { printf("# DEBUG: GOT TO ID (%s)\n", yytext); PARSER_FWD(ID); }
+        |       ID { PARSER_FWD(ID); }
         |       I32_LIT { PARSER_FWD(I32_LIT); }
         |       F32_LIT { PARSER_FWD(F32_LIT); }
         ;

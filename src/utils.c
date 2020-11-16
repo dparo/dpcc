@@ -172,16 +172,19 @@ void ast_clear(ast_t *ast)
 }
 
 
-#include <assert.h>
-
 char *lexeme_intern(char *yytext)
 {
-    char *intern = shget(G_str_intern, yytext);
-    if (intern == NULL) {
-        printf("Intern not found (%s)\n", yytext);
-        intern = dallstl(&G_allctx, strdup(yytext));
+    char *intern = NULL;
+    ptrdiff_t index = shgeti(G_str_intern, yytext);
+    if (index < 0) {
+        char *key = dallstl(&G_allctx, strdup(yytext));
+        char *value = key;
+        shput(G_str_intern, key, value);
+        intern = value;
+    } else {
+        intern = G_str_intern[index].value;
     }
-    printf("intern value: %p -> %s\n", (void*) intern, intern);
+
     return intern;
 }
 
@@ -213,7 +216,7 @@ token_t* token_push(YYLTYPE yylloc, char* yytext, int yychar, char *yychar_str)
 }
 
 
-ast_node_t *ast_push(token_t *t)
+ast_node_t *ast_push(token_t *t, isize num_childs, ast_node_t **childs)
 {
     ast_t *ast = &G_ast;
 
@@ -227,6 +230,10 @@ ast_node_t *ast_push(token_t *t)
         fprintf(stderr, "ast_push :: Failed memory allocation\n");
         fflush(stderr);
         abort();
+    }
+
+    for (isize i = 0; i < num_childs; i++) {
+        arrpush(node.childs, childs[i]);
     }
 
     ast->nodes = ptr;

@@ -33,7 +33,7 @@ token_t* token_push(YYLTYPE yylloc, char* yytext, int yychar, char *yychar_str);
 
 
 void ast_clear(ast_t* ast);
-ast_node_t *ast_push(token_t *t);
+ast_node_t *ast_push(token_t *t, isize num_childs, ast_node_t **childs);
 
 
 bool str_to_i32(char* string, i32* out);
