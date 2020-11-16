@@ -3,9 +3,6 @@
 #include <stdint.h>
 #include <setjmp.h>
 
-
-
-
 #include "dpcc.h"
 #include "parser.h"
 #include "tests_common.h"
@@ -72,12 +69,12 @@ static void literal_parsing_test(void)
 
 int main(void)
 {
-    UNITY_BEGIN(); {
+    UNITY_BEGIN();
+    {
 
         RUN_TEST(basic_tests);
         RUN_TEST(str_to_literal_test);
         RUN_TEST(literal_parsing_test);
-
     }
 
     return UNITY_END();

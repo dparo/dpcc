@@ -20,44 +20,37 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
-
-typedef size_t    usize;
+typedef size_t usize;
 typedef ptrdiff_t isize;
 
-
 typedef char* cstr_t;
-
 
 typedef struct YYLTYPE {
     i32 line;
     i32 column;
 } YYLTYPE;
 
-
 typedef struct mctx {
-    void **allocs;
-    i32  num_allocs;
+    void** allocs;
+    i32 num_allocs;
 } mctx_t;
 
-
-
 typedef struct {
-    char *lexeme;
-    i32  kind;
-    char *skind;
+    char* lexeme;
+    i32 kind;
+    char* skind;
     YYLTYPE yylloc;
 } token_t;
 
 typedef struct {
-    token_t *tokens;
-    i32      tokens_cnt;
+    token_t* tokens;
+    i32 tokens_cnt;
 } token_seq_t;
 
-
 typedef struct ast_node {
-    token_t *tok;
+    token_t* tok;
 
-    struct ast_node **childs;
+    struct ast_node** childs;
 
     union {
         i32 i;
@@ -67,13 +60,13 @@ typedef struct ast_node {
 } ast_node_t;
 
 typedef struct {
-    ast_node_t *nodes;
-    i32         nodes_cnt;
+    ast_node_t* nodes;
+    i32 nodes_cnt;
 } ast_t;
 
 typedef struct {
-    char *key;
-    char *value;
+    char* key;
+    char* value;
 } str_str_key_value_t;
 
 #define YYSTYPE token_t*

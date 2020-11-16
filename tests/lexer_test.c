@@ -10,7 +10,6 @@
 #include <unity.h>
 #include <assert.h>
 
-
 #define FS(X) open_from_string(X)
 
 static void number_lexing_test(void)
@@ -28,51 +27,48 @@ static void number_lexing_test(void)
     }
 }
 
-static void lex_test(i32 testidx, dpcc_test_t *test)
+static void lex_test(i32 testidx, dpcc_test_t* test)
 {
     bool lexsucc = lex(open_from_string(test->buffer));
     bool expected_lex_success = test->num_expected_tokens != 0;
 
     TEST_ASSERT_NOT_NULL(test->expected_tokens);
 
-    char *lexmsg;
+    char* lexmsg;
     asprintf(&lexmsg,
-             "--- Fixture test [%d]:\n"
-             "--- buffer:"
-             "%s\n"
-             "--- expected lex success: %d\n"
-             "--- expected tokens_cnt: %d\n"
-             "--- found lex success: %d\n"
-             "--- found tokens_cnt: %d\n",
-             testidx,
-             test->buffer,
-             expected_lex_success,
-             test->num_expected_tokens,
-             lexsucc,
-             G_tok_seq.tokens_cnt
-        );
-
+        "--- Fixture test [%d]:\n"
+        "--- buffer:"
+        "%s\n"
+        "--- expected lex success: %d\n"
+        "--- expected tokens_cnt: %d\n"
+        "--- found lex success: %d\n"
+        "--- found tokens_cnt: %d\n",
+        testidx,
+        test->buffer,
+        expected_lex_success,
+        test->num_expected_tokens,
+        lexsucc,
+        G_tok_seq.tokens_cnt);
 
     TEST_ASSERT_EQUAL_MESSAGE(expected_lex_success, lexsucc, lexmsg);
     TEST_ASSERT_EQUAL_INT32_MESSAGE(test->num_expected_tokens, G_tok_seq.tokens_cnt, lexmsg);
 
     for (i32 i = 0; i < G_tok_seq.tokens_cnt; i++) {
-        char *tokmsg;
+        char* tokmsg;
         i32 expected_kind = test->expected_tokens[i];
         i32 found_kind = G_tok_seq.tokens[i].kind;
         asprintf(&tokmsg,
-                 "%s"
-                 "- token_idx: %d\n"
-                 "- expected kind: %d\n"
-                 "- found kind: %d (%s)\n"
-                 "- found lexeme: \"%s\"\n",
-                 lexmsg,
-                 i,
-                 expected_kind,
-                 found_kind,
-                 G_tok_seq.tokens[i].skind,
-                 G_tok_seq.tokens[i].lexeme
-            );
+            "%s"
+            "- token_idx: %d\n"
+            "- expected kind: %d\n"
+            "- found kind: %d (%s)\n"
+            "- found lexeme: \"%s\"\n",
+            lexmsg,
+            i,
+            expected_kind,
+            found_kind,
+            G_tok_seq.tokens[i].skind,
+            G_tok_seq.tokens[i].lexeme);
 
         TEST_ASSERT_EQUAL_INT32_MESSAGE(expected_kind, found_kind, tokmsg);
         free(tokmsg);
@@ -89,17 +85,15 @@ static void testture_lexing_test(void)
 
 int main(void)
 {
-    UNITY_BEGIN(); {
+    UNITY_BEGIN();
+    {
 
         RUN_TEST(number_lexing_test);
         RUN_TEST(testture_lexing_test);
-
     }
 
     return UNITY_END();
 }
-
-
 
 /// Ran before each test
 void setUp(void)

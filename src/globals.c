@@ -4,16 +4,14 @@
 #include "utils.h"
 #include <stb_ds.h>
 
-bool    yy_errored_out = false;
+bool yy_errored_out = false;
 int32_t yyprevcol = 0;
-YYLTYPE yylloc = {1, 0};
-
+YYLTYPE yylloc = { 1, 0 };
 
 str_str_key_value_t* G_str_intern = NULL;
-mctx_t               G_allctx     = {0};
-ast_t                G_ast        = { 0 };
-token_seq_t          G_tok_seq    = { 0 };
-
+mctx_t G_allctx = { 0 };
+ast_t G_ast = { 0 };
+token_seq_t G_tok_seq = { 0 };
 
 void clear_all_global_vars()
 {
@@ -25,7 +23,6 @@ void clear_all_global_vars()
 
     tokens_seq_clear(&G_tok_seq);
     ast_clear(&G_ast);
-
 
     shfree(G_str_intern);
     G_str_intern = NULL;

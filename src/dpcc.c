@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 FILE* open_from_string(char* string)
 {
     FILE* result = fmemopen(string, strlen(string), "r");
@@ -38,7 +37,6 @@ static void reset(void)
     yylex_destroy();
     clear_all_global_vars();
 }
-
 
 bool lex(FILE* input_stream)
 {

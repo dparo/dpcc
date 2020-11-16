@@ -42,7 +42,8 @@ void* dallrsz(mctx_t* ctx, void* ptr, size_t new_size)
 /// Equivalent to free
 void dalldel(mctx_t* ctx, void* ptr)
 {
-    if (!ptr) return;
+    if (!ptr)
+        return;
 
     i32 alloc_idx = -1;
     for (i32 i = 0; i < ctx->num_allocs; i++) {
@@ -75,22 +76,13 @@ void dallclr(mctx_t* ctx)
     }
 }
 
-
-void* dallstl(mctx_t *ctx, void *ptr)
+void* dallstl(mctx_t* ctx, void* ptr)
 {
     ctx->allocs = realloc(ctx->allocs, sizeof(void*) * (ctx->num_allocs + 1));
     ctx->allocs[ctx->num_allocs] = ptr;
     ctx->num_allocs += 1;
     return ctx->allocs[ctx->num_allocs - 1];
-
 }
-
-
-
-
-
-
-
 
 bool str_to_i32(char* string, i32* out)
 {
@@ -154,31 +146,27 @@ bool str_to_f32(char* string, f32* out)
     return result;
 }
 
-
-
-void tokens_seq_clear(token_seq_t *tseq)
+void tokens_seq_clear(token_seq_t* tseq)
 {
     dalldel(&G_allctx, tseq->tokens);
     tseq->tokens = NULL;
     tseq->tokens_cnt = 0;
 }
 
-
-void ast_clear(ast_t *ast)
+void ast_clear(ast_t* ast)
 {
     dalldel(&G_allctx, ast->nodes);
     ast->nodes = NULL;
     ast->nodes_cnt = 0;
 }
 
-
-char *lexeme_intern(char *yytext)
+char* lexeme_intern(char* yytext)
 {
-    char *intern = NULL;
+    char* intern = NULL;
     ptrdiff_t index = shgeti(G_str_intern, yytext);
     if (index < 0) {
-        char *key = dallstl(&G_allctx, strdup(yytext));
-        char *value = key;
+        char* key = dallstl(&G_allctx, strdup(yytext));
+        char* value = key;
         shput(G_str_intern, key, value);
         intern = value;
     } else {
@@ -188,12 +176,12 @@ char *lexeme_intern(char *yytext)
     return intern;
 }
 
-token_t* token_push(YYLTYPE yylloc, char* yytext, int yychar, char *yychar_str)
+token_t* token_push(YYLTYPE yylloc, char* yytext, int yychar, char* yychar_str)
 {
-    token_seq_t *tseq = &G_tok_seq;
+    token_seq_t* tseq = &G_tok_seq;
 
     token_t token = {
-        .lexeme = (char*) lexeme_intern(yytext),
+        .lexeme = (char*)lexeme_intern(yytext),
         .kind = yychar,
         .skind = yychar_str,
         .yylloc = yylloc,
@@ -212,13 +200,11 @@ token_t* token_push(YYLTYPE yylloc, char* yytext, int yychar, char *yychar_str)
 
     memcpy(&tseq->tokens[tseq->tokens_cnt - 1], &token, sizeof(token));
     return &tseq->tokens[tseq->tokens_cnt - 1];
-
 }
 
-
-ast_node_t *ast_push(token_t *t, isize num_childs, ast_node_t **childs)
+ast_node_t* ast_push(token_t* t, isize num_childs, ast_node_t** childs)
 {
-    ast_t *ast = &G_ast;
+    ast_t* ast = &G_ast;
 
     ast_node_t node = {
         .tok = t,
