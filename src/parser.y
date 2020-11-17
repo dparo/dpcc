@@ -3,7 +3,7 @@
 %code requires {
     /* This code block will be exported to the generated header file by bison */
     #include "globals.h"
- }
+}
 %{
 
 #include "utils.h"
@@ -28,7 +28,7 @@ static bool yacc_from_str_to_i32(ast_node_t *node) {
     int32_t i = 0;
     bool success = str_to_i32(node->tok->lexeme, &i);
     if (success == false) {
-        gen_error("Invalid integer");
+        dpcc_log(DPCC_SEVERITY_ERROR, node, "Invalid int32 literal: got `%s`", node->tok->lexeme);
     } else {
         node->val.i = i;
     }
@@ -39,7 +39,7 @@ static bool yacc_from_str_to_f32(ast_node_t *node) {
     f32 f = 0;
     bool success = str_to_f32(node->tok->lexeme, &f);
     if (success == false) {
-        gen_error("Invalid float");
+        dpcc_log(DPCC_SEVERITY_ERROR, node, "Invalid float literal: got `%s`", node->tok->lexeme);
     } else {
         node->val.f = f;
     }
@@ -50,7 +50,7 @@ static bool yacc_from_str_to_char(ast_node_t *node) {
     char c = 0;
     bool success = str_to_char(node->tok->lexeme, &c);
     if (success == false) {
-        gen_error("Invalid char");
+        dpcc_log(DPCC_SEVERITY_ERROR, node, "Invalid char literal: got `%s`", node->tok->lexeme);
     } else {
         node->val.c = c;
     }
@@ -61,7 +61,7 @@ static bool yacc_from_str_to_bool(ast_node_t *node) {
     bool b = 0;
     bool success = str_to_bool(node->tok->lexeme, &b);
     if (success == false) {
-        gen_error("Invalid boolean");
+        dpcc_log(DPCC_SEVERITY_ERROR, node, "Invalid bool literal: got `%s`", node->tok->lexeme);
     } else {
         node->val.b = b;
     }
@@ -71,17 +71,17 @@ static bool yacc_from_str_to_bool(ast_node_t *node) {
 
 
 
-#define YACC_FROM_STR_TO_I32(node) \
-    do { if(!yacc_from_str_to_i32(node)) { YYERROR; } } while(0)
+#define PUSH_I32(X) \
+    do { if(!yacc_from_str_to_i32(PUSH(X))) { YYERROR; } } while(0)
 
-#define YACC_FROM_STR_TO_F32(node) \
-    do { if(!yacc_from_str_to_f32(node)) { YYERROR; } } while(0)
+#define PUSH_F32(X) \
+    do { if(!yacc_from_str_to_f32(PUSH(X))) { YYERROR; } } while(0)
 
-#define YACC_FROM_STR_TO_CHAR(node) \
-    do { if(!yacc_from_str_to_char(node)) { YYERROR; } } while(0)
+#define PUSH_CHAR(X) \
+    do { if(!yacc_from_str_to_char(PUSH(X))) { YYERROR; } } while(0)
 
-#define YACC_FROM_STR_TO_BOOL(node) \
-    do { if(!yacc_from_str_to_bool(node)) { YYERROR; } } while(0)
+#define PUSH_BOOL(X) \
+    do { if(!yacc_from_str_to_bool(PUSH(X))) { YYERROR; } } while(0)
 
 %}
 
@@ -134,10 +134,10 @@ expr:           expr PLUS { PUSH(PLUS); } expr
         |       MINUS expr  %prec NEG { PUSH(NEG); }
         |       OPEN_PAREN expr CLOSE_PAREN { PUSH(OPEN_PAREN); }
         |       ID { PUSH(ID); }
-        |       I32_LIT    { YACC_FROM_STR_TO_I32(PUSH(I32_LIT)); }
-        |       F32_LIT    { YACC_FROM_STR_TO_F32(PUSH(F32_LIT)); }
-        |       CHAR_LIT   { YACC_FROM_STR_TO_F32(PUSH(CHAR_LIT)); }
-        |       BOOL_LIT   { YACC_FROM_STR_TO_BOOL(PUSH(BOOL_LIT)); }
+        |       I32_LIT    { PUSH_I32(I32_LIT); }
+        |       F32_LIT    { PUSH(F32_LIT); }
+        |       CHAR_LIT   { PUSH_CHAR(CHAR_LIT); }
+        |       BOOL_LIT   { PUSH_BOOL(BOOL_LIT); }
         ;
 
 %%
