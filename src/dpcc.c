@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 FILE *open_from_string(char *string)
 {
@@ -105,10 +106,20 @@ bool compile(FILE *input_stream, FILE *output_stream)
         return false;
     }
 
-    for (usize node_idx = 0; node_idx < G_ast.nodes_cnt; node_idx++) {
+    /// Log and maybe error out (set success to false)
+#define LOG(severity, node, ...)               \
+    do {                                       \
+        dpcc_log(severity, node, __VA_ARGS__); \
+        if (severity == DPCC_SEVERITY_ERROR)   \
+            success = false;                   \
+    } while (0)
+
+    bool success = true;
+    for (usize node_idx = 0; node_idx < (usize)G_ast.nodes_cnt; node_idx++) {
         ast_node_t *node = &G_ast.nodes[node_idx];
-        dpcc_log(DPCC_SEVERITY_WARNING, node, "Hello from node (lexeme: `%s`, skind: %s)\n", node->tok->lexeme, node->skind);
+        LOG(DPCC_SEVERITY_WARNING, node, "Hello from node (lexeme: `%s`, skind: %s)\n", node->tok->lexeme, node->skind);
     }
 
-    return true;
+#undef LOG
+    return success;
 }

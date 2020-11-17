@@ -57,6 +57,10 @@ char (&ARRAY_LEN_HELPER(T (&array)[N]))[N];
             ARRAY_LEN_SIMPLE((int32_t[])ARGS(__VA_ARGS__)), \
     }
 
+/// String format concat
+char *sfcat(char *string, int32_t string_len, char *fmt, ...)
+    __attribute__((format(printf, 3, 4)));
+
 /// Equivalent to malloc
 void *dallnew(mctx_t *ctx, size_t size);
 /// Equivalent to realloc

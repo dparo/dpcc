@@ -322,10 +322,10 @@ void dpcc_log(enum DPCC_LOG_SEVERITY severity, ast_node_t *node, char *fmt, ...)
     va_list ap;
     va_start(ap, fmt);
     char *msg = "";
-    int msg_required_len = vsnprintf(msg, 0, fmt, ap);
-    msg = calloc(1, msg_required_len);
+    int msg_required_len = vsnprintf(NULL, 0, fmt, ap);
+    msg = calloc(1, msg_required_len + 1);
     va_start(ap, fmt);
-    vsnprintf(msg, msg_required_len, fmt, ap);
+    vsnprintf(msg, msg_required_len + 1, fmt, ap);
     va_end(ap);
 
     fprintf(stderr, "%s:%d:%d: %s: %s\n", filepath, line, column, severity_string[severity], msg);
@@ -333,4 +333,26 @@ void dpcc_log(enum DPCC_LOG_SEVERITY severity, ast_node_t *node, char *fmt, ...)
     dpcc_set_log_color(stderr, DPCC_LOG_COLOR_RESET);
 
     free(msg);
+}
+
+/// String format concat
+char *sfcat(char *string, int32_t string_len, char *fmt, ...)
+{
+    if (string == NULL || string[0] == '\0') {
+        string = calloc(1, 1);
+        string_len = 0;
+    }
+
+    va_list ap;
+
+    va_start(ap, fmt);
+    int32_t chars_to_write = vsnprintf(NULL, 0, fmt, ap);
+    char *result = realloc(string, string_len + chars_to_write + 1);
+    result[string_len + chars_to_write] = 0;
+
+    char *bumped = string + string_len;
+    va_start(ap, fmt);
+    vsnprintf(bumped, chars_to_write, fmt, ap);
+    va_end(ap);
+    return result;
 }
