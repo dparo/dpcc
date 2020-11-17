@@ -9,12 +9,12 @@
 #include "utils.h"
 
 typedef struct str_i32_tuple {
-    char* string;
+    char *string;
     i32 expected;
 } str_i32_tuple_t;
 
 typedef struct str_f32_tuple {
-    char* string;
+    char *string;
     f32 expected;
 } str_f32_tuple_t;
 
@@ -58,13 +58,15 @@ static str_f32_tuple_t f32_tests[] = {
 };
 
 typedef struct {
-    char* buffer;
-    i32 num_expected_tokens;
-    i32* expected_tokens;
+    char *buffer;
+    i32_array_t expected_tokens;
 } dpcc_test_t;
 
 static dpcc_test_t all_dpcc_tests[] = {
-    { "a = a; b = b; long_name = a + long_name; // A comment", 14, (int32_t[]) { ID, ASSIGN, ID, SEMICOLON, ID, ASSIGN, ID, SEMICOLON, ID, ASSIGN, ID, PLUS, ID, SEMICOLON } },
-    { "a = b; // A comment", 4, (int32_t[]) { ID, ASSIGN, ID, SEMICOLON } },
-    { "a = b; // A comment\n", 4, (int32_t[]) { ID, ASSIGN, ID, SEMICOLON } },
+    { "a = a; b = b; long_name = a + long_name; // A comment",
+        ARRAY_LIT(i32, { ID, ASSIGN, ID, SEMICOLON, ID, ASSIGN, ID, SEMICOLON, ID, ASSIGN, ID, PLUS, ID, SEMICOLON }) },
+    { "a = b; // A comment",
+        ARRAY_LIT(i32, { ID, ASSIGN, ID, SEMICOLON }) },
+    { "a = b; // A comment\n",
+        ARRAY_LIT(i32, { ID, ASSIGN, ID, SEMICOLON }) },
 };

@@ -7,10 +7,10 @@
 #include "lexer.h"
 #include "parser.h"
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-    char* filepath = "in/input.txt";
-    char* mode = "compile";
+    char *filepath = "in/input.txt";
+    char *mode = "compile";
 
     if (argc >= 2) {
         if (argc >= 3) {
@@ -21,7 +21,7 @@ int main(int argc, char** argv)
         }
     }
 
-    FILE* input_stream = open_file_for_reading(filepath);
+    FILE *input_stream = open_file_for_reading(filepath);
 
     if (0 == strcmp(mode, "lex")) {
         bool lexsuccess = lex(input_stream);
@@ -30,7 +30,8 @@ int main(int argc, char** argv)
         }
 
         for (i32 i = 0; i < G_tok_seq.tokens_cnt; i++) {
-            token_t* t = &G_tok_seq.tokens[i];
+            token_t *t = &G_tok_seq.tokens[i];
+
             printf("Token[%d]: \"%s\"\t\t[kind = %s (%d), yylloc=(%d, %d)]\n",
                 i,
                 t->lexeme,
@@ -47,7 +48,7 @@ int main(int argc, char** argv)
         }
 
         for (i32 i = 0; i < G_ast.nodes_cnt; i++) {
-            ast_node_t* node = &G_ast.nodes[i];
+            ast_node_t *node = &G_ast.nodes[i];
             printf("NODE: {idx: %d, lexeme: \"%s\", kind = %d, skind = %s}\n",
                 i,
                 node->tok->lexeme,

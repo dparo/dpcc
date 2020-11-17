@@ -9,16 +9,16 @@
 #include "globals.h"
 
 /// Equivalent to malloc
-void* dallnew(mctx_t* ctx, size_t size)
+void *dallnew(mctx_t *ctx, size_t size)
 {
-    ctx->allocs = realloc(ctx->allocs, sizeof(void*) * (ctx->num_allocs + 1));
+    ctx->allocs = realloc(ctx->allocs, sizeof(void *) * (ctx->num_allocs + 1));
     ctx->allocs[ctx->num_allocs] = calloc(1, size);
     ctx->num_allocs += 1;
     return ctx->allocs[ctx->num_allocs - 1];
 }
 
 /// Equivalent to realloc
-void* dallrsz(mctx_t* ctx, void* ptr, size_t new_size)
+void *dallrsz(mctx_t *ctx, void *ptr, size_t new_size)
 {
     i32 alloc_idx = -1;
     for (i32 i = 0; i < ctx->num_allocs; i++) {
@@ -40,7 +40,7 @@ void* dallrsz(mctx_t* ctx, void* ptr, size_t new_size)
 }
 
 /// Equivalent to free
-void dalldel(mctx_t* ctx, void* ptr)
+void dalldel(mctx_t *ctx, void *ptr)
 {
     if (!ptr)
         return;
@@ -63,7 +63,7 @@ void dalldel(mctx_t* ctx, void* ptr)
 }
 
 /// Clears all memory allocations
-void dallclr(mctx_t* ctx)
+void dallclr(mctx_t *ctx)
 {
     if (ctx->allocs) {
         for (i32 i = 0; i < ctx->num_allocs; i++) {
@@ -76,15 +76,15 @@ void dallclr(mctx_t* ctx)
     }
 }
 
-void* dallstl(mctx_t* ctx, void* ptr)
+void *dallstl(mctx_t *ctx, void *ptr)
 {
-    ctx->allocs = realloc(ctx->allocs, sizeof(void*) * (ctx->num_allocs + 1));
+    ctx->allocs = realloc(ctx->allocs, sizeof(void *) * (ctx->num_allocs + 1));
     ctx->allocs[ctx->num_allocs] = ptr;
     ctx->num_allocs += 1;
     return ctx->allocs[ctx->num_allocs - 1];
 }
 
-bool str_to_i32(char* string, i32* out)
+bool str_to_i32(char *string, i32 *out)
 {
     size_t len = strlen(string);
     int base = 10;
@@ -107,7 +107,7 @@ bool str_to_i32(char* string, i32* out)
         len -= 2;
     }
 
-    char* endptr = NULL;
+    char *endptr = NULL;
     errno = 0;
     intmax_t conv_ret_val = strtoimax(string, &endptr, base);
 
@@ -124,11 +124,11 @@ bool str_to_i32(char* string, i32* out)
     return result;
 }
 
-bool str_to_f32(char* string, f32* out)
+bool str_to_f32(char *string, f32 *out)
 {
     size_t len = strlen(string);
 
-    char* endptr = NULL;
+    char *endptr = NULL;
 
     errno = 0;
     f32 conv_ret_val = strtof(string, &endptr);
@@ -146,27 +146,27 @@ bool str_to_f32(char* string, f32* out)
     return result;
 }
 
-void tokens_seq_clear(token_seq_t* tseq)
+void tokens_seq_clear(token_seq_t *tseq)
 {
     dalldel(&G_allctx, tseq->tokens);
     tseq->tokens = NULL;
     tseq->tokens_cnt = 0;
 }
 
-void ast_clear(ast_t* ast)
+void ast_clear(ast_t *ast)
 {
     dalldel(&G_allctx, ast->nodes);
     ast->nodes = NULL;
     ast->nodes_cnt = 0;
 }
 
-char* lexeme_intern(char* yytext)
+char *lexeme_intern(char *yytext)
 {
-    char* intern = NULL;
+    char *intern = NULL;
     ptrdiff_t index = shgeti(G_str_intern, yytext);
     if (index < 0) {
-        char* key = dallstl(&G_allctx, strdup(yytext));
-        char* value = key;
+        char *key = dallstl(&G_allctx, strdup(yytext));
+        char *value = key;
         shput(G_str_intern, key, value);
         intern = value;
     } else {
@@ -176,18 +176,20 @@ char* lexeme_intern(char* yytext)
     return intern;
 }
 
-token_t* token_push(YYLTYPE yylloc, char* yytext, int yychar, char* yychar_str)
+token_t *token_push(YYLTYPE yylloc, char *yytext, int yychar, char *yychar_str)
 {
-    token_seq_t* tseq = &G_tok_seq;
+    token_seq_t *tseq = &G_tok_seq;
 
     token_t token = {
-        .lexeme = (char*)lexeme_intern(yytext),
+        .lexeme = (char *)lexeme_intern(yytext),
         .kind = yychar,
         .skind = yychar_str,
         .yylloc = yylloc,
     };
 
-    void* ptr = dallrsz(&G_allctx, tseq->tokens, (tseq->tokens_cnt + 1) * sizeof(*tseq->tokens));
+    token.idx = G_tok_seq.tokens_cnt;
+
+    void *ptr = dallrsz(&G_allctx, tseq->tokens, (tseq->tokens_cnt + 1) * sizeof(*tseq->tokens));
 
     if (ptr == NULL) {
         fprintf(stderr, "ast_push :: Failed memory allocation\n");
@@ -202,15 +204,15 @@ token_t* token_push(YYLTYPE yylloc, char* yytext, int yychar, char* yychar_str)
     return &tseq->tokens[tseq->tokens_cnt - 1];
 }
 
-ast_node_t* ast_push(token_t* t, isize num_childs, ast_node_t** childs)
+ast_node_t *ast_push(token_t *t, isize num_childs, ast_node_t **childs)
 {
-    ast_t* ast = &G_ast;
+    ast_t *ast = &G_ast;
 
     ast_node_t node = {
         .tok = t,
     };
 
-    void* ptr = dallrsz(&G_allctx, ast->nodes, (ast->nodes_cnt + 1) * sizeof(*ast->nodes));
+    void *ptr = dallrsz(&G_allctx, ast->nodes, (ast->nodes_cnt + 1) * sizeof(*ast->nodes));
 
     if (ptr == NULL) {
         fprintf(stderr, "ast_push :: Failed memory allocation\n");

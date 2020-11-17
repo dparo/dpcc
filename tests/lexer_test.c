@@ -27,35 +27,35 @@ static void number_lexing_test(void)
     }
 }
 
-static void lex_test(i32 testidx, dpcc_test_t* test)
+static void lex_test(i32 testidx, dpcc_test_t *test)
 {
     bool lexsucc = lex(open_from_string(test->buffer));
-    bool expected_lex_success = test->num_expected_tokens != 0;
+    bool expected_lex_success = test->expected_tokens.cnt != 0;
 
-    TEST_ASSERT_NOT_NULL(test->expected_tokens);
+    TEST_ASSERT_NOT_NULL(test->expected_tokens.buf);
 
-    char* lexmsg;
+    char *lexmsg;
     asprintf(&lexmsg,
         "--- Fixture test [%d]:\n"
         "--- buffer:"
         "%s\n"
         "--- expected lex success: %d\n"
-        "--- expected tokens_cnt: %d\n"
+        "--- expected tokens_cnt: %zi\n"
         "--- found lex success: %d\n"
         "--- found tokens_cnt: %d\n",
         testidx,
         test->buffer,
         expected_lex_success,
-        test->num_expected_tokens,
+        test->expected_tokens.cnt,
         lexsucc,
         G_tok_seq.tokens_cnt);
 
     TEST_ASSERT_EQUAL_MESSAGE(expected_lex_success, lexsucc, lexmsg);
-    TEST_ASSERT_EQUAL_INT32_MESSAGE(test->num_expected_tokens, G_tok_seq.tokens_cnt, lexmsg);
+    TEST_ASSERT_EQUAL_INT32_MESSAGE(test->expected_tokens.cnt, G_tok_seq.tokens_cnt, lexmsg);
 
     for (i32 i = 0; i < G_tok_seq.tokens_cnt; i++) {
-        char* tokmsg;
-        i32 expected_kind = test->expected_tokens[i];
+        char *tokmsg;
+        i32 expected_kind = test->expected_tokens.buf[i];
         i32 found_kind = G_tok_seq.tokens[i].kind;
         asprintf(&tokmsg,
             "%s"
