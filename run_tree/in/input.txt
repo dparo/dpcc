@@ -1,11 +1,5 @@
 
-a = '\0xCC';
+a = b + c;
+left1 = right1 + right2;
 
-a = b;
-a = b;
-a = b;
-a = b;
-
-
-// a = b * (e + 2);
-// var1 = (var2 + 3) * 2;
+a = 10;

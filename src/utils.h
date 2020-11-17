@@ -76,7 +76,9 @@ void tokens_seq_clear(token_seq_t *tseq);
 token_t *token_push(YYLTYPE yylloc, char *yytext, int yychar, char *yychar_str);
 
 void ast_clear(ast_t *ast);
-ast_node_t *ast_push(token_t *t, isize num_childs, ast_node_t **childs);
+ast_node_t *ast_push(token_t *t, int32_t kind, char *skind, isize num_childs, ast_node_t **childs);
 
 bool str_to_i32(char *string, i32 *out);
 bool str_to_f32(char *string, f32 *out);
+bool str_to_char(char *string, char *out);
+bool str_to_bool(char *string, bool *out);

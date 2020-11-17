@@ -204,12 +204,14 @@ token_t *token_push(YYLTYPE yylloc, char *yytext, int yychar, char *yychar_str)
     return &tseq->tokens[tseq->tokens_cnt - 1];
 }
 
-ast_node_t *ast_push(token_t *t, isize num_childs, ast_node_t **childs)
+ast_node_t *ast_push(token_t *t, int32_t kind, char *skind, isize num_childs, ast_node_t **childs)
 {
     ast_t *ast = &G_ast;
 
     ast_node_t node = {
         .tok = t,
+        .kind = kind,
+        .skind = skind,
     };
 
     void *ptr = dallrsz(&G_allctx, ast->nodes, (ast->nodes_cnt + 1) * sizeof(*ast->nodes));
@@ -229,4 +231,51 @@ ast_node_t *ast_push(token_t *t, isize num_childs, ast_node_t **childs)
 
     memcpy(&ast->nodes[ast->nodes_cnt - 1], &node, sizeof(node));
     return &ast->nodes[ast->nodes_cnt - 1];
+}
+
+bool str_to_char(char *string, char *out)
+{
+    size_t len = strlen(string);
+    bool is_escaped = len >= 1 && string[0] == '\\';
+
+    if (len == 1) {
+        *out = string[0];
+        return true;
+    } else if (is_escaped && len == 2) {
+        char c = string[1];
+        char allowed_chars[] = {
+            '\0', '\a', '\b', '\t', '\n', '\v', '\f', '\r'
+        };
+        for (usize i = 0; i < ARRAY_LEN(allowed_chars); i++) {
+            if (c == allowed_chars[i]) {
+                *out = allowed_chars[i];
+                return true;
+            }
+        }
+    } else if (is_escaped && len == 5 && string[1] == '0' && string[2] == 'x') {
+        int32_t i;
+        bool conversion_success = str_to_i32(string + 1, &i);
+        bool in_range = i < 255 && i >= 0;
+        if (!in_range || !conversion_success) {
+            return false;
+        }
+        *out = (char)i;
+        return true;
+    } else {
+        return false;
+    }
+    return false;
+}
+
+bool str_to_bool(char *string, bool *out)
+{
+    if (0 == strcmp(string, "true")) {
+        *out = true;
+        return true;
+    } else if (0 == strcmp(string, "false")) {
+        *out = false;
+        return true;
+    } else {
+        return false;
+    }
 }

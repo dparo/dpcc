@@ -56,12 +56,15 @@ typedef struct {
 
 typedef struct ast_node {
     token_t *tok;
+    i32 kind;
+    char *skind;
 
     struct ast_node **childs;
 
     union {
         i32 i;
         f32 f;
+        char c;
         bool b;
     } val;
 } ast_node_t;

@@ -52,8 +52,8 @@ int main(int argc, char **argv)
             printf("NODE: {idx: %d, lexeme: \"%s\", kind = %d, skind = %s}\n",
                 i,
                 node->tok->lexeme,
-                node->tok->kind,
-                node->tok->skind);
+                node->kind,
+                node->skind);
         }
     } else {
         fprintf(stderr, "Invalid code path\n");

@@ -57,6 +57,7 @@ mul      "*"
 i32_lit         [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
 f32_lit         [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)(f|F)?
 char_lit        "'"({alphanum}|{punct}|{escape_seq}|(\\0x{hex}{2}))"'"
+bool_lit        true|false
 string_lit      ["](([\\]["])|([^"]))*["]
 
 
@@ -89,9 +90,10 @@ EOF              { FWD(YYEOF); }
 
 {id}             { FWD(ID); }
 
-{i32_lit}        { FWD(I32_LIT); }
+{i32_lit}        { FWD(I32_LIT);  }
 {f32_lit}        { FWD(F32_LIT); }
 {char_lit}       { FWD(CHAR_LIT); }
+{bool_lit}       { FWD(BOOL_LIT); }
 {string_lit}     { FWD(STRING_LIT); }
 
 

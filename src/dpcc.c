@@ -56,7 +56,6 @@ bool lex(FILE *input_stream)
     int result = 0;
     int kind = 0;
     while ((kind = yylex()) != YYEOF) {
-        printf("lex kind returned %d for string (%s)\n", kind, yytext);
         if (kind == YYUNDEF || kind == YYerror) {
             result = kind;
             break;

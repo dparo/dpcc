@@ -15,8 +15,72 @@ void yyerror(char const *s);
 int  yylex(void);
 
 
-#define PARSER_FWD(X) \
-        (void) ast_push(yylval, (isize) 0, NULL)
+#define PUSH(X) \
+    ast_push(yylval, X, #X, (isize) 0, NULL)
+
+
+static inline void gen_error(char *msg) {
+    fprintf(stderr, "%s\n", msg);
+}
+
+static bool yacc_from_str_to_i32(ast_node_t *node) {
+    int32_t i = 0;
+    bool success = str_to_i32(node->tok->lexeme, &i);
+    if (success == false) {
+        gen_error("Invalid integer");
+    } else {
+        node->val.i = i;
+    }
+    return success;
+}
+
+static bool yacc_from_str_to_f32(ast_node_t *node) {
+    f32 f = 0;
+    bool success = str_to_f32(node->tok->lexeme, &f);
+    if (success == false) {
+        gen_error("Invalid float");
+    } else {
+        node->val.f = f;
+    }
+    return success;
+}
+
+static bool yacc_from_str_to_char(ast_node_t *node) {
+    char c = 0;
+    bool success = str_to_char(node->tok->lexeme, &c);
+    if (success == false) {
+        gen_error("Invalid char");
+    } else {
+        node->val.c = c;
+    }
+    return success;
+}
+
+static bool yacc_from_str_to_bool(ast_node_t *node) {
+    bool b = 0;
+    bool success = str_to_bool(node->tok->lexeme, &b);
+    if (success == false) {
+        gen_error("Invalid boolean");
+    } else {
+        node->val.b = b;
+    }
+    return success;
+}
+
+
+
+
+#define YACC_FROM_STR_TO_I32(node) \
+    do { if(!yacc_from_str_to_i32(node)) { YYERROR; } } while(0)
+
+#define YACC_FROM_STR_TO_F32(node) \
+    do { if(!yacc_from_str_to_f32(node)) { YYERROR; } } while(0)
+
+#define YACC_FROM_STR_TO_CHAR(node) \
+    do { if(!yacc_from_str_to_char(node)) { YYERROR; } } while(0)
+
+#define YACC_FROM_STR_TO_BOOL(node) \
+    do { if(!yacc_from_str_to_bool(node)) { YYERROR; } } while(0)
 
 %}
 
@@ -25,6 +89,7 @@ int  yylex(void);
 %token                  I32_LIT
 %token                  F32_LIT
 %token                  CHAR_LIT
+%token                  BOOL_LIT
 %token                  STRING_LIT
 
 %token                  ASSIGN
@@ -58,19 +123,21 @@ lines:           line lines
 line:            statement
         ;
 
-statement:      ID ASSIGN expr SEMICOLON { PARSER_FWD(STATEMENT); }
-        |       SEMICOLON                { PARSER_FWD(SEMICOLON); }
+statement:      ID { PUSH(ID); } ASSIGN { PUSH(ASSIGN); } expr SEMICOLON { PUSH(STATEMENT); }
+        |       SEMICOLON                { PUSH(STATEMENT); }
         ;
 
-expr:           expr PLUS expr { PARSER_FWD(PLUS); }
-        |       expr MINUS expr { PARSER_FWD(MINUS); }
-        |       expr MUL expr { PARSER_FWD(MUL); }
-        |       MINUS expr  %prec NEG { PARSER_FWD(NEG); }
-        |       OPEN_PAREN expr CLOSE_PAREN { PARSER_FWD(OPEN_PAREN); }
-        |       ID { PARSER_FWD(ID); }
-        |       I32_LIT { PARSER_FWD(I32_LIT); }
-        |       F32_LIT { PARSER_FWD(F32_LIT); }
-        |       CHAR_LIT { PARSER_FWD(CHAR_LIT); }
+expr:           expr PLUS { PUSH(PLUS); } expr 
+        |       expr MINUS expr { PUSH(MINUS); }
+        |       expr MUL expr { PUSH(MUL); }
+        |       MINUS expr  %prec NEG { PUSH(NEG); }
+        |       OPEN_PAREN expr CLOSE_PAREN { PUSH(OPEN_PAREN); }
+        |       ID { PUSH(ID); }
+        
+        |       I32_LIT    { YACC_FROM_STR_TO_I32(PUSH(I32_LIT)); }
+        |       F32_LIT    { YACC_FROM_STR_TO_F32(PUSH(F32_LIT)); }
+        |       CHAR_LIT   { YACC_FROM_STR_TO_F32(PUSH(CHAR_LIT)); }
+        |       BOOL_LIT   { YACC_FROM_STR_TO_BOOL(PUSH(BOOL_LIT)); }
         ;
 
 %%
