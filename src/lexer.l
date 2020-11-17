@@ -21,7 +21,7 @@
 #define FWD(X) \
     do {  \
         STRIP();                    \
-        yylval = token_push(yylloc, yytext, (X), (#X)); \
+        yyltoken = token_push(yylloc, yytext, (X), (#X)); \
         return (X);   \
     } while(0)
 

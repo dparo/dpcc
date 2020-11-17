@@ -79,7 +79,7 @@ typedef struct {
     char *value;
 } str_str_key_value_t;
 
-#define YYSTYPE token_t *
+#define YYSTYPE ast_node_t *
 
 enum DPCC_LOG_COLOR {
     DPCC_LOG_COLOR_RESET,

@@ -9,7 +9,7 @@
 
 int main(int argc, char **argv)
 {
-    char *filepath = "in/input.txt";
+    char *filepath = "run_tree/in/input.txt";
     char *mode = "compile";
 
     if (argc >= 2) {

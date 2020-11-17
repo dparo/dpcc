@@ -16,7 +16,7 @@ int  yylex(void);
 
 
 #define PUSH(X) \
-    ast_push(yylval, X, #X, (isize) 0, NULL)
+    ast_push(yyltoken, X, #X, (isize) 0, NULL)
 
 
 static inline void gen_error(char *msg) {
