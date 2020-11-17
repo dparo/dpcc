@@ -32,7 +32,7 @@ add_library(libstb STATIC
 target_include_directories(libstb PUBLIC third_party/stb)
 
 add_library(libdpcc STATIC
-  src/dpcc.c src/dpcc.h src/globals.c src/utils.c
+  src/dpcc.c src/dpcc.h src/globals.c src/utils.c src/log.c
   ${BISON_parser_OUTPUTS}
   ${FLEX_lexer_OUTPUTS}
   )

@@ -9,6 +9,7 @@
 #include "utils.h"
 #include "lexer.h"
 #include "parser.h"
+#include "log.h"
 #define YYERROR_VERBOSE 1
 
 void yyerror(char const *s);
@@ -127,7 +128,7 @@ statement:      ID { PUSH(ID); } ASSIGN { PUSH(ASSIGN); } expr SEMICOLON { PUSH(
         |       SEMICOLON               { PUSH(STATEMENT); }
         ;
 
-expr:           expr PLUS { PUSH(PLUS); } expr 
+expr:           expr PLUS { PUSH(PLUS); } expr
         |       expr MINUS expr { PUSH(MINUS); }
         |       expr MUL expr { PUSH(MUL); }
         |       MINUS expr  %prec NEG { PUSH(NEG); }

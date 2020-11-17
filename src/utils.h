@@ -3,7 +3,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "types.h"
-
 #include <stb_ds.h>
 
 #define ARGS(...) __VA_ARGS__
@@ -86,7 +85,3 @@ bool str_to_i32(char *string, i32 *out);
 bool str_to_f32(char *string, f32 *out);
 bool str_to_char(char *string, char *out);
 bool str_to_bool(char *string, bool *out);
-
-void dpcc_set_log_color(FILE *stream, enum DPCC_LOG_COLOR out_color);
-void dpcc_log(enum DPCC_LOG_SEVERITY severity, ast_node_t *node, char *fmt, ...)
-    __attribute__((format(printf, 3, 4)));

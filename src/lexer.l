@@ -37,7 +37,7 @@ static inline int yywrap(void)
 
 
 eol      (\r\n?)|\n
- 
+
 ws       [\t\v" "]
 comment  "//".*
 
