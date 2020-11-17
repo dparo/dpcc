@@ -80,3 +80,16 @@ typedef struct {
 } str_str_key_value_t;
 
 #define YYSTYPE token_t *
+
+enum DPCC_LOG_COLOR {
+    DPCC_LOG_COLOR_RESET,
+    DPCC_LOG_COLOR_RED,
+    DPCC_LOG_COLOR_YELLOW,
+    DPCC_LOG_COLOR_GREEN,
+};
+
+enum DPCC_LOG_SEVERITY {
+    DPCC_SEVERITY_ERROR,
+    DPCC_SEVERITY_WARNING,
+    DPCC_SEVERITY_INFO,
+};

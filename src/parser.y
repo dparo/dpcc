@@ -124,7 +124,7 @@ line:            statement
         ;
 
 statement:      ID { PUSH(ID); } ASSIGN { PUSH(ASSIGN); } expr SEMICOLON { PUSH(STATEMENT); }
-        |       SEMICOLON                { PUSH(STATEMENT); }
+        |       SEMICOLON               { PUSH(STATEMENT); }
         ;
 
 expr:           expr PLUS { PUSH(PLUS); } expr 
@@ -133,7 +133,6 @@ expr:           expr PLUS { PUSH(PLUS); } expr
         |       MINUS expr  %prec NEG { PUSH(NEG); }
         |       OPEN_PAREN expr CLOSE_PAREN { PUSH(OPEN_PAREN); }
         |       ID { PUSH(ID); }
-        
         |       I32_LIT    { YACC_FROM_STR_TO_I32(PUSH(I32_LIT)); }
         |       F32_LIT    { YACC_FROM_STR_TO_F32(PUSH(F32_LIT)); }
         |       CHAR_LIT   { YACC_FROM_STR_TO_F32(PUSH(CHAR_LIT)); }

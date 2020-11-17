@@ -21,6 +21,7 @@ int main(int argc, char **argv)
         }
     }
 
+    printf("Opening file: `%s`\n", filepath);
     FILE *input_stream = open_file_for_reading(filepath);
 
     if (0 == strcmp(mode, "lex")) {
@@ -54,6 +55,11 @@ int main(int argc, char **argv)
                 node->tok->lexeme,
                 node->kind,
                 node->skind);
+        }
+    } else if (0 == strcmp(mode, "compile") || (0 == strcmp(mode, "cc"))) {
+        bool compile_success = compile(input_stream, stdout);
+        if (!compile_success) {
+            return -1;
         }
     } else {
         fprintf(stderr, "Invalid code path\n");

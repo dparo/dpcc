@@ -2,6 +2,7 @@
 #include "globals.h"
 #include "lexer.h"
 #include "parser.h"
+#include "types.h"
 #include "utils.h"
 
 #include <assert.h>
@@ -85,4 +86,29 @@ bool parse(FILE *input_stream)
     }
 
     return result == 0;
+}
+
+bool compile(FILE *input_stream, FILE *output_stream)
+{
+    reset();
+
+    if (input_stream == NULL) {
+        fprintf(stderr, "dpcc::parse() --- NULL input_stream\n");
+        abort();
+    }
+    if (output_stream == NULL) {
+        output_stream = stdout;
+    }
+
+    bool parse_success = parse(input_stream);
+    if (!parse_success) {
+        return false;
+    }
+
+    for (usize node_idx = 0; node_idx < G_ast.nodes_cnt; node_idx++) {
+        ast_node_t *node = &G_ast.nodes[node_idx];
+        dpcc_log(DPCC_SEVERITY_WARNING, node, "Hello from node (lexeme: `%s`, skind: %s)\n", node->tok->lexeme, node->skind);
+    }
+
+    return true;
 }
