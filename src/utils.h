@@ -7,7 +7,6 @@
 #include <stb_ds.h>
 
 #define ARGS(...) __VA_ARGS__
-
 #define ARRAY_LEN_SIMPLE(x) ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
 
 #if defined(__GNUC__) && defined(__GNUC_MINOR__)

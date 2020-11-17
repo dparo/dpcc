@@ -1,4 +1,4 @@
-%option yylineno
+%option nodefault
 
 %{
 #include "parser.h"
@@ -14,7 +14,7 @@
 #define ERROR() \
     do { \
         STRIP(); \
-        fprintf(stderr, "LEXER UNRECOGNIZED CHAR {%s}\n", yytext);\
+        fprintf(stderr, "LEXER UNRECOGNIZED CHAR '%s'\n", yytext);\
         return YYUNDEF; \
     } while(0)
 
@@ -25,6 +25,14 @@
         return (X);   \
     } while(0)
 
+
+/// yywrap: return 1 to stop the parser/lexer upon encountering EOF.
+/// Return 0 and setup a new yyin in order to continue lexing from the new file
+static inline int yywrap(void)
+{
+    return 1;
+}
+
 %}
 
 
@@ -33,18 +41,23 @@ eol      (\r\n)|\n
 ws       [\t\v" "]
 comment  "//".*
 
-digit    [0-9]
-alpha    [a-zA-Z_]
-alphanum {alpha}|{digit}
+digit       [0-9]
+hex         [0-9a-fA-F]
+alpha       [a-zA-Z_]
+alphanum    {alpha}|{digit}
+punct       [ !\"#$%&'()*+,-./:;<=>?@\\\]\[^`{|}~]
+escape_seq  \\0|\\a|\\b|\\t|\\n|\\v|\\f|\\r
+
 id       {alpha}{alphanum}*
 assign   "="
 plus     "+"
 minus     "+"
 mul      "*"
 
+i32_lit   [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
+f32_lit   [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)
+char_lit  "'"({alphanum}|{punct}|{escape_seq}|(\\0x{hex}{2}))"'"
 
-i32_lit      [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
-f32_lit      [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)
 
 
 /* Handling utf-8 characters: specifying illegal chars */
@@ -77,6 +90,7 @@ EOF              { FWD(YYEOF); }
 
 {i32_lit}        { FWD(I32_LIT); }
 {f32_lit}        { FWD(F32_LIT); }
+{char_lit}       { FWD(CHAR_LIT); }
 
 
 ";"              { FWD(SEMICOLON); }

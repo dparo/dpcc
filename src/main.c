@@ -55,9 +55,12 @@ int main(int argc, char **argv)
                 node->tok->kind,
                 node->tok->skind);
         }
+    } else {
+        fprintf(stderr, "Invalid code path\n");
+        fflush(stderr);
+        return -1;
     }
 
-    fprintf(stderr, "Invalid code path\n");
     fflush(stderr);
-    return -1;
+    return 0;
 }

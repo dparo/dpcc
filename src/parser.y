@@ -24,6 +24,7 @@ int  yylex(void);
 %token                  ID
 %token                  I32_LIT
 %token                  F32_LIT
+%token                  CHAR_LIT
 
 %token                  ASSIGN
 %token                  PLUS
@@ -68,6 +69,7 @@ expr:           expr PLUS expr { PARSER_FWD(PLUS); }
         |       ID { PARSER_FWD(ID); }
         |       I32_LIT { PARSER_FWD(I32_LIT); }
         |       F32_LIT { PARSER_FWD(F32_LIT); }
+        |       CHAR_LIT { PARSER_FWD(CHAR_LIT); }
         ;
 
 %%
@@ -77,10 +79,4 @@ void yyerror (char const *s)
     extern int yylineno;
     fprintf(stderr, "Error at yylineno: %d, yylloc=(%d, %d)\n\t%s\n", yylineno, yylloc.line, yylloc.column, s);
     yy_errored_out = true;
-}
-
-// yywrap: return 1 to stop the parser/lexer upon encountering EOF
-int yywrap(void)
-{
-    return 1;
 }

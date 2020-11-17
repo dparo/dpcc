@@ -10,9 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-FILE* open_from_string(char* string)
+FILE *open_from_string(char *string)
 {
-    FILE* result = fmemopen(string, strlen(string), "r");
+    FILE *result = fmemopen(string, strlen(string), "r");
     if (result == NULL) {
         fprintf(stderr, "Failed create FILE* stream from string\n");
         abort();
@@ -21,9 +21,9 @@ FILE* open_from_string(char* string)
     return result;
 }
 
-FILE* open_file_for_reading(char* filepath)
+FILE *open_file_for_reading(char *filepath)
 {
-    FILE* result = fopen(filepath, "r");
+    FILE *result = fopen(filepath, "r");
     if (result == NULL) {
         fprintf(stderr, "Failed to open file for reading (%s)\n", filepath);
         abort();
@@ -38,7 +38,7 @@ static void reset(void)
     clear_all_global_vars();
 }
 
-bool lex(FILE* input_stream)
+bool lex(FILE *input_stream)
 {
     reset();
 
@@ -46,11 +46,17 @@ bool lex(FILE* input_stream)
         fprintf(stderr, "dpcc::lex() --- NULL input_stream\n");
         abort();
     }
+
+#if 1
+    yyrestart(input_stream);
+#else
     yyin = input_stream;
+#endif
 
     int result = 0;
     int kind = 0;
     while ((kind = yylex()) != YYEOF) {
+        printf("lex kind returned %d for string (%s)\n", kind, yytext);
         if (kind == YYUNDEF || kind == YYerror) {
             result = kind;
             break;
@@ -60,7 +66,7 @@ bool lex(FILE* input_stream)
     return result == 0;
 }
 
-bool parse(FILE* input_stream)
+bool parse(FILE *input_stream)
 {
     reset();
 
