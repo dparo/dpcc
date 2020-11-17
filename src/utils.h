@@ -11,6 +11,14 @@
     (TYPE[]) { __VA_ARGS__ }
 #define ARRAY_LEN(A) (sizeof(A) / sizeof((A)[0]))
 
+/// @Example:
+/// ```c
+/// typedef struct { int32_t *buf, isize cnt; } int32_array_t;
+/// ...
+/// int32_array_t a = ARRAY_LIT(int32_t, {5, 6, 7});
+/// a.buf[0] -> 5
+/// a.cnt -> 3
+/// ```
 #define ARRAY_LIT(TYPE, ...)                         \
     (TYPE##_array_t)                                 \
     {                                                \
