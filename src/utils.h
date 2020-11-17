@@ -7,7 +7,8 @@
 #include <stb_ds.h>
 
 #define ARGS(...) __VA_ARGS__
-#define ARRAY_LEN(A) (sizeof(A) / sizeof((A)[0]))
+
+#define ARRAY_LEN_SIMPLE(x) ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
 
 #if defined(__GNUC__) && defined(__GNUC_MINOR__)
 #define GNUC_VERSION \
@@ -33,11 +34,11 @@
 
 #ifdef __cplusplus
 template <typename T, size_t N>
-char (&ARRAY_SIZE_HELPER(T (&array)[N]))[N];
-#define ARRAY_SIZE(array) \
-    (sizeof(ARRAY_SIZE_HELPER(array)))
+char (&ARRAY_LEN_HELPER(T (&array)[N]))[N];
+#define ARRAY_LEN(array) \
+    (sizeof(ARRAY_LEN_HELPER(array)))
 #else
-#define ARRAY_SIZE(a) (      \
+#define ARRAY_LEN(a) (       \
     (sizeof(a) / sizeof(*a)) \
     + MUST_BE_ARRAY(a))
 #endif
@@ -50,11 +51,11 @@ char (&ARRAY_SIZE_HELPER(T (&array)[N]))[N];
 /// a.buf[0] -> 5
 /// a.cnt -> 3
 /// ```
-#define ARRAY_LIT(TYPE, ...)                         \
-    (TYPE##_array_t)                                 \
-    {                                                \
-        ((int32_t[])__VA_ARGS__),                    \
-            ARRAY_LEN((int32_t[])ARGS(__VA_ARGS__)), \
+#define ARRAY_LIT(TYPE, ...)                                \
+    (TYPE##_array_t)                                        \
+    {                                                       \
+        ((int32_t[])__VA_ARGS__),                           \
+            ARRAY_LEN_SIMPLE((int32_t[])ARGS(__VA_ARGS__)), \
     }
 
 /// Equivalent to malloc
