@@ -25,6 +25,7 @@ int  yylex(void);
 %token                  I32_LIT
 %token                  F32_LIT
 %token                  CHAR_LIT
+%token                  STRING_LIT
 
 %token                  ASSIGN
 %token                  PLUS

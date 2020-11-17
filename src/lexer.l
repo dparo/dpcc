@@ -36,7 +36,7 @@ static inline int yywrap(void)
 %}
 
 
-eol      (\r\n)|\n
+eol      (\r\n?)|\n
  
 ws       [\t\v" "]
 comment  "//".*
@@ -54,9 +54,10 @@ plus     "+"
 minus     "+"
 mul      "*"
 
-i32_lit   [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
-f32_lit   [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)
-char_lit  "'"({alphanum}|{punct}|{escape_seq}|(\\0x{hex}{2}))"'"
+i32_lit         [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
+f32_lit         [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)(f|F)?
+char_lit        "'"({alphanum}|{punct}|{escape_seq}|(\\0x{hex}{2}))"'"
+string_lit      ["](([\\]["])|([^"]))*["]
 
 
 
@@ -91,6 +92,7 @@ EOF              { FWD(YYEOF); }
 {i32_lit}        { FWD(I32_LIT); }
 {f32_lit}        { FWD(F32_LIT); }
 {char_lit}       { FWD(CHAR_LIT); }
+{string_lit}     { FWD(STRING_LIT); }
 
 
 ";"              { FWD(SEMICOLON); }
