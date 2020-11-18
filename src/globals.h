@@ -3,7 +3,6 @@
 #include "types.h"
 
 extern token_t *yyltoken;
-extern bool yy_errored_out;
 extern int32_t yyprevcol;
 extern YYLTYPE yylloc;
 

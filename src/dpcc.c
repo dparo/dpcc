@@ -79,13 +79,6 @@ bool parse(FILE *input_stream)
     yyin = input_stream;
 
     int result = yyparse();
-
-    if (result == 0) {
-        assert(yy_errored_out == false);
-    } else if (result == 1) {
-        assert(yy_errored_out == true);
-    }
-
     return result == 0;
 }
 

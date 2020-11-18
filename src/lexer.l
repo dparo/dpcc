@@ -48,7 +48,7 @@ alphanum    {alpha}|{digit}
 punct       [ !\"#$%&'()*+,-./:;<=>?@\\\]\[^`{|}~]
 escape_seq  \\0|\\a|\\b|\\t|\\n|\\v|\\f|\\r
 
-id       {alpha}{alphanum}*
+
 assign   "="
 plus     "+"
 minus     "+"
@@ -60,6 +60,8 @@ char_lit        "'"({alphanum}|{punct}|{escape_seq}|(\\0x{hex}{2}))"'"
 bool_lit        true|false
 string_lit      ["](([\\]["])|([^"]))*["]
 
+
+id       {alpha}{alphanum}*
 
 
 /* Handling utf-8 characters: specifying illegal chars */
@@ -88,8 +90,6 @@ EOF              { FWD(YYEOF); }
 {comment}         { STRIP(); }
 
 
-{id}             { FWD(ID); }
-
 {i32_lit}        { FWD(I32_LIT);  }
 {f32_lit}        { FWD(F32_LIT); }
 {char_lit}       { FWD(CHAR_LIT); }
@@ -97,6 +97,7 @@ EOF              { FWD(YYEOF); }
 {string_lit}     { FWD(STRING_LIT); }
 
 
+":"              { FWD(COLON); }
 ";"              { FWD(SEMICOLON); }
 "="              { FWD(ASSIGN); }
 "+"              { FWD(PLUS); }
@@ -106,7 +107,19 @@ EOF              { FWD(YYEOF); }
 "("              { FWD(OPEN_PAREN); }
 ")"              { FWD(CLOSE_PAREN); }
 
+int         { FWD(KW_INT); }
+float       { FWD(KW_INT); }
+bool        { FWD(KW_INT); }
 
+let         { FWD(KW_LET); }
+if          { FWD(KW_IF); }
+else        { FWD(KW_ELSE); }
+do          { FWD(KW_DO); }
+while       { FWD(KW_WHILE); }
+for         { FWD(KW_FOR);  }
+
+
+{id}             { FWD(ID); }
 .                { ERROR(); }
 
 

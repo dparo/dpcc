@@ -1,5 +1,2 @@
-
-a = b + c;
-left1 = right1 + right2;
-
-a = 10;
+a = ;
+b = 10;

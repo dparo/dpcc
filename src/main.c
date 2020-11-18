@@ -56,7 +56,7 @@ int main(int argc, char **argv)
                 node->kind,
                 node->skind);
         }
-    } else if (0 == strcmp(mode, "compile") || (0 == strcmp(mode, "cc"))) {
+    } else if ((0 == strcmp(mode, "compile")) || (0 == strcmp(mode, "cc"))) {
         bool compile_success = compile(input_stream, stdout);
         if (!compile_success) {
             return -1;

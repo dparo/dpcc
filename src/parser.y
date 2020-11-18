@@ -98,10 +98,23 @@ static bool yacc_from_str_to_bool(ast_node_t *node) {
 %token                  MINUS
 %token                  MUL
 
+%token                  COLON
 %token                  SEMICOLON
 %token                  OPEN_PAREN
 %token                  CLOSE_PAREN
 %token                  STATEMENT
+
+
+%token KW_INT
+%token KW_FLOAT
+%token KW_BOOL
+
+%token KW_LET
+%token KW_IF
+%token KW_ELSE
+%token KW_WHILE
+%token KW_DO
+%token KW_FOR
 
 
 // Precedence of the operators
@@ -117,14 +130,23 @@ static bool yacc_from_str_to_bool(ast_node_t *node) {
 
 %%
 
-lines:           line lines
-        |        YYEOF                   {      }
+car:            stmt car
+        |       decl car
+        |       YYEOF                   {      }
         ;
 
-line:            statement
+decl:           KW_LET ID SEMICOLON
+        |       KW_LET ID ASSIGN expr SEMICOLON
+        |       KW_LET ID COLON type SEMICOLON
+        |       KW_LET ID COLON type ASSIGN expr SEMICOLON
         ;
 
-statement:      ID { PUSH(ID); } ASSIGN { PUSH(ASSIGN); } expr SEMICOLON { PUSH(STATEMENT); }
+type:           KW_INT
+        |       KW_FLOAT
+        |       KW_BOOL
+        ;
+
+stmt:           ID { PUSH(ID); } ASSIGN { PUSH(ASSIGN); } expr SEMICOLON { PUSH(STATEMENT); }
         |       SEMICOLON               { PUSH(STATEMENT); }
         ;
 
@@ -146,5 +168,4 @@ void yyerror (char const *s)
 {
     extern int yylineno;
     fprintf(stderr, "Error at yylineno: %d, yylloc=(%d, %d)\n\t%s\n", yylineno, yylloc.line, yylloc.column, s);
-    yy_errored_out = true;
 }

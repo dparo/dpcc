@@ -4,7 +4,6 @@
 #include "utils.h"
 #include <stb_ds.h>
 
-bool yy_errored_out = false;
 int32_t yyprevcol = 0;
 YYLTYPE yylloc = { 1, 0 };
 
@@ -20,8 +19,6 @@ void clear_all_global_vars()
     yyprevcol = 0;
     yylloc.line = 1;
     yylloc.column = 0;
-
-    yy_errored_out = false;
 
     yyltoken = NULL;
 
