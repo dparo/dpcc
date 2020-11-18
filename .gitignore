@@ -4,6 +4,8 @@ logs
 cache
 .gdb_history
 .log
+out
+report
 
 CMakeLists.txt.user
 CMakeCache.txt

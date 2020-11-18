@@ -1,4 +1,6 @@
 %define parse.error detailed
+/* Sets YYSTYPE used for semantic values */
+%define api.value.type {ast_node_t*}
 
 %code requires {
     /* This code block will be exported to the generated header file by bison */
@@ -102,6 +104,8 @@ static bool yacc_from_str_to_bool(ast_node_t *node) {
 %token                  SEMICOLON
 %token                  OPEN_PAREN
 %token                  CLOSE_PAREN
+%token                  OPEN_BRACE
+%token                  CLOSE_BRACE
 %token                  STATEMENT
 
 
@@ -128,10 +132,18 @@ static bool yacc_from_str_to_bool(ast_node_t *node) {
 %left                   MUL
 %right                  NEG
 
+
+/* When error recovery, bison may want to discard some symbols. So
+   it is generally good practice to free any allocated memory here. */
+// %destructor { printf ("Discarding TAG-FILLED symbol\n"); if(0) free ((void*) $$); } <*>
+// %destructor { printf ("Discarding TAG-LESS symbol\n"); if(0) free((void*) $$); } <>
+
 %%
 
-car:            stmt car
-        |       decl car
+
+/* Bison MANUAL says to prefer left recursion where possible (bounded stack space) */
+car:            car stmt
+        |       car decl
         |       YYEOF                   {      }
         ;
 
@@ -146,15 +158,26 @@ type:           KW_INT
         |       KW_BOOL
         ;
 
-stmt:           ID { PUSH(ID); } ASSIGN { PUSH(ASSIGN); } expr SEMICOLON { PUSH(STATEMENT); }
-        |       SEMICOLON               { PUSH(STATEMENT); }
+
+stmts:          stmts stmt
         ;
 
-expr:           expr PLUS { PUSH(PLUS); } expr
-        |       expr MINUS expr { PUSH(MINUS); }
-        |       expr MUL expr { PUSH(MUL); }
-        |       MINUS expr  %prec NEG { PUSH(NEG); }
-        |       OPEN_PAREN expr CLOSE_PAREN { PUSH(OPEN_PAREN); }
+stmt[res]:      assignment
+        |       if_statement
+        |       SEMICOLON               {  }
+        ;
+
+if_statement: KW_IF OPEN_PAREN expr CLOSE_PAREN OPEN_BRACE stmts CLOSE_BRACE
+        ;
+
+assignment[res]: ID { PUSH(ID); } ASSIGN { PUSH(ASSIGN); } expr SEMICOLON { PUSH(STATEMENT); }
+        ;
+
+expr[res]:      expr[lhs] PLUS expr[rhs] { PUSH(PLUS); }
+        |       expr[lhs] MINUS expr[rhs] { PUSH(MINUS); }
+        |       expr[lhs] MUL expr[rhs] { PUSH(MUL); }
+        |       MINUS expr[e]  %prec NEG { PUSH(NEG); }
+        |       OPEN_PAREN expr[e] CLOSE_PAREN { PUSH(OPEN_PAREN); }
         |       ID { PUSH(ID); }
         |       I32_LIT    { PUSH_I32(I32_LIT); }
         |       F32_LIT    { PUSH(F32_LIT); }

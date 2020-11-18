@@ -78,5 +78,3 @@ typedef struct {
     char *key;
     char *value;
 } str_str_key_value_t;
-
-#define YYSTYPE ast_node_t *

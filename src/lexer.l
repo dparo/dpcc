@@ -45,7 +45,9 @@ digit       [0-9]
 hex         [0-9a-fA-F]
 alpha       [a-zA-Z_]
 alphanum    {alpha}|{digit}
-punct       [ !\"#$%&'()*+,-./:;<=>?@\\\]\[^`{|}~]
+
+space       " "
+punct       "!\"#$%&'()*+,-./:;<=>?@[\\]^`{|}~"
 escape_seq  \\0|\\a|\\b|\\t|\\n|\\v|\\f|\\r
 
 
@@ -56,7 +58,7 @@ mul      "*"
 
 i32_lit         [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
 f32_lit         [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)(f|F)?
-char_lit        "'"({alphanum}|{punct}|{escape_seq}|(\\0x{hex}{2}))"'"
+char_lit        "'"({alphanum}|{punct}|{space}|{escape_seq}|(\\0x{hex}{2}))"'"
 bool_lit        true|false
 string_lit      ["](([\\]["])|([^"]))*["]
 
@@ -106,6 +108,9 @@ EOF              { FWD(YYEOF); }
 
 "("              { FWD(OPEN_PAREN); }
 ")"              { FWD(CLOSE_PAREN); }
+
+"{"              { FWD(OPEN_BRACE); }
+"}"              { FWD(CLOSE_BRACE); }
 
 int         { FWD(KW_INT); }
 float       { FWD(KW_INT); }
