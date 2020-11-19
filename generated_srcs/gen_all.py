@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import sys
 from datetime import datetime
 
@@ -55,6 +56,7 @@ def main():
     ]
 
     for v in gen_list:
+        os.makedirs(os.path.dirname(v['filepath']), exist_ok=True)
         with open(v['filepath'], 'w') as f:
             sys.stdout = f
             (v['fn'])()
