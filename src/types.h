@@ -34,7 +34,7 @@ typedef struct {
     char *filepath;
     i32 line;
     i32 column;
-} loc_t;
+} tokloc_t;
 
 typedef struct mctx {
     void **allocs;
@@ -47,7 +47,7 @@ typedef struct {
     char *lexeme;
     i32 kind;
     char *skind;
-    loc_t loc;
+    tokloc_t loc;
 } token_t;
 
 typedef struct {

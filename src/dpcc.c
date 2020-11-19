@@ -68,8 +68,8 @@ bool lex(char *filepath, FILE *input_stream)
 
     int result = 0;
     int kind = 0;
-    while ((kind = yylex()) != YYEOF) {
-        if (kind == YYUNDEF || kind == YYerror) {
+    while ((kind = yylex()) != TOK_YYEOF) {
+        if (kind == TOK_YYUNDEF || kind == TOK_YYerror) {
             result = kind;
             break;
         }

@@ -1,13 +1,23 @@
-
 // If you want to use glr-parse enable this 2 down below
 //     The second line specifies the expected number of reduce-reduce conflicts.
-//     Even though bison still reports conflicts. GLR parsers are meant to 
+//     Even though bison still reports conflicts. GLR parsers are meant to
 //     solve this type of conflicts any way. Thus it is possible to disable
 //%glr-parser
 //%expect-rr 1
 
-// Track locations
-%locations
+/*
+    Bison track locations. In the documentation setting this flag, or 
+    using any of @n for getting the locations enables bison to track
+    in its context the locations of the tokens. Bison manual
+    says that enabling this feature makes the parser considerably
+    slower. Thus Since we don't use this in the grammar,
+    and we do our location tracking externally anyway we leave this flag
+    commented out and we avoid using any `@n` locations refering in the actions
+    of the grammar
+*/
+
+// %locations
+// %define api.location.type {tokloc_t}
 
 
 // Write an extra output file containing verbose descriptions of the parser states
@@ -20,7 +30,6 @@
 %define api.symbol.prefix {YY_}
 %define api.token.prefix  {TOK_}
 %define api.value.type    {ast_node_t*}
-%define api.location.type {loc_t}
 
 %code requires {
     /* This code block will be exported to the generated header file by bison */
@@ -42,7 +51,7 @@
 %token                  STRING_LIT
 
 
-// The string representation of the tokens allows to show in the error message it's 
+// The string representation of the tokens allows to show in the error message it's
 // string representation rather than it's associated token kind name. And also
 // it allows us to refer to this tokens in the grammar using their string representation
 %token                  ASSIGN "="
@@ -139,7 +148,7 @@
 
 /* When error recovery, bison may want to discard some symbols. So
    it is generally good practice to free any allocated memory here. */
-// %destructor { printf ("Discarding TAG-FILLED symbol\n"); if(0) free ($$); } <*> 
+// %destructor { printf ("Discarding TAG-FILLED symbol\n"); if(0) free ($$); } <*>
 // %destructor { printf ("Discarding TAG-LESS symbol\n"); if(0) free($$); } <>
 
 
@@ -211,3 +220,21 @@ expr:           expr[lhs] "+" expr[rhs] %prec ADD     { PUSH(PLUS); }
 
 %%
 
+
+
+void yyerror(char const *s)
+{
+    extern int yylineno;
+
+    fprintf(stderr, "errors thus far: %d\n", yynerrs);
+    fprintf(stderr, "Error at yylineno: %d, yylloc=(%d, %d)\n\t%s\n", yylineno, yylloc.line, yylloc.column, s);
+}
+
+
+#if 0
+int yyreport_syntax_error (const yypcontext_t *ctx)
+{
+
+}
+
+#endif

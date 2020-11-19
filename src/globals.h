@@ -4,7 +4,7 @@
 
 extern token_t *yyltoken;
 extern int32_t yyprevcol;
-extern YYLTYPE yylloc;
+extern tokloc_t yylloc;
 
 extern str_str_key_value_t *G_str_intern;
 extern mctx_t G_allctx;

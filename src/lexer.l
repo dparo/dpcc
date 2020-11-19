@@ -15,14 +15,14 @@
     do { \
         STRIP(); \
         fprintf(stderr, "LEXER UNRECOGNIZED CHAR '%s'\n", yytext);\
-        return YYUNDEF; \
+        return TOK_YYUNDEF; \
     } while(0)
 
 #define FWD(X) \
     do {  \
         STRIP();                    \
-        yyltoken = token_push(yylloc, yytext, (X), (#X)); \
-        return (X);   \
+        yyltoken = token_push(yylloc, yytext, TOK_##X, (#X)); \
+        return (TOK_##X);   \
     } while(0)
 
 
@@ -80,7 +80,7 @@ NASCII      {UTF8_H2}|{UTF8_H3}|{UTF8_H4}
 
 
 NASCII           { FWD(YYUNDEF); }
-EOF              { FWD(YYEOF); }
+EOF              { FWD(YYEOF); }   /* Must return YYEOF upon EOF in order for bison to work */
 
 {eol}             { yylloc.line += 1; yylloc.column = 0; yyprevcol = 0; }
 {ws}              { STRIP(); }
@@ -120,7 +120,7 @@ for         { FWD(KW_FOR);  }
 
 
 {id}             { FWD(ID); }
-.                { ERROR(); }
+.                { ERROR(); } /* Returning YYUNDEF tells the parser that some lexical error was found. It will emit an error message about an “invalid token”, and enter error-recovery */
 
 
 %%

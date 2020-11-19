@@ -40,8 +40,8 @@ int main(int argc, char **argv)
                 t->lexeme,
                 t->skind,
                 t->kind,
-                t->yylloc.line,
-                t->yylloc.column);
+                t->loc.line,
+                t->loc.column);
         }
 
     } else if (0 == strcmp(mode, "parse")) {
