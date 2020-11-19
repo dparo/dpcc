@@ -1,3 +1,11 @@
+
+// If you want to use glr-parse enable this 2 down below
+//     The second line specifies the expected number of reduce-reduce conflicts.
+//     Even though bison still reports conflicts. GLR parsers are meant to 
+//     solve this type of conflicts any way. Thus it is possible to disable
+//%glr-parser
+//%expect-rr 1
+
 %define parse.error detailed
 /* Sets YYSTYPE used for semantic values */
 %define api.value.type {ast_node_t*}
@@ -113,18 +121,36 @@
 %left                   INC DEC
 
 
+// Printers are usefull for generating traces of the debugger
+%printer { fprintf (yyo, "{lexeme: \"%s\"skind: %s, yylloc=[%d, %d]}", $$->tok->lexeme, $$->tok->skind, $$->tok->yylloc.line, $$->tok->yylloc.column); } <>
+
+
 /* When error recovery, bison may want to discard some symbols. So
    it is generally good practice to free any allocated memory here. */
-// %destructor { printf ("Discarding TAG-FILLED symbol\n"); if(0) free ((void*) $$); } <*>
-// %destructor { printf ("Discarding TAG-LESS symbol\n"); if(0) free((void*) $$); } <>
+// %destructor { printf ("Discarding TAG-FILLED symbol\n"); if(0) free ($$); } <*> 
+// %destructor { printf ("Discarding TAG-LESS symbol\n"); if(0) free($$); } <>
+
+
+// Starting symbol. If this is not used bison assumes that the starting symbol is the
+// first one declared in the grammar
+%start root
+
 
 %%
 
+root: stmts ;
+
 
 /* Bison MANUAL says to prefer left recursion where possible (bounded stack space) */
-car:            car stmt
-        |       car decl
-        |       YYEOF                             {  }
+stmts:          stmts stmt
+        |       YYEOF                             { }
+        ;
+
+
+stmt:           assignment
+        |       decl
+        |       if_statement
+        |       ";"                               { /* Eat empty statements */ }
         ;
 
 decl:           "let" ID ";"
@@ -139,13 +165,7 @@ type:           "int"
         ;
 
 
-stmts:          stmts stmt
-        ;
 
-stmt:           assignment
-        |       if_statement
-        |       ";"                               { /* Eat empty statements */ }
-        ;
 
 if_statement: "if" "(" expr ")" "{" stmts "}"
         ;
