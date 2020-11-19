@@ -1,9 +1,4 @@
 #include "dpcc.h"
-#include "globals.h"
-#include "lexer.h"
-#include "parser.h"
-#include "types.h"
-#include "utils.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -11,6 +6,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+
+#include "globals.h"
+#include "lexer.h"
+#include "parser.h"
+#include "types.h"
+#include "utils.h"
 
 FILE *open_from_string(char *string)
 {

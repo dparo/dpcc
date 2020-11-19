@@ -5,12 +5,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "types.h"
 #include "globals.h"
 #include "utils.h"
-
-#include <stdarg.h>
 #include "log.h"
 
 FILE *open_file_for_reading(char *filepath);
