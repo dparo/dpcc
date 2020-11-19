@@ -225,7 +225,7 @@ do_while_stmt:  "do" code_block "while" "(" expr ")" ";"
 assignment: ID "=" expr ";"                               { PUSH(STATEMENT); }
         ;
 
-expr:           "(" expr[e] ")"                            { PUSH(OPEN_PAREN); }
+expr:           "(" expr[e] ")"                           { PUSH(OPEN_PAREN); }
         |       "(" error ")"                             { yyerrok; }
         |       expr[lhs] "+" expr[rhs]  %prec ADD        { PUSH(ADD); }
         |       expr[lhs] "-" expr[rhs]  %prec SUB        { PUSH(SUB); }
