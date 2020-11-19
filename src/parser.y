@@ -24,6 +24,13 @@
 //  and what is done for each type of lookahead token in that state
 %verbose
 
+
+// As from the Bison MANUAL using LAC parser instead of the default LALR parser
+// table implementations can lead to better error messages provided.
+// Also user actions associated with tokens lookahead are not executed in case
+// of syntax errors. Also since it stores stack frame of the parser state
+// prior to do expolarion it can lead to better identification of
+// the token causing the syntax error
 %define parse.lac   full
 %define parse.error detailed
 
@@ -104,11 +111,14 @@
 %token KW_BOOL    "bool"
 
 %token KW_LET      "let"
+%token KW_PRINT    "print"
 %token KW_IF       "if"
 %token KW_ELSE     "else"
 %token KW_WHILE    "while"
 %token KW_DO       "do"
 %token KW_FOR      "for"
+
+
 
 
 // Precedence of the operators
@@ -162,8 +172,7 @@ root: stmts ;
 
 
 /* Bison MANUAL says to prefer left recursion where possible (bounded stack space) */
-stmts:          stmts stmt
-        |       stmt
+stmts:          stmts stmt                        { $$ = $1; }
         |       YYEOF                             { }
         ;
 
@@ -174,6 +183,8 @@ stmt:           assignment
         |       for_stmt
         |       while_stmt
         |       do_while_stmt
+        |       "print" "(" expr ")" ";"
+        |       error ";"                         { yyerrok; } /* Upon syntax error synchronize to next ";". yyerrok: Resume generating error messages immediately for subsequent syntax errors. */
         |       ";"                               { $$ = NULL; }
         ;
 
@@ -188,8 +199,11 @@ type:           "int"
         |       "bool"
         ;
 
+code_block:   "{" stmts "}"
+        |     "{" error "}"                                  { yyerrok; }
+        ;
 
-for_1: assignment | %empty ;
+for_1: var_decl | assignment | %empty ;
 for_2: expr | %empty ;
 for_3: expr | %empty ;
 
@@ -197,15 +211,22 @@ if_stmt:      "if" "(" expr ")" "{" stmts "}"
         |     "if" "(" expr ")" "{" stmts "}" "else" "{" stmts "}"
         ;
 
-for_stmt:       "for" "(" for_1 ";" for_2 ";" for_3 ")" "{" stmts "}" ;
-while_stmt:     "while" "(" expr ")" "{" stmts "}"
-do_while_stmt:  "do" "{" stmts "}" "while" "(" expr ")" ";"
+for_stmt:       "for" "(" for_1 ";" for_2 ";" for_3 ")" code_block
+        |       "for" "(" error ")" code_block            { yyerrok; }
+        ;
+while_stmt:     "while" "(" expr ")" code_block
+        |       "while" "(" error ")" code_block          { yyerrok; }
+        ;
+do_while_stmt:  "do" code_block "while" "(" expr ")" ";"
+        |       "do" code_block "while" "(" error ")" ";" { yyerrok; }
+        ;
 
 
 assignment: ID "=" expr ";"                               { PUSH(STATEMENT); }
         ;
 
-expr:          "(" expr[e] ")"                            { PUSH(OPEN_PAREN); }
+expr:           "(" expr[e] ")"                            { PUSH(OPEN_PAREN); }
+        |       "(" error ")"                             { yyerrok; }
         |       expr[lhs] "+" expr[rhs]  %prec ADD        { PUSH(ADD); }
         |       expr[lhs] "-" expr[rhs]  %prec SUB        { PUSH(SUB); }
         |       expr[lhs] "*" expr[rhs]  %prec MUL        { PUSH(MUL); }

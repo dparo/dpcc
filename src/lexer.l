@@ -141,6 +141,7 @@ EOF              { FWD(YYEOF); }   /* Must return YYEOF upon EOF in order for bi
 "bool"        { FWD(KW_BOOL); }
 
 "let"         { FWD(KW_LET); }
+"print"       { FWD(KW_PRINT); }
 "if"          { FWD(KW_IF); }
 "else"        { FWD(KW_ELSE); }
 "do"          { FWD(KW_DO); }
