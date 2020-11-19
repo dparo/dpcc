@@ -1,3 +1,5 @@
+%require "3.6"   // Required for %define parse.error {custom,detailed}
+
 // If you want to use glr-parse enable this 2 down below
 //     The second line specifies the expected number of reduce-reduce conflicts.
 //     Even though bison still reports conflicts. GLR parsers are meant to
