@@ -101,6 +101,33 @@ EOF              { FWD(YYEOF); }   /* Must return YYEOF upon EOF in order for bi
 "-"              { FWD(SUB); }
 "*"              { FWD(MUL); }
 "/"              { FWD(DIV); }
+"%"              { FWD(MOD); }
+
+
+"=="             { FWD(EQ); }
+"!="             { FWD(NEQ); }
+">"              { FWD(GT); }
+">="             { FWD(GTEQ); }
+"<"              { FWD(LT); }
+"<="             { FWD(LTEQ); }
+
+"++"             { FWD(INC); }
+"--"             { FWD(DEC); }
+"!"              { FWD(LNOT); }
+"&&"             { FWD(LAND); }
+"||"             { FWD(LOR); }
+
+"~"              { FWD(BNOT); }
+"&"              { FWD(BAND); }
+"|"              { FWD(BOR); }
+"^"              { FWD(BXOR); }
+
+"<<"             { FWD(BLSHIFT); }
+">>"             { FWD(BRSHIFT); }
+
+"**"             { FWD(POW); }
+
+
 
 "("              { FWD(OPEN_PAREN); }
 ")"              { FWD(CLOSE_PAREN); }
