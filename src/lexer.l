@@ -44,21 +44,21 @@ comment  "//".*
 digit       [0-9]
 hex         [0-9a-fA-F]
 alpha       [a-zA-Z_]
-alphanum    {alpha}|{digit}
+alnum       {alpha}|{digit}
 
 space       " "
 punct       "!\"#$%&'()*+,-./:;<=>?@[\\]^`{|}~"
 escape_seq  \\0|\\a|\\b|\\t|\\n|\\v|\\f|\\r
 
 
-i32_lit         [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
+i32_lit         [+-]?({digit}+|((0[xXbB]({digit}|[abcdefABCDEF])+)))
 f32_lit         [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)(f|F)?
-char_lit        "'"({alphanum}|{punct}|{space}|{escape_seq}|(\\0x{hex}{2}))"'"
+char_lit        "'"({alnum}|{punct}|{space}|{escape_seq}|(\\0x{hex}{2}))"'"
 bool_lit        true|false
 string_lit      ["](([\\]["])|([^"]))*["]
 
 
-id       {alpha}{alphanum}*
+id       {alpha}{alnum}*
 
 
 /* Handling utf-8 characters: specifying illegal chars */
@@ -135,20 +135,20 @@ EOF              { FWD(YYEOF); }   /* Must return YYEOF upon EOF in order for bi
 "{"              { FWD(OPEN_BRACE); }
 "}"              { FWD(CLOSE_BRACE); }
 
-int         { FWD(KW_INT); }
-float       { FWD(KW_INT); }
-bool        { FWD(KW_INT); }
 
-let         { FWD(KW_LET); }
-if          { FWD(KW_IF); }
-else        { FWD(KW_ELSE); }
-do          { FWD(KW_DO); }
-while       { FWD(KW_WHILE); }
-for         { FWD(KW_FOR);  }
+"int"         { FWD(KW_INT); }
+"float"       { FWD(KW_FLOAT); }
+"bool"        { FWD(KW_BOOL); }
 
+"let"         { FWD(KW_LET); }
+"if"          { FWD(KW_IF); }
+"else"        { FWD(KW_ELSE); }
+"do"          { FWD(KW_DO); }
+"while"       { FWD(KW_WHILE); }
+"for"         { FWD(KW_FOR);  }
 
-{id}             { FWD(ID); }
-.                { ERROR(); } /* Returning YYUNDEF tells the parser that some lexical error was found. It will emit an error message about an “invalid token”, and enter error-recovery */
+{id}          { FWD(ID); }
+.             { ERROR(); } /* Returning YYUNDEF tells the parser that some lexical error was found. It will emit an error message about an “invalid token”, and enter error-recovery */
 
 
 %%

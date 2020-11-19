@@ -6,7 +6,7 @@
 //%expect-rr 1
 
 /*
-    Bison track locations. In the documentation setting this flag, or 
+    Bison track locations. In the documentation setting this flag, or
     using any of @n for getting the locations enables bison to track
     in its context the locations of the tokens. Bison manual
     says that enabling this feature makes the parser considerably
@@ -61,30 +61,30 @@
 %token                  DIV "/"
 %token                  MOD "%"
 
-%token                  EQ "=="
-%token                  NEQ "!="
-%token                  GT ">"
-%token                  GTEQ ">="
-%token                  LT "<"
-%token                  LTEQ "<="
+%token                  EQ      "=="
+%token                  NEQ     "!="
+%token                  GT      ">"
+%token                  GTEQ    ">="
+%token                  LT      "<"
+%token                  LTEQ    "<="
 
-%token                  INC "++"
-%token                  DEC "--"
+%token                  INC     "++"
+%token                  DEC     "--"
 
 
-%token                  LNOT "!"
-%token                  LAND "&&"
-%token                  LOR "||"
+%token                  LNOT    "!"
+%token                  LAND    "&&"
+%token                  LOR     "||"
 
-%token                  BNOT "~"
-%token                  BAND "&"
-%token                  BOR "|"
-%token                  BXOR "^"
+%token                  BNOT    "~"
+%token                  BAND    "&"
+%token                  BOR     "|"
+%token                  BXOR    "^"
 
 %token                  BLSHIFT "<<"
 %token                  BRSHIFT ">>"
 
-%token                  POW "**"
+%token                  POW     "**"
 
 
 %token                  COLON ":"
@@ -163,17 +163,21 @@ root: stmts ;
 
 /* Bison MANUAL says to prefer left recursion where possible (bounded stack space) */
 stmts:          stmts stmt
+        |       stmt
         |       YYEOF                             { }
         ;
 
 
 stmt:           assignment
-        |       decl
-        |       if_statement
-        |       ";"                               { /* Eat empty statements */ }
+        |       var_decl
+        |       if_stmt
+        |       for_stmt
+        |       while_stmt
+        |       do_while_stmt
+        |       ";"                               { $$ = NULL; }
         ;
 
-decl:           "let" ID ";"
+var_decl:       "let" ID ";"
         |       "let" ID "=" expr ";"
         |       "let" ID ":" type ";"
         |       "let" ID ":" type "=" expr ";"
@@ -185,23 +189,30 @@ type:           "int"
         ;
 
 
+for_1: assignment | %empty ;
+for_2: expr | %empty ;
+for_3: expr | %empty ;
 
-
-if_statement: "if" "(" expr ")" "{" stmts "}"
+if_stmt:      "if" "(" expr ")" "{" stmts "}"
+        |     "if" "(" expr ")" "{" stmts "}" "else" "{" stmts "}"
         ;
 
+for_stmt:       "for" "(" for_1 ";" for_2 ";" for_3 ")" "{" stmts "}" ;
+while_stmt:     "while" "(" expr ")" "{" stmts "}"
+do_while_stmt:  "do" "{" stmts "}" "while" "(" expr ")" ";"
 
-assignment: ID "=" expr ";"                           { PUSH(STATEMENT); }
+
+assignment: ID "=" expr ";"                               { PUSH(STATEMENT); }
         ;
 
-expr:           expr[lhs] "+" expr[rhs]  %prec ADD        { PUSH(ADD); }
+expr:          "(" expr[e] ")"                            { PUSH(OPEN_PAREN); }
+        |       expr[lhs] "+" expr[rhs]  %prec ADD        { PUSH(ADD); }
         |       expr[lhs] "-" expr[rhs]  %prec SUB        { PUSH(SUB); }
         |       expr[lhs] "*" expr[rhs]  %prec MUL        { PUSH(MUL); }
         |       expr[lhs] "/" expr[rhs]  %prec DIV        { PUSH(DIV); }
         |       expr[lhs] "%" expr[rhs]  %prec MOD        { PUSH(MOD); }
         |       "+" expr[e]              %prec POS        { PUSH(POS); }
         |       "-" expr[e]              %prec NEG        { PUSH(NEG); }
-        |       "(" expr[e] ")"          %prec OPEN_PAREN { PUSH(OPEN_PAREN); }
         |       expr[lhs] "==" expr[rhs] %prec EQ         { PUSH(EQ); }
         |       expr[lhs] "!=" expr[rhs] %prec NEQ        { PUSH(NEQ); }
         |       expr[lhs] "<" expr[rhs]  %prec LT         { PUSH(LT); }
