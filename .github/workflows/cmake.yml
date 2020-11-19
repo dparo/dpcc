@@ -19,6 +19,7 @@ jobs:
     
     - name: Install Dependencies
       run: sudo apt install flex bison
+      
     - name: Checkout submodules
       uses: textbook/git-checkout-submodule-action@2.1.1
       
