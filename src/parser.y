@@ -8,82 +8,8 @@
 }
 %{
 
-#include "utils.h"
-#include "lexer.h"
-#include "parser.h"
-#include "log.h"
+#include "yacc_utils.h"
 #define YYERROR_VERBOSE 1
-
-void yyerror(char const *s);
-int  yylex(void);
-
-
-#define PUSH(X) \
-    ast_push(yyltoken, X, #X, (isize) 0, NULL)
-
-
-static inline void gen_error(char *msg) {
-    fprintf(stderr, "%s\n", msg);
-}
-
-static bool yacc_from_str_to_i32(ast_node_t *node) {
-    int32_t i = 0;
-    bool success = str_to_i32(node->tok->lexeme, &i);
-    if (success == false) {
-        dpcc_log(DPCC_SEVERITY_ERROR, node, "Invalid int32 literal: got `%s`", node->tok->lexeme);
-    } else {
-        node->val.i = i;
-    }
-    return success;
-}
-
-static bool yacc_from_str_to_f32(ast_node_t *node) {
-    f32 f = 0;
-    bool success = str_to_f32(node->tok->lexeme, &f);
-    if (success == false) {
-        dpcc_log(DPCC_SEVERITY_ERROR, node, "Invalid float literal: got `%s`", node->tok->lexeme);
-    } else {
-        node->val.f = f;
-    }
-    return success;
-}
-
-static bool yacc_from_str_to_char(ast_node_t *node) {
-    char c = 0;
-    bool success = str_to_char(node->tok->lexeme, &c);
-    if (success == false) {
-        dpcc_log(DPCC_SEVERITY_ERROR, node, "Invalid char literal: got `%s`", node->tok->lexeme);
-    } else {
-        node->val.c = c;
-    }
-    return success;
-}
-
-static bool yacc_from_str_to_bool(ast_node_t *node) {
-    bool b = 0;
-    bool success = str_to_bool(node->tok->lexeme, &b);
-    if (success == false) {
-        dpcc_log(DPCC_SEVERITY_ERROR, node, "Invalid bool literal: got `%s`", node->tok->lexeme);
-    } else {
-        node->val.b = b;
-    }
-    return success;
-}
-
-
-
-
-#define PUSH_I32(X) \
-    do { if(!yacc_from_str_to_i32(PUSH(X))) { YYERROR; } } while(0)
-
-#define PUSH_F32(X) \
-    do { if(!yacc_from_str_to_f32(PUSH(X))) { YYERROR; } } while(0)
-
-#define PUSH_CHAR(X) \
-    do { if(!yacc_from_str_to_char(PUSH(X))) { YYERROR; } } while(0)
-
-#define PUSH_BOOL(X) \
-    do { if(!yacc_from_str_to_bool(PUSH(X))) { YYERROR; } } while(0)
 
 %}
 
@@ -194,7 +120,7 @@ static bool yacc_from_str_to_bool(ast_node_t *node) {
 /* Bison MANUAL says to prefer left recursion where possible (bounded stack space) */
 car:            car stmt
         |       car decl
-        |       YYEOF                   {      }
+        |       YYEOF                             {  }
         ;
 
 decl:           "let" ID ";"
@@ -214,14 +140,14 @@ stmts:          stmts stmt
 
 stmt:           assignment
         |       if_statement
-        |       ";"               {  }
+        |       ";"                               { /* Eat empty statements */ }
         ;
 
 if_statement: "if" "(" expr ")" "{" stmts "}"
         ;
 
 
-assignment: ID "=" expr ";" { PUSH(STATEMENT); }
+assignment: ID "=" expr ";"                       { PUSH(STATEMENT); }
         ;
 
 expr:           expr[lhs] "+" expr[rhs] %prec ADD { PUSH(PLUS); }
@@ -239,8 +165,3 @@ expr:           expr[lhs] "+" expr[rhs] %prec ADD { PUSH(PLUS); }
 
 %%
 
-void yyerror (char const *s)
-{
-    extern int yylineno;
-    fprintf(stderr, "Error at yylineno: %d, yylloc=(%d, %d)\n\t%s\n", yylineno, yylloc.line, yylloc.column, s);
-}

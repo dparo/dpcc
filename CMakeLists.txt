@@ -22,7 +22,7 @@ endif()
 
 BISON_TARGET(parser src/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.c
   DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.h
-  COMPILE_FLAGS "-Wempty-rule -Wmidrule-values"
+  COMPILE_FLAGS "-Wempty-rule -Wmidrule-values --color=auto"
   )
 
 FLEX_TARGET(lexer  src/lexer.l ${CMAKE_CURRENT_BINARY_DIR}/lexer.c
@@ -37,7 +37,7 @@ add_library(libstb STATIC
 target_include_directories(libstb PUBLIC third_party/stb)
 
 add_library(libdpcc STATIC
-  src/dpcc.c src/dpcc.h src/globals.c src/utils.c src/log.c
+  src/dpcc.c src/dpcc.h src/globals.c src/utils.c src/log.c src/yacc_utils.c
   ${BISON_parser_OUTPUTS}
   ${FLEX_lexer_OUTPUTS}
   )
