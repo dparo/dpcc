@@ -22,7 +22,7 @@ endif()
 
 BISON_TARGET(parser src/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.c
   DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.h
-  COMPILE_FLAGS "-Wcounterexamples -Wempty-rule -Wmidrule-values --color=auto"
+  COMPILE_FLAGS ""
   )
 
 FLEX_TARGET(lexer  src/lexer.l ${CMAKE_CURRENT_BINARY_DIR}/lexer.c

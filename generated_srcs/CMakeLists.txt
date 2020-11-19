@@ -12,9 +12,7 @@ add_custom_target(gen.py
 add_dependencies(libdpcc gen.py)
 
 foreach(SRC IN LISTS GENERATED_SOURCES_LIST)
-  message("----------- testing existance: ${SRC}")
   if (EXISTS "${SRC}")
-    message("----------- target adding sources: ${SRC}")
     target_sources(libdpcc PRIVATE "${SRC}")
   endif()
 endforeach(SRC)
