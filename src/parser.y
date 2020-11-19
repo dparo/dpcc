@@ -6,9 +6,21 @@
 //%glr-parser
 //%expect-rr 1
 
+// Track locations
+%locations
+
+
+// Write an extra output file containing verbose descriptions of the parser states
+//  and what is done for each type of lookahead token in that state
+%verbose
+
+%define parse.lac   full
 %define parse.error detailed
-/* Sets YYSTYPE used for semantic values */
-%define api.value.type {ast_node_t*}
+
+%define api.symbol.prefix {YY_}
+%define api.token.prefix  {TOK_}
+%define api.value.type    {ast_node_t*}
+%define api.location.type {loc_t}
 
 %code requires {
     /* This code block will be exported to the generated header file by bison */
