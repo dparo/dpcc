@@ -91,20 +91,24 @@
 // Spaces can be used to separate operators on the same line,
 //  and assign the same precedence
 // %precedence can be used to declare a token with no associatvity (eg for unary operators)
-// --- Most of this precedence table is C derived
-// --- The only difference is that the bitwise and, or, xor are pushed higher in precedence compared to the "==", "!=" operators
-// --- the reasons in mainly for convenience. Most modern languaes applied the same form of change
+// --- Most of this precedence table is C derived.
+// --- Differences:
+// --- 1. The bitwise and, or, xor are pushed higher in precedence compared to the "==", "!=" operators
+// ---    the reasons in mainly for convenience. Most modern languaes applied the same form of change
+// --- 2. Equality comparison operators are non associative by default. This avoids possible logical errors
+// --- 3. A right associative power operator
 %left                   ASSIGN
 %left                   LOR
 %left                   LAND
-%left                   EQ NEQ
+%nonassoc               EQ NEQ
+%nonassoc               LT LTEQ GT GTEQ
 %left                   BXOR
 %left                   BOR
 %left                   BAND
 %left                   BLSHIFT BRSHIFT
 %left                   ADD SUB
 %left                   MUL DIV MOD
-%left                   POW
+%right                  POW
 %right                  POS NEG
 %left                   INC DEC
 
@@ -150,17 +154,27 @@ if_statement: "if" "(" expr ")" "{" stmts "}"
 assignment: ID "=" expr ";"                       { PUSH(STATEMENT); }
         ;
 
-expr:           expr[lhs] "+" expr[rhs] %prec ADD { PUSH(PLUS); }
-        |       expr[lhs] "-" expr[rhs] %prec SUB { PUSH(MINUS); }
-        |       expr[lhs] "*" expr[rhs] %prec MUL { PUSH(MUL); }
-        |       "+" expr[e]             %prec POS { PUSH(NEG); }
-        |       "-" expr[e]             %prec NEG { PUSH(NEG); }
-        |       "(" expr[e] ")"                   { PUSH(OPEN_PAREN); }
-        |       ID                                { PUSH(ID); }
-        |       I32_LIT                           { PUSH_I32(I32_LIT); }
-        |       F32_LIT                           { PUSH_F32(F32_LIT); }
-        |       CHAR_LIT                          { PUSH_CHAR(CHAR_LIT); }
-        |       BOOL_LIT                          { PUSH_BOOL(BOOL_LIT); }
+expr:           expr[lhs] "+" expr[rhs] %prec ADD     { PUSH(PLUS); }
+        |       expr[lhs] "-" expr[rhs] %prec SUB     { PUSH(MINUS); }
+        |       expr[lhs] "*" expr[rhs] %prec MUL     { PUSH(MUL); }
+        |       expr[lhs] "/" expr[rhs] %prec DIV     { PUSH(DIV); }
+        |       expr[lhs] "%" expr[rhs] %prec MOD     { PUSH(MOD); }
+        |       "+" expr[e]             %prec POS     { PUSH(POS); }
+        |       "-" expr[e]             %prec NEG     { PUSH(NEG); }
+        |       "(" expr[e] ")"                       { PUSH(OPEN_PAREN); }
+        |       expr[lhs] "==" expr[rhs] %prec EQ     { PUSH(EQ); }
+        |       expr[lhs] "!=" expr[rhs] %prec NEQ    { PUSH(NEQ); }
+        |       expr[lhs] "<" expr[rhs] %prec LT      { PUSH(LT); }
+        |       expr[lhs] "<=" expr[rhs] %prec LTEQ   { PUSH(LTEQ); }
+        |       expr[lhs] ">" expr[rhs] %prec GT      { PUSH(GT); }
+        |       expr[lhs] ">=" expr[rhs] %prec GTEQ   { PUSH(GTEQ); }
+        |       ID "++"                  %prec INC    { PUSH(INC); }
+        |       ID "--"                  %prec DEC    { PUSH(DEC); }
+        |       ID                                    { PUSH(ID); }
+        |       I32_LIT                               { PUSH_I32(I32_LIT); }
+        |       F32_LIT                               { PUSH_F32(F32_LIT); }
+        |       CHAR_LIT                              { PUSH_CHAR(CHAR_LIT); }
+        |       BOOL_LIT                              { PUSH_BOOL(BOOL_LIT); }
         ;
 
 %%
