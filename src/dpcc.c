@@ -84,6 +84,9 @@ bool parse(FILE *input_stream)
 
 bool compile(FILE *input_stream, FILE *output_stream)
 {
+
+    // My fucking comment
+
     reset();
 
     if (input_stream == NULL) {

@@ -95,30 +95,37 @@ static bool yacc_from_str_to_bool(ast_node_t *node) {
 %token                  BOOL_LIT
 %token                  STRING_LIT
 
-%token                  ASSIGN
-%token                  PLUS
-%token                  MINUS
-%token                  MUL
 
-%token                  COLON
-%token                  SEMICOLON
-%token                  OPEN_PAREN
-%token                  CLOSE_PAREN
-%token                  OPEN_BRACE
-%token                  CLOSE_BRACE
+// The string representation of the tokens allows to show in the error message it's 
+// string representation rather than it's associated token kind name. And also
+// it allows us to refer to this tokens in the grammar using their string representation
+%token                  ASSIGN "="
+%token                  PLUS "+"
+%token                  MINUS "-"
+%token                  MUL "*"
+
+%token                  COLON ":"
+%token                  SEMICOLON ";"
+%token                  OPEN_PAREN "("
+%token                  CLOSE_PAREN ")"
+%token                  OPEN_BRACE "{"
+%token                  CLOSE_BRACE "}"
+
+
+// Derived ast nodes kind
 %token                  STATEMENT
 
 
-%token KW_INT
-%token KW_FLOAT
-%token KW_BOOL
+%token KW_INT     "int"
+%token KW_FLOAT   "float"
+%token KW_BOOL    "bool"
 
-%token KW_LET
-%token KW_IF
-%token KW_ELSE
-%token KW_WHILE
-%token KW_DO
-%token KW_FOR
+%token KW_LET      "let"
+%token KW_IF       "if"
+%token KW_ELSE     "else"
+%token KW_WHILE    "while"
+%token KW_DO       "do"
+%token KW_FOR      "for"
 
 
 // Precedence of the operators
@@ -127,10 +134,12 @@ static bool yacc_from_str_to_bool(ast_node_t *node) {
 // - Bottom: Higher precedence
 // Spaces can be used to separate operators on the same line,
 //  and assign the same precedence
+// %precedence can be used to declare a token with no associatvity (eg for unary operators)
 %left                   ASSIGN
 %left                   PLUS MINUS
 %left                   MUL
 %right                  NEG
+
 
 
 /* When error recovery, bison may want to discard some symbols. So
@@ -147,40 +156,41 @@ car:            car stmt
         |       YYEOF                   {      }
         ;
 
-decl:           KW_LET ID SEMICOLON
-        |       KW_LET ID ASSIGN expr SEMICOLON
-        |       KW_LET ID COLON type SEMICOLON
-        |       KW_LET ID COLON type ASSIGN expr SEMICOLON
+decl:           "let" ID ";"
+        |       "let" ID "=" expr ";"
+        |       "let" ID ":" type ";"
+        |       "let" ID ":" type "=" expr ";"
         ;
 
-type:           KW_INT
-        |       KW_FLOAT
-        |       KW_BOOL
+type:           "int"
+        |       "float"
+        |       "bool"
         ;
 
 
 stmts:          stmts stmt
         ;
 
-stmt[res]:      assignment
+stmt:           assignment
         |       if_statement
-        |       SEMICOLON               {  }
+        |       ";"               {  }
         ;
 
-if_statement: KW_IF OPEN_PAREN expr CLOSE_PAREN OPEN_BRACE stmts CLOSE_BRACE
+if_statement: "if" "(" expr ")" "{" stmts "}"
         ;
 
-assignment[res]: ID { PUSH(ID); } ASSIGN { PUSH(ASSIGN); } expr SEMICOLON { PUSH(STATEMENT); }
+
+assignment: ID "=" expr ";" { PUSH(STATEMENT); }
         ;
 
-expr[res]:      expr[lhs] PLUS expr[rhs] { PUSH(PLUS); }
-        |       expr[lhs] MINUS expr[rhs] { PUSH(MINUS); }
-        |       expr[lhs] MUL expr[rhs] { PUSH(MUL); }
-        |       MINUS expr[e]  %prec NEG { PUSH(NEG); }
-        |       OPEN_PAREN expr[e] CLOSE_PAREN { PUSH(OPEN_PAREN); }
+expr:           expr[lhs] "+" expr[rhs] { PUSH(PLUS); }
+        |       expr[lhs] "-" expr[rhs] { PUSH(MINUS); }
+        |       expr[lhs] "*" expr[rhs] { PUSH(MUL); }
+        |       "-" expr[e]  %prec NEG { PUSH(NEG); }
+        |       "(" expr[e] ")" { PUSH(OPEN_PAREN); }
         |       ID { PUSH(ID); }
         |       I32_LIT    { PUSH_I32(I32_LIT); }
-        |       F32_LIT    { PUSH(F32_LIT); }
+        |       F32_LIT    { PUSH_F32(F32_LIT); }
         |       CHAR_LIT   { PUSH_CHAR(CHAR_LIT); }
         |       BOOL_LIT   { PUSH_BOOL(BOOL_LIT); }
         ;

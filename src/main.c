@@ -9,6 +9,8 @@
 
 int main(int argc, char **argv)
 {
+    // My fucking comment
+
     char *filepath = "run_tree/in/input.txt";
     char *mode = "compile";
 
