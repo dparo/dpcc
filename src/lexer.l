@@ -97,9 +97,10 @@ EOF              { FWD(YYEOF); }   /* Must return YYEOF upon EOF in order for bi
 ":"              { FWD(COLON); }
 ";"              { FWD(SEMICOLON); }
 "="              { FWD(ASSIGN); }
-"+"              { FWD(PLUS); }
-"-"              { FWD(MINUS); }
+"+"              { FWD(ADD); }
+"-"              { FWD(SUB); }
 "*"              { FWD(MUL); }
+"/"              { FWD(DIV); }
 
 "("              { FWD(OPEN_PAREN); }
 ")"              { FWD(CLOSE_PAREN); }

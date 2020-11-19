@@ -55,13 +55,11 @@
 // string representation rather than it's associated token kind name. And also
 // it allows us to refer to this tokens in the grammar using their string representation
 %token                  ASSIGN "="
-%token                  PLUS "+"
-%token                  MINUS "-"
+%token                  ADD "+"
+%token                  SUB "-"
 %token                  MUL "*"
 %token                  DIV "/"
 %token                  MOD "%"
-
-
 
 %token                  EQ "=="
 %token                  NEQ "!="
@@ -140,6 +138,7 @@
 %right                  POW
 %right                  POS NEG
 %left                   INC DEC
+%precedence             OPEN_PAREN CLOSE_PAREN
 
 
 // Printers are usefull for generating traces of the debugger
@@ -195,27 +194,27 @@ if_statement: "if" "(" expr ")" "{" stmts "}"
 assignment: ID "=" expr ";"                           { PUSH(STATEMENT); }
         ;
 
-expr:           expr[lhs] "+" expr[rhs] %prec ADD     { PUSH(PLUS); }
-        |       expr[lhs] "-" expr[rhs] %prec SUB     { PUSH(MINUS); }
-        |       expr[lhs] "*" expr[rhs] %prec MUL     { PUSH(MUL); }
-        |       expr[lhs] "/" expr[rhs] %prec DIV     { PUSH(DIV); }
-        |       expr[lhs] "%" expr[rhs] %prec MOD     { PUSH(MOD); }
-        |       "+" expr[e]             %prec POS     { PUSH(POS); }
-        |       "-" expr[e]             %prec NEG     { PUSH(NEG); }
-        |       "(" expr[e] ")"                       { PUSH(OPEN_PAREN); }
-        |       expr[lhs] "==" expr[rhs] %prec EQ     { PUSH(EQ); }
-        |       expr[lhs] "!=" expr[rhs] %prec NEQ    { PUSH(NEQ); }
-        |       expr[lhs] "<" expr[rhs] %prec LT      { PUSH(LT); }
-        |       expr[lhs] "<=" expr[rhs] %prec LTEQ   { PUSH(LTEQ); }
-        |       expr[lhs] ">" expr[rhs] %prec GT      { PUSH(GT); }
-        |       expr[lhs] ">=" expr[rhs] %prec GTEQ   { PUSH(GTEQ); }
-        |       ID "++"                  %prec INC    { PUSH(INC); }
-        |       ID "--"                  %prec DEC    { PUSH(DEC); }
-        |       ID                                    { PUSH(ID); }
-        |       I32_LIT                               { PUSH_I32(I32_LIT); }
-        |       F32_LIT                               { PUSH_F32(F32_LIT); }
-        |       CHAR_LIT                              { PUSH_CHAR(CHAR_LIT); }
-        |       BOOL_LIT                              { PUSH_BOOL(BOOL_LIT); }
+expr:           expr[lhs] "+" expr[rhs]  %prec ADD        { PUSH(ADD); }
+        |       expr[lhs] "-" expr[rhs]  %prec SUB        { PUSH(SUB); }
+        |       expr[lhs] "*" expr[rhs]  %prec MUL        { PUSH(MUL); }
+        |       expr[lhs] "/" expr[rhs]  %prec DIV        { PUSH(DIV); }
+        |       expr[lhs] "%" expr[rhs]  %prec MOD        { PUSH(MOD); }
+        |       "+" expr[e]              %prec POS        { PUSH(POS); }
+        |       "-" expr[e]              %prec NEG        { PUSH(NEG); }
+        |       "(" expr[e] ")"          %prec OPEN_PAREN { PUSH(OPEN_PAREN); }
+        |       expr[lhs] "==" expr[rhs] %prec EQ         { PUSH(EQ); }
+        |       expr[lhs] "!=" expr[rhs] %prec NEQ        { PUSH(NEQ); }
+        |       expr[lhs] "<" expr[rhs]  %prec LT         { PUSH(LT); }
+        |       expr[lhs] "<=" expr[rhs] %prec LTEQ       { PUSH(LTEQ); }
+        |       expr[lhs] ">" expr[rhs]  %prec GT         { PUSH(GT); }
+        |       expr[lhs] ">=" expr[rhs] %prec GTEQ       { PUSH(GTEQ); }
+        |       ID "++"                  %prec INC        { PUSH(INC); }
+        |       ID "--"                  %prec DEC        { PUSH(DEC); }
+        |       ID                                        { PUSH(ID); }
+        |       I32_LIT                                   { PUSH_I32(I32_LIT); }
+        |       F32_LIT                                   { PUSH_F32(F32_LIT); }
+        |       CHAR_LIT                                  { PUSH_CHAR(CHAR_LIT); }
+        |       BOOL_LIT                                  { PUSH_BOOL(BOOL_LIT); }
         ;
 
 %%

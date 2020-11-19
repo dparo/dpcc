@@ -64,7 +64,7 @@ typedef struct {
 
 static dpcc_test_t all_dpcc_tests[] = {
     { "a = a; b = b; long_name = a + long_name; // A comment",
-        ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON, TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON, TOK_ID, TOK_ASSIGN, TOK_ID, TOK_PLUS, TOK_ID, TOK_SEMICOLON }) },
+        ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON, TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON, TOK_ID, TOK_ASSIGN, TOK_ID, TOK_ADD, TOK_ID, TOK_SEMICOLON }) },
     { "a = b; // A comment",
         ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON }) },
     { "a = b; // A comment\n",
