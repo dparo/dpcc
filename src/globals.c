@@ -5,7 +5,7 @@
 #include <stb_ds.h>
 
 int32_t yyprevcol = 0;
-YYLTYPE yylloc = { 1, 0 };
+YYLTYPE yylloc = { NULL, 1, 0 };
 
 token_t *yyltoken = NULL;
 
@@ -32,4 +32,7 @@ void clear_all_global_vars()
     memset(&G_allctx, 0, sizeof(G_allctx));
     memset(&G_tok_seq, 0, sizeof(G_tok_seq));
     memset(&G_ast, 0, sizeof(G_ast));
+
+    free(yylloc.filepath);
+    yylloc.filepath = "";
 }

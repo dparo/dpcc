@@ -35,7 +35,7 @@ void dpcc_log(enum DPCC_LOG_SEVERITY severity, ast_node_t *node, char *fmt, ...)
 
     dpcc_set_log_color(stderr, color_table[severity]);
 
-    char *filepath = "DUMMY_FIlE.c";
+    char *filepath = node->tok->yylloc.filepath;
     int32_t line = node->tok->yylloc.line;
     int32_t column = node->tok->yylloc.column;
 

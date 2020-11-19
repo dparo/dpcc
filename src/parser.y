@@ -151,7 +151,7 @@ if_statement: "if" "(" expr ")" "{" stmts "}"
         ;
 
 
-assignment: ID "=" expr ";"                       { PUSH(STATEMENT); }
+assignment: ID "=" expr ";"                           { PUSH(STATEMENT); }
         ;
 
 expr:           expr[lhs] "+" expr[rhs] %prec ADD     { PUSH(PLUS); }

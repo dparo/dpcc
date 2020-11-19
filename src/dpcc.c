@@ -41,9 +41,19 @@ static void reset(void)
     clear_all_global_vars();
 }
 
-bool lex(FILE *input_stream)
+static void setup_filepath(char *filepath)
+{
+    if (!filepath) {
+        yylloc.filepath = strdup("<UNNAMED>");
+    } else {
+        yylloc.filepath = strdup(filepath);
+    }
+}
+
+bool lex(char *filepath, FILE *input_stream)
 {
     reset();
+    setup_filepath(filepath);
 
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::lex() --- NULL input_stream\n");
@@ -68,9 +78,10 @@ bool lex(FILE *input_stream)
     return result == 0;
 }
 
-bool parse(FILE *input_stream)
+bool parse(char *filepath, FILE *input_stream)
 {
     reset();
+    setup_filepath(filepath);
 
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::parse() --- NULL input_stream\n");
@@ -83,12 +94,10 @@ bool parse(FILE *input_stream)
     return result == 0;
 }
 
-bool compile(FILE *input_stream, FILE *output_stream)
+bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
 {
-
-    // My fucking comment
-
     reset();
+    setup_filepath(filepath);
 
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::parse() --- NULL input_stream\n");
@@ -98,7 +107,7 @@ bool compile(FILE *input_stream, FILE *output_stream)
         output_stream = stdout;
     }
 
-    bool parse_success = parse(input_stream);
+    bool parse_success = parse(filepath, input_stream);
     if (!parse_success) {
         return false;
     }

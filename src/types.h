@@ -31,6 +31,7 @@ typedef struct {
 } int32_array_t, i32_array_t, int32_t_array_t;
 
 typedef struct YYLTYPE {
+    char *filepath;
     i32 line;
     i32 column;
 } YYLTYPE;

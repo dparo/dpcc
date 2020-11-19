@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     FILE *input_stream = open_file_for_reading(filepath);
 
     if (0 == strcmp(mode, "lex")) {
-        bool lexsuccess = lex(input_stream);
+        bool lexsuccess = lex(filepath, input_stream);
         if (!lexsuccess) {
             return -1;
         }
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
         }
 
     } else if (0 == strcmp(mode, "parse")) {
-        bool parsesuccess = parse(input_stream);
+        bool parsesuccess = parse(filepath, input_stream);
         if (!parsesuccess) {
             return -1;
         }
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
                 node->skind);
         }
     } else if ((0 == strcmp(mode, "compile")) || (0 == strcmp(mode, "cc"))) {
-        bool compile_success = compile(input_stream, stdout);
+        bool compile_success = compile(filepath, input_stream, stdout);
         if (!compile_success) {
             return -1;
         }
