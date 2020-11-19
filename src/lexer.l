@@ -15,14 +15,14 @@
     do { \
         STRIP(); \
         fprintf(stderr, "LEXER UNRECOGNIZED CHAR '%s'\n", yytext);\
-        return YYUNDEF; \
+        return TOK_YYUNDEF; \
     } while(0)
 
 #define FWD(X) \
     do {  \
         STRIP();                    \
-        yyltoken = token_push(yylloc, yytext, (X), (#X)); \
-        return (X);   \
+        yyltoken = token_push(yylloc, yytext, TOK_##X, (#X)); \
+        return (TOK_##X);   \
     } while(0)
 
 
@@ -44,21 +44,21 @@ comment  "//".*
 digit       [0-9]
 hex         [0-9a-fA-F]
 alpha       [a-zA-Z_]
-alphanum    {alpha}|{digit}
+alnum       {alpha}|{digit}
 
 space       " "
 punct       "!\"#$%&'()*+,-./:;<=>?@[\\]^`{|}~"
 escape_seq  \\0|\\a|\\b|\\t|\\n|\\v|\\f|\\r
 
 
-i32_lit         [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
+i32_lit         [+-]?({digit}+|((0[xXbB]({digit}|[abcdefABCDEF])+)))
 f32_lit         [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)(f|F)?
-char_lit        "'"({alphanum}|{punct}|{space}|{escape_seq}|(\\0x{hex}{2}))"'"
+char_lit        "'"({alnum}|{punct}|{space}|{escape_seq}|(\\0x{hex}{2}))"'"
 bool_lit        true|false
 string_lit      ["](([\\]["])|([^"]))*["]
 
 
-id       {alpha}{alphanum}*
+id       {alpha}{alnum}*
 
 
 /* Handling utf-8 characters: specifying illegal chars */
@@ -80,7 +80,7 @@ NASCII      {UTF8_H2}|{UTF8_H3}|{UTF8_H4}
 
 
 NASCII           { FWD(YYUNDEF); }
-EOF              { FWD(YYEOF); }
+EOF              { FWD(YYEOF); }   /* Must return YYEOF upon EOF in order for bison to work */
 
 {eol}             { yylloc.line += 1; yylloc.column = 0; yyprevcol = 0; }
 {ws}              { STRIP(); }
@@ -97,9 +97,37 @@ EOF              { FWD(YYEOF); }
 ":"              { FWD(COLON); }
 ";"              { FWD(SEMICOLON); }
 "="              { FWD(ASSIGN); }
-"+"              { FWD(PLUS); }
-"-"              { FWD(MINUS); }
+"+"              { FWD(ADD); }
+"-"              { FWD(SUB); }
 "*"              { FWD(MUL); }
+"/"              { FWD(DIV); }
+"%"              { FWD(MOD); }
+
+
+"=="             { FWD(EQ); }
+"!="             { FWD(NEQ); }
+">"              { FWD(GT); }
+">="             { FWD(GTEQ); }
+"<"              { FWD(LT); }
+"<="             { FWD(LTEQ); }
+
+"++"             { FWD(INC); }
+"--"             { FWD(DEC); }
+"!"              { FWD(LNOT); }
+"&&"             { FWD(LAND); }
+"||"             { FWD(LOR); }
+
+"~"              { FWD(BNOT); }
+"&"              { FWD(BAND); }
+"|"              { FWD(BOR); }
+"^"              { FWD(BXOR); }
+
+"<<"             { FWD(BLSHIFT); }
+">>"             { FWD(BRSHIFT); }
+
+"**"             { FWD(POW); }
+
+
 
 "("              { FWD(OPEN_PAREN); }
 ")"              { FWD(CLOSE_PAREN); }
@@ -107,20 +135,21 @@ EOF              { FWD(YYEOF); }
 "{"              { FWD(OPEN_BRACE); }
 "}"              { FWD(CLOSE_BRACE); }
 
-int         { FWD(KW_INT); }
-float       { FWD(KW_INT); }
-bool        { FWD(KW_INT); }
 
-let         { FWD(KW_LET); }
-if          { FWD(KW_IF); }
-else        { FWD(KW_ELSE); }
-do          { FWD(KW_DO); }
-while       { FWD(KW_WHILE); }
-for         { FWD(KW_FOR);  }
+"int"         { FWD(KW_INT); }
+"float"       { FWD(KW_FLOAT); }
+"bool"        { FWD(KW_BOOL); }
 
+"let"         { FWD(KW_LET); }
+"print"       { FWD(KW_PRINT); }
+"if"          { FWD(KW_IF); }
+"else"        { FWD(KW_ELSE); }
+"do"          { FWD(KW_DO); }
+"while"       { FWD(KW_WHILE); }
+"for"         { FWD(KW_FOR);  }
 
-{id}             { FWD(ID); }
-.                { ERROR(); }
+{id}          { FWD(ID); }
+.             { ERROR(); } /* Returning YYUNDEF tells the parser that some lexical error was found. It will emit an error message about an “invalid token”, and enter error-recovery */
 
 
 %%

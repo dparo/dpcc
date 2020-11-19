@@ -35,9 +35,9 @@ void dpcc_log(enum DPCC_LOG_SEVERITY severity, ast_node_t *node, char *fmt, ...)
 
     dpcc_set_log_color(stderr, color_table[severity]);
 
-    char *filepath = node->tok->yylloc.filepath;
-    int32_t line = node->tok->yylloc.line;
-    int32_t column = node->tok->yylloc.column;
+    char *filepath = node->tok->loc.filepath;
+    int32_t line = node->tok->loc.line;
+    int32_t column = node->tok->loc.column;
 
     va_list ap;
     va_start(ap, fmt);

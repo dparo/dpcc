@@ -6,11 +6,11 @@
 #include "log.h"
 #define YYERROR_VERBOSE 1
 
-void yyerror(char const *s);
 int yylex(void);
+void yyerror(char const *s);
 
 #define PUSH(X) \
-    ast_push(yyltoken, X, #X, (isize)0, NULL)
+    ast_push(yyltoken, YY_##X, #X, (isize)0, NULL)
 
 static inline void gen_error(char *msg)
 {

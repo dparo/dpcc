@@ -1,14 +1,42 @@
-
 // If you want to use glr-parse enable this 2 down below
 //     The second line specifies the expected number of reduce-reduce conflicts.
-//     Even though bison still reports conflicts. GLR parsers are meant to 
+//     Even though bison still reports conflicts. GLR parsers are meant to
 //     solve this type of conflicts any way. Thus it is possible to disable
 //%glr-parser
 //%expect-rr 1
 
+/*
+    Bison track locations. In the documentation setting this flag, or
+    using any of @n for getting the locations enables bison to track
+    in its context the locations of the tokens. Bison manual
+    says that enabling this feature makes the parser considerably
+    slower. Thus Since we don't use this in the grammar,
+    and we do our location tracking externally anyway we leave this flag
+    commented out and we avoid using any `@n` locations refering in the actions
+    of the grammar
+*/
+
+// %locations
+// %define api.location.type {tokloc_t}
+
+
+// Write an extra output file containing verbose descriptions of the parser states
+//  and what is done for each type of lookahead token in that state
+%verbose
+
+
+// As from the Bison MANUAL using LAC parser instead of the default LALR parser
+// table implementations can lead to better error messages provided.
+// Also user actions associated with tokens lookahead are not executed in case
+// of syntax errors. Also since it stores stack frame of the parser state
+// prior to do expolarion it can lead to better identification of
+// the token causing the syntax error
+%define parse.lac   full
 %define parse.error detailed
-/* Sets YYSTYPE used for semantic values */
-%define api.value.type {ast_node_t*}
+
+%define api.symbol.prefix {YY_}
+%define api.token.prefix  {TOK_}
+%define api.value.type    {ast_node_t*}
 
 %code requires {
     /* This code block will be exported to the generated header file by bison */
@@ -30,42 +58,40 @@
 %token                  STRING_LIT
 
 
-// The string representation of the tokens allows to show in the error message it's 
+// The string representation of the tokens allows to show in the error message it's
 // string representation rather than it's associated token kind name. And also
 // it allows us to refer to this tokens in the grammar using their string representation
 %token                  ASSIGN "="
-%token                  PLUS "+"
-%token                  MINUS "-"
+%token                  ADD "+"
+%token                  SUB "-"
 %token                  MUL "*"
 %token                  DIV "/"
 %token                  MOD "%"
 
+%token                  EQ      "=="
+%token                  NEQ     "!="
+%token                  GT      ">"
+%token                  GTEQ    ">="
+%token                  LT      "<"
+%token                  LTEQ    "<="
+
+%token                  INC     "++"
+%token                  DEC     "--"
 
 
-%token                  EQ "=="
-%token                  NEQ "!="
-%token                  GT ">"
-%token                  GTEQ ">="
-%token                  LT "<"
-%token                  LTEQ "<="
+%token                  LNOT    "!"
+%token                  LAND    "&&"
+%token                  LOR     "||"
 
-%token                  INC "++"
-%token                  DEC "--"
-
-
-%token                  LNOT "!"
-%token                  LAND "&&"
-%token                  LOR "||"
-
-%token                  BNOT "~"
-%token                  BAND "&"
-%token                  BOR "|"
-%token                  BXOR "^"
+%token                  BNOT    "~"
+%token                  BAND    "&"
+%token                  BOR     "|"
+%token                  BXOR    "^"
 
 %token                  BLSHIFT "<<"
 %token                  BRSHIFT ">>"
 
-%token                  POW "**"
+%token                  POW     "**"
 
 
 %token                  COLON ":"
@@ -85,11 +111,14 @@
 %token KW_BOOL    "bool"
 
 %token KW_LET      "let"
+%token KW_PRINT    "print"
 %token KW_IF       "if"
 %token KW_ELSE     "else"
 %token KW_WHILE    "while"
 %token KW_DO       "do"
 %token KW_FOR      "for"
+
+
 
 
 // Precedence of the operators
@@ -119,6 +148,7 @@
 %right                  POW
 %right                  POS NEG
 %left                   INC DEC
+%precedence             OPEN_PAREN CLOSE_PAREN
 
 
 // Printers are usefull for generating traces of the debugger
@@ -127,7 +157,7 @@
 
 /* When error recovery, bison may want to discard some symbols. So
    it is generally good practice to free any allocated memory here. */
-// %destructor { printf ("Discarding TAG-FILLED symbol\n"); if(0) free ($$); } <*> 
+// %destructor { printf ("Discarding TAG-FILLED symbol\n"); if(0) free ($$); } <*>
 // %destructor { printf ("Discarding TAG-LESS symbol\n"); if(0) free($$); } <>
 
 
@@ -142,18 +172,23 @@ root: stmts ;
 
 
 /* Bison MANUAL says to prefer left recursion where possible (bounded stack space) */
-stmts:          stmts stmt
+stmts:          stmts stmt                        { $$ = $1; }
         |       YYEOF                             { }
         ;
 
 
 stmt:           assignment
-        |       decl
-        |       if_statement
-        |       ";"                               { /* Eat empty statements */ }
+        |       var_decl
+        |       if_stmt
+        |       for_stmt
+        |       while_stmt
+        |       do_while_stmt
+        |       "print" "(" expr ")" ";"
+        |       error ";"                         { yyerrok; } /* Upon syntax error synchronize to next ";". yyerrok: Resume generating error messages immediately for subsequent syntax errors. */
+        |       ";"                               { $$ = NULL; }
         ;
 
-decl:           "let" ID ";"
+var_decl:       "let" ID ";"
         |       "let" ID "=" expr ";"
         |       "let" ID ":" type ";"
         |       "let" ID ":" type "=" expr ";"
@@ -164,38 +199,73 @@ type:           "int"
         |       "bool"
         ;
 
+code_block:   "{" stmts "}"
+        |     "{" error "}"                                  { yyerrok; }
+        ;
 
+for_1: var_decl | assignment | %empty ;
+for_2: expr | %empty ;
+for_3: expr | %empty ;
 
+if_stmt:      "if" "(" expr ")" "{" stmts "}"
+        |     "if" "(" expr ")" "{" stmts "}" "else" "{" stmts "}"
+        ;
 
-if_statement: "if" "(" expr ")" "{" stmts "}"
+for_stmt:       "for" "(" for_1 ";" for_2 ";" for_3 ")" code_block
+        |       "for" "(" error ")" code_block            { yyerrok; }
+        ;
+while_stmt:     "while" "(" expr ")" code_block
+        |       "while" "(" error ")" code_block          { yyerrok; }
+        ;
+do_while_stmt:  "do" code_block "while" "(" expr ")" ";"
+        |       "do" code_block "while" "(" error ")" ";" { yyerrok; }
         ;
 
 
-assignment: ID "=" expr ";"                           { PUSH(STATEMENT); }
+assignment: ID "=" expr ";"                               { PUSH(STATEMENT); }
         ;
 
-expr:           expr[lhs] "+" expr[rhs] %prec ADD     { PUSH(PLUS); }
-        |       expr[lhs] "-" expr[rhs] %prec SUB     { PUSH(MINUS); }
-        |       expr[lhs] "*" expr[rhs] %prec MUL     { PUSH(MUL); }
-        |       expr[lhs] "/" expr[rhs] %prec DIV     { PUSH(DIV); }
-        |       expr[lhs] "%" expr[rhs] %prec MOD     { PUSH(MOD); }
-        |       "+" expr[e]             %prec POS     { PUSH(POS); }
-        |       "-" expr[e]             %prec NEG     { PUSH(NEG); }
-        |       "(" expr[e] ")"                       { PUSH(OPEN_PAREN); }
-        |       expr[lhs] "==" expr[rhs] %prec EQ     { PUSH(EQ); }
-        |       expr[lhs] "!=" expr[rhs] %prec NEQ    { PUSH(NEQ); }
-        |       expr[lhs] "<" expr[rhs] %prec LT      { PUSH(LT); }
-        |       expr[lhs] "<=" expr[rhs] %prec LTEQ   { PUSH(LTEQ); }
-        |       expr[lhs] ">" expr[rhs] %prec GT      { PUSH(GT); }
-        |       expr[lhs] ">=" expr[rhs] %prec GTEQ   { PUSH(GTEQ); }
-        |       ID "++"                  %prec INC    { PUSH(INC); }
-        |       ID "--"                  %prec DEC    { PUSH(DEC); }
-        |       ID                                    { PUSH(ID); }
-        |       I32_LIT                               { PUSH_I32(I32_LIT); }
-        |       F32_LIT                               { PUSH_F32(F32_LIT); }
-        |       CHAR_LIT                              { PUSH_CHAR(CHAR_LIT); }
-        |       BOOL_LIT                              { PUSH_BOOL(BOOL_LIT); }
+expr:           "(" expr[e] ")"                           { PUSH(OPEN_PAREN); }
+        |       "(" error ")"                             { yyerrok; }
+        |       expr[lhs] "+" expr[rhs]  %prec ADD        { PUSH(ADD); }
+        |       expr[lhs] "-" expr[rhs]  %prec SUB        { PUSH(SUB); }
+        |       expr[lhs] "*" expr[rhs]  %prec MUL        { PUSH(MUL); }
+        |       expr[lhs] "/" expr[rhs]  %prec DIV        { PUSH(DIV); }
+        |       expr[lhs] "%" expr[rhs]  %prec MOD        { PUSH(MOD); }
+        |       "+" expr[e]              %prec POS        { PUSH(POS); }
+        |       "-" expr[e]              %prec NEG        { PUSH(NEG); }
+        |       expr[lhs] "==" expr[rhs] %prec EQ         { PUSH(EQ); }
+        |       expr[lhs] "!=" expr[rhs] %prec NEQ        { PUSH(NEQ); }
+        |       expr[lhs] "<" expr[rhs]  %prec LT         { PUSH(LT); }
+        |       expr[lhs] "<=" expr[rhs] %prec LTEQ       { PUSH(LTEQ); }
+        |       expr[lhs] ">" expr[rhs]  %prec GT         { PUSH(GT); }
+        |       expr[lhs] ">=" expr[rhs] %prec GTEQ       { PUSH(GTEQ); }
+        |       ID "++"                  %prec INC        { PUSH(INC); }
+        |       ID "--"                  %prec DEC        { PUSH(DEC); }
+        |       ID                                        { PUSH(ID); }
+        |       I32_LIT                                   { PUSH_I32(I32_LIT); }
+        |       F32_LIT                                   { PUSH_F32(F32_LIT); }
+        |       CHAR_LIT                                  { PUSH_CHAR(CHAR_LIT); }
+        |       BOOL_LIT                                  { PUSH_BOOL(BOOL_LIT); }
         ;
 
 %%
 
+
+
+void yyerror(char const *s)
+{
+    extern int yylineno;
+
+    fprintf(stderr, "errors thus far: %d\n", yynerrs);
+    fprintf(stderr, "Error at yylineno: %d, yylloc=(%d, %d)\n\t%s\n", yylineno, yylloc.line, yylloc.column, s);
+}
+
+
+#if 0
+int yyreport_syntax_error (const yypcontext_t *ctx)
+{
+
+}
+
+#endif

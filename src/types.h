@@ -30,11 +30,11 @@ typedef struct {
     isize cnt;
 } int32_array_t, i32_array_t, int32_t_array_t;
 
-typedef struct YYLTYPE {
+typedef struct {
     char *filepath;
     i32 line;
     i32 column;
-} YYLTYPE;
+} tokloc_t;
 
 typedef struct mctx {
     void **allocs;
@@ -47,7 +47,7 @@ typedef struct {
     char *lexeme;
     i32 kind;
     char *skind;
-    YYLTYPE yylloc;
+    tokloc_t loc;
 } token_t;
 
 typedef struct {

@@ -19,6 +19,7 @@ f"""//
 #include "globals.h"
 #include "utils.h"
 #include "log.h"
+
 """
 )
 
@@ -42,17 +43,12 @@ class scope:
 
 def generate():
     eprint(common_boilerplate)
-    eprint("int main(int argc, char**argv)")
-    with scope(): 
-        eprint("return 0;")
-        with scope(): 
-            eprint("int a = 10;")  
 
 
 def main():
 
     with open("last_gen.txt", "w") as f:
-        f.write(datetime.today().strftime('%Y-%m-%d-%H:%M:%S')) 
+        f.write(datetime.today().strftime('%Y-%m-%d-%H:%M:%S'))
 
     gen_list = [
         { "filepath": "src/gen.c", "fn": generate }

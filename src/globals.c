@@ -5,7 +5,7 @@
 #include <stb_ds.h>
 
 int32_t yyprevcol = 0;
-YYLTYPE yylloc = { NULL, 1, 0 };
+tokloc_t yylloc = { NULL, 1, 0 };
 
 token_t *yyltoken = NULL;
 

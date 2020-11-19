@@ -17,13 +17,13 @@ static void number_lexing_test(void)
     for (size_t i = 0; i < ARRAY_LEN(i32_tests); i++) {
         TEST_ASSERT_TRUE(lex(NULL, open_from_string(i32_tests[i].string)));
         TEST_ASSERT_EQUAL_INT32(1, G_tok_seq.tokens_cnt);
-        TEST_ASSERT_EQUAL_INT32(I32_LIT, G_tok_seq.tokens[0].kind);
+        TEST_ASSERT_EQUAL_INT32(TOK_I32_LIT, G_tok_seq.tokens[0].kind);
     }
 
     for (size_t i = 0; i < ARRAY_LEN(f32_tests); i++) {
         TEST_ASSERT_TRUE(lex(NULL, open_from_string(f32_tests[i].string)));
         TEST_ASSERT_EQUAL_INT32(1, G_tok_seq.tokens_cnt);
-        TEST_ASSERT_EQUAL_INT32(F32_LIT, G_tok_seq.tokens[0].kind);
+        TEST_ASSERT_EQUAL_INT32(TOK_F32_LIT, G_tok_seq.tokens[0].kind);
     }
 }
 

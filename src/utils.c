@@ -178,7 +178,7 @@ char *lexeme_intern(char *yytext)
     return intern;
 }
 
-token_t *token_push(YYLTYPE yylloc, char *yytext, int yychar, char *yychar_str)
+token_t *token_push(tokloc_t loc, char *yytext, int yychar, char *yychar_str)
 {
     token_seq_t *tseq = &G_tok_seq;
 
@@ -186,7 +186,7 @@ token_t *token_push(YYLTYPE yylloc, char *yytext, int yychar, char *yychar_str)
         .lexeme = (char *)lexeme_intern(yytext),
         .kind = yychar,
         .skind = yychar_str,
-        .yylloc = yylloc,
+        .loc = loc,
     };
 
     token.idx = G_tok_seq.tokens_cnt;
