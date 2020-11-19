@@ -103,6 +103,36 @@ static bool yacc_from_str_to_bool(ast_node_t *node) {
 %token                  PLUS "+"
 %token                  MINUS "-"
 %token                  MUL "*"
+%token                  DIV "/"
+%token                  MOD "%"
+
+
+
+%token                  EQ "=="
+%token                  NEQ "!="
+%token                  GT ">"
+%token                  GTEQ ">="
+%token                  LT "<"
+%token                  LTEQ "<="
+
+%token                  INC "++"
+%token                  DEC "--"
+
+
+%token                  LNOT "!"
+%token                  LAND "&&"
+%token                  LOR "||"
+
+%token                  BNOT "~"
+%token                  BAND "&"
+%token                  BOR "|"
+%token                  BXOR "^"
+
+%token                  BLSHIFT "<<"
+%token                  BRSHIFT ">>"
+
+%token                  POW "**"
+
 
 %token                  COLON ":"
 %token                  SEMICOLON ";"
@@ -135,11 +165,22 @@ static bool yacc_from_str_to_bool(ast_node_t *node) {
 // Spaces can be used to separate operators on the same line,
 //  and assign the same precedence
 // %precedence can be used to declare a token with no associatvity (eg for unary operators)
+// --- Most of this precedence table is C derived
+// --- The only difference is that the bitwise and, or, xor are pushed higher in precedence compared to the "==", "!=" operators
+// --- the reasons in mainly for convenience. Most modern languaes applied the same form of change
 %left                   ASSIGN
-%left                   PLUS MINUS
-%left                   MUL
-%right                  NEG
-
+%left                   LOR
+%left                   LAND
+%left                   EQ NEQ
+%left                   BXOR
+%left                   BOR
+%left                   BAND
+%left                   BLSHIFT BRSHIFT
+%left                   ADD SUB
+%left                   MUL DIV MOD
+%left                   POW
+%right                  POS NEG
+%left                   INC DEC
 
 
 /* When error recovery, bison may want to discard some symbols. So
@@ -183,16 +224,17 @@ if_statement: "if" "(" expr ")" "{" stmts "}"
 assignment: ID "=" expr ";" { PUSH(STATEMENT); }
         ;
 
-expr:           expr[lhs] "+" expr[rhs] { PUSH(PLUS); }
-        |       expr[lhs] "-" expr[rhs] { PUSH(MINUS); }
-        |       expr[lhs] "*" expr[rhs] { PUSH(MUL); }
-        |       "-" expr[e]  %prec NEG { PUSH(NEG); }
-        |       "(" expr[e] ")" { PUSH(OPEN_PAREN); }
-        |       ID { PUSH(ID); }
-        |       I32_LIT    { PUSH_I32(I32_LIT); }
-        |       F32_LIT    { PUSH_F32(F32_LIT); }
-        |       CHAR_LIT   { PUSH_CHAR(CHAR_LIT); }
-        |       BOOL_LIT   { PUSH_BOOL(BOOL_LIT); }
+expr:           expr[lhs] "+" expr[rhs] %prec ADD { PUSH(PLUS); }
+        |       expr[lhs] "-" expr[rhs] %prec SUB { PUSH(MINUS); }
+        |       expr[lhs] "*" expr[rhs] %prec MUL { PUSH(MUL); }
+        |       "+" expr[e]             %prec POS { PUSH(NEG); }
+        |       "-" expr[e]             %prec NEG { PUSH(NEG); }
+        |       "(" expr[e] ")"                   { PUSH(OPEN_PAREN); }
+        |       ID                                { PUSH(ID); }
+        |       I32_LIT                           { PUSH_I32(I32_LIT); }
+        |       F32_LIT                           { PUSH_F32(F32_LIT); }
+        |       CHAR_LIT                          { PUSH_CHAR(CHAR_LIT); }
+        |       BOOL_LIT                          { PUSH_BOOL(BOOL_LIT); }
         ;
 
 %%

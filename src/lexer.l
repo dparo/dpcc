@@ -51,11 +51,6 @@ punct       "!\"#$%&'()*+,-./:;<=>?@[\\]^`{|}~"
 escape_seq  \\0|\\a|\\b|\\t|\\n|\\v|\\f|\\r
 
 
-assign   "="
-plus     "+"
-minus     "+"
-mul      "*"
-
 i32_lit         [+-]?(0[xX])?(0[bB])?({digit}|[abcdefABCDEF])+
 f32_lit         [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)(f|F)?
 char_lit        "'"({alphanum}|{punct}|{space}|{escape_seq}|(\\0x{hex}{2}))"'"
