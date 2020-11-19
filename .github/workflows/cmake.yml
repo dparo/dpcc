@@ -17,6 +17,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
+    - name: Setup PPAs for install latest required Bison>=3.6
+      run: sudo add-apt-repository ppa:dns/gnu && sudo apt-get update
+ 
     - name: Install Dependencies
       run: sudo apt install flex bison
       
