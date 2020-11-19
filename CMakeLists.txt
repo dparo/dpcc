@@ -30,14 +30,6 @@ FLEX_TARGET(lexer  src/lexer.l ${CMAKE_CURRENT_BINARY_DIR}/lexer.c
 ADD_FLEX_BISON_DEPENDENCY(lexer parser)
 
 
-add_custom_target(gen.py
-  python3 "${CMAKE_SOURCE_DIR}/scripts/gen.py" "generated_code/gen.c"
-  DEPENDS "${CMAKE_SOURCE_DIR}/scripts/gen.py"
-  BYPRODUCTS generated_code/gen.c
-  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-  )
-
-
 add_library(libstb STATIC
   third_party/stb_impl.c
   )
@@ -50,8 +42,21 @@ add_library(libdpcc STATIC
   )
 target_include_directories(libdpcc PUBLIC src)
 target_include_directories(libdpcc PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(libdpcc PUBLIC libstb)
+
+
+
+
+add_custom_target(gen.py
+  python3 "${CMAKE_SOURCE_DIR}/generated_srcs/gen_all.py"
+  DEPENDS "${CMAKE_SOURCE_DIR}/generated_srcs/gen_all.py"
+  BYPRODUCTS "${CMAKE_SOURCE_DIR}/generated_srcs/last_gen.txt"
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/generated_srcs"
+  )
+
 add_dependencies(libdpcc gen.py)
-target_sources(libdpcc PRIVATE generated_code/gen.c)
+target_sources(libdpcc PRIVATE  "${CMAKE_SOURCE_DIR}/generated_srcs/src/gen.c")
+
 
 add_executable(dpcc src/main.c )
 target_link_libraries(dpcc libdpcc)
