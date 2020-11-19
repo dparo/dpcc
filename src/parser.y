@@ -49,6 +49,7 @@
 
 %}
 
+%token YYEOF 0 "end of file"
 
 %token                  ID
 %token                  I32_LIT
@@ -173,7 +174,7 @@ root: stmts ;
 
 /* Bison MANUAL says to prefer left recursion where possible (bounded stack space) */
 stmts:          stmts stmt                        { $$ = $1; }
-        |       YYEOF                             { }
+        |       "end of file"                     { }
         ;
 
 
