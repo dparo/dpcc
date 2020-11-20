@@ -158,13 +158,6 @@ bool str_to_f32(char *string, f32 *out)
     return result;
 }
 
-void tokens_seq_clear(token_seq_t *tseq)
-{
-    dalldel(&G_allctx, tseq->tokens);
-    tseq->tokens = NULL;
-    tseq->tokens_cnt = 0;
-}
-
 char *string_intern(char *yytext)
 {
     char *intern = NULL;
@@ -181,46 +174,58 @@ char *string_intern(char *yytext)
     return intern;
 }
 
-token_t *token_push(tokloc_t loc, char *yytext, int yychar, char *yychar_str)
+void tokens_seq_clear(token_seq_t *tseq)
 {
-    token_seq_t *tseq = &G_tok_seq;
+    dalldel(&G_allctx, tseq->tokens);
+    tseq->tokens = NULL;
+    tseq->tokens_cnt = 0;
+}
 
-    token_t token = {
-        .lexeme = string_intern(yytext),
-        .kind = yychar,
-        .skind = string_intern(yychar_str),
-        .loc = loc,
-    };
-
-    token.idx = G_tok_seq.tokens_cnt;
-
-    void *ptr = dallrsz(&G_allctx, tseq->tokens, (tseq->tokens_cnt + 1) * sizeof(*tseq->tokens));
-
-    if (ptr == NULL) {
+token_t *token_new(tokloc_t loc, char *yytext, int yychar, char *yychar_str)
+{
+    token_t *result = dallnew(&G_allctx, sizeof(*result));
+    if (result == NULL) {
         fprintf(stderr, "ast_push :: Failed memory allocation\n");
         fflush(stderr);
         abort();
     }
 
-    tseq->tokens = ptr;
-    tseq->tokens_cnt += 1;
+    result->lexeme = string_intern(yytext);
+    result->kind = yychar;
+    result->skind = string_intern(yychar_str);
+    result->loc = loc;
 
-    memcpy(&tseq->tokens[tseq->tokens_cnt - 1], &token, sizeof(token));
-    return &tseq->tokens[tseq->tokens_cnt - 1];
+    G_tok_seq.tokens = dallrsz(&G_allctx, G_tok_seq.tokens, (G_tok_seq.tokens_cnt + 1) * sizeof(token_t *));
+    G_tok_seq.tokens[G_tok_seq.tokens_cnt++] = result;
+
+    result->idx = G_tok_seq.tokens_cnt - 1;
+
+    return result;
 }
 
-void print_node(FILE *f, ast_node_t *node)
+void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
 {
     assert(node);
-    fprintf(f, "NODE: { (%s) -- type: `%s` (.i = %d, .f = %f, .b = %d) \n"
-               "        ---- lexeme: \"%s\", tok->skind = `%s` }\n",
-        node->skind,
+
+    char *indent_string = NULL;
+    for (int32_t i = 0; i < indentation_level; i++) {
+        indent_string = sfcat(indent_string, 0, "   |");
+    }
+
+    indent_string = sfcat(indent_string, 0, "%s", node->skind);
+
+    fprintf(f,
+        " %-8s { type: `%s` (.i = %d, .f = %f, .b = %d) ---- lexeme: \"%s\", tok->skind = `%s` tok->loc=[%d,%d] }\n",
+        indent_string,
         node->stype,
         node->val.i,
         node->val.f,
         node->val.b,
         node->tok ? node->tok->lexeme : "",
-        node->skind);
+        node->tok ? node->tok->skind : "",
+        node->tok ? node->tok->loc.line : 0,
+        node->tok ? node->tok->loc.line : 0);
+    free(indent_string);
 }
 
 ast_node_t *new_node(token_t *t, int32_t kind, char *skind)
@@ -320,10 +325,10 @@ char *sfcat(char *string, int32_t string_len, char *fmt, ...)
 
     va_start(ap, fmt);
     int32_t chars_to_write = vsnprintf(NULL, 0, fmt, ap);
-    char *result = realloc(string, string_len + chars_to_write + 1);
-    result[string_len + chars_to_write] = 0;
+    char *result = realloc(string, string_len + chars_to_write + 2);
+    result[string_len + chars_to_write + 1] = 0;
 
-    char *bumped = string + string_len;
+    char *bumped = result + string_len;
     va_start(ap, fmt);
     vsnprintf(bumped, chars_to_write, fmt, ap);
     va_end(ap);

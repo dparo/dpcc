@@ -56,7 +56,7 @@ typedef struct {
 } token_t;
 
 typedef struct {
-    token_t *tokens;
+    token_t **tokens;
     i32 tokens_cnt;
 } token_seq_t;
 
@@ -69,6 +69,7 @@ enum AST_TYPE {
 
 typedef struct ast_node {
     token_t *tok;
+
     i32 kind;
     char *skind;
 

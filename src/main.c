@@ -31,7 +31,7 @@ int main(int argc, char **argv)
         }
 
         for (i32 i = 0; i < G_tok_seq.tokens_cnt; i++) {
-            token_t *t = &G_tok_seq.tokens[i];
+            token_t *t = G_tok_seq.tokens[i];
 
             printf("Token[%d]: \"%s\"\t\t[kind = %s (%d), yylloc=(%d, %d)]\n",
                 i,
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
         ast_traversal_begin(&att);
         ast_node_t *n = NULL;
         while ((n = ast_traverse_next(&att)) != NULL) {
-            print_node(stdout, n);
+            print_node(stdout, n, att.stack_cnt - 1);
         }
 
 #if 0
