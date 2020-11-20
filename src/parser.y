@@ -30,11 +30,6 @@
 // %locations
 // %define api.location.type {tokloc_t}
 
-
-// Write an extra output file containing verbose descriptions of the parser states
-//  and what is done for each type of lookahead token in that state
-%verbose
-
 // As from the Bison MANUAL using LAC parser instead of the default LALR parser
 // table implementations can lead to better error messages provided.
 // Also user actions associated with tokens lookahead are not executed in case
