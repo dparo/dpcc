@@ -88,9 +88,6 @@ void node_set_kind(ast_node_t *node, int32_t kind, char *skind);
 void push_child(ast_node_t *parent, ast_node_t *child);
 void push_childs(ast_node_t *parent, int32_t num_childs, ast_node_t **childs);
 
-void ast_traversal_begin(ast_traversal_t *t);
-ast_node_t *ast_traverse_next(ast_traversal_t *t);
-
 bool str_to_i32(char *string, i32 *out);
 bool str_to_f32(char *string, f32 *out);
 bool str_to_char(char *string, char *out);

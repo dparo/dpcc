@@ -133,3 +133,57 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
 #undef LOG
     return success;
 }
+
+static void ast_traversal_push(ast_traversal_t *t, ast_node_t *parent, int32_t current_child)
+{
+    t->stack_nodes = dallrsz(&G_allctx, t->stack_nodes, (t->stack_cnt + 1) * sizeof(parent));
+    t->stack_childs = dallrsz(&G_allctx, t->stack_childs, (t->stack_cnt + 1) * sizeof(current_child));
+    t->stack_cnt += 1;
+    t->stack_nodes[t->stack_cnt - 1] = parent;
+    t->stack_childs[t->stack_cnt - 1] = current_child;
+}
+
+static inline bool ast_traversal_pop(ast_traversal_t *t)
+{
+    if (t->stack_cnt == 0) {
+        return false;
+    }
+    t->stack_cnt -= 1;
+    return true;
+}
+
+void ast_traversal_begin(ast_traversal_t *t)
+{
+    ast_traversal_push(t, &G_root_node, 0);
+}
+
+ast_node_t *ast_traverse_next(ast_traversal_t *t)
+{
+    if (t->stack_cnt == 0) {
+        return NULL;
+    }
+
+    while (t->stack_childs[t->stack_cnt - 1] < t->stack_nodes[t->stack_cnt - 1]->num_childs) {
+        int32_t ci = t->stack_childs[t->stack_cnt - 1];
+        ast_node_t *child = NULL;
+
+        while (((child = t->stack_nodes[t->stack_cnt - 1]->childs[ci]) == NULL) && (ci < t->stack_nodes[t->stack_cnt - 1]->num_childs)) {
+            ci++;
+        }
+        if (child) {
+            t->stack_childs[t->stack_cnt - 1] = ci + 1;
+            ast_traversal_push(t, child, 0);
+        } else {
+            break;
+        }
+    }
+
+    ast_node_t *nvcs = t->stack_nodes[t->stack_cnt - 1];
+    ast_traversal_pop(t);
+
+    if (nvcs->kind == TOK_YYEOF) {
+        return NULL;
+    }
+
+    return nvcs;
+}

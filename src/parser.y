@@ -193,14 +193,14 @@
 
 %%
 
-root:    stmts                                   { push_childs(&G_root_node, 1, CAST { $1 }); }
+root:    stmts                                   { NODE_KIND($$, YYEOF); push_childs(&G_root_node, 1, CAST { $1 }); }
        | %empty
        ;
 
         // Bison MANUAL says to prefer left recursion where possible. Better memory footprint (bounded stack space)
 
 stmts:          stmts[car] stmt[self]                        { $$ = $car; push_child($car, $self); }
-        |       stmt                                         { $$ = NEW_NODE(NULL, STATEMENT); }
+        |       stmt[self]                                   { $$ = NEW_NODE(NULL, STATEMENT); push_child($$, $self); }
         ;
 
 
