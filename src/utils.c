@@ -228,11 +228,16 @@ ast_node_t *new_node(token_t *t, int32_t kind, char *skind)
 
     if (result) {
         result->tok = t;
-        result->kind = kind;
-        result->skind = string_intern(skind);
+        node_set_kind(result, kind, skind);
     }
 
     return result;
+}
+
+void node_set_kind(ast_node_t *node, int32_t kind, char *skind)
+{
+    node->kind = kind;
+    node->skind = string_intern(skind);
 }
 
 void push_child(ast_node_t *parent, ast_node_t *child)

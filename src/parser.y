@@ -61,6 +61,7 @@
 
 %code requires {
 #include "globals.h"
+#define CAST (ast_node_t*[])
 }
 %{
 
@@ -189,7 +190,7 @@
 
 %%
 
-root:    stmts                                   { push_childs(&G_root_node, 1, (ast_node_t *[]) { $1 }); }
+root:    stmts                                   { push_childs(&G_root_node, 1, CAST { $1 }); }
        | %empty
        ;
 

@@ -81,7 +81,10 @@ void tokens_seq_clear(token_seq_t *tseq);
 token_t *token_push(tokloc_t loc, char *yytext, int yychar, char *yychar_str);
 
 void print_node(FILE *f, ast_node_t *node);
+
 ast_node_t *new_node(token_t *t, int32_t kind, char *skind);
+void node_set_kind(ast_node_t *node, int32_t kind, char *skind);
+
 void push_child(ast_node_t *parent, ast_node_t *child);
 void push_childs(ast_node_t *parent, int32_t num_childs, ast_node_t **childs);
 
@@ -92,8 +95,3 @@ bool str_to_i32(char *string, i32 *out);
 bool str_to_f32(char *string, f32 *out);
 bool str_to_char(char *string, char *out);
 bool str_to_bool(char *string, bool *out);
-
-static inline int breakme(void)
-{
-    return 1;
-}

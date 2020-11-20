@@ -83,13 +83,11 @@ static ast_node_t *yacc_from_str_to_bool(ast_node_t *node)
         return (TOK_##X);                                       \
     } while (0)
 
-#define A ast_node_t **
-
 #define NEW_NODE(TOKEN_PTR, KIND) \
-    new_node(TOKEN_PTR, KIND, #KIND)
+    new_node(TOKEN_PTR, YY_##KIND, #KIND)
 
-#define PUSH_CHILDS(CNT, ...) \
-    push_childs(yyval, CNT, (ast_node_t *[])__VA_ARGS__)
+#define NODE_KIND(node, KIND) \
+    node_set_kind(node, YY_##KIND, (#KIND))
 
 #define INIT_I32(node)                               \
     do {                                             \
@@ -98,6 +96,7 @@ static ast_node_t *yacc_from_str_to_bool(ast_node_t *node)
         } else {                                     \
             node->type = TYPE_I32;                   \
         }                                            \
+        NODE_KIND(node, I32_LIT);                    \
     } while (0)
 
 #define INIT_F32(node)                               \
@@ -107,6 +106,7 @@ static ast_node_t *yacc_from_str_to_bool(ast_node_t *node)
         } else {                                     \
             node->type = TYPE_F32;                   \
         }                                            \
+        NODE_KIND(node, F32_LIT);                    \
     } while (0)
 
 #define INIT_CHAR(node)                               \
@@ -116,6 +116,7 @@ static ast_node_t *yacc_from_str_to_bool(ast_node_t *node)
         } else {                                      \
             node->type = TYPE_I32;                    \
         }                                             \
+        NODE_KIND(node, I32_LIT);                     \
     } while (0)
 
 #define INIT_BOOL(node)                               \
@@ -125,4 +126,5 @@ static ast_node_t *yacc_from_str_to_bool(ast_node_t *node)
         } else {                                      \
             node->type = TYPE_BOOL;                   \
         }                                             \
+        NODE_KIND(node, BOOL_LIT);                    \
     } while (0)
