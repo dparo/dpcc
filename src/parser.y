@@ -15,14 +15,13 @@
         // Also you must setup the global var `yydebug` to a non zero value
         // to enable the traces at runtime. Also the ill-named `%verbose` is required
         // in this case
-%verbose
-%define parse.trace
-%initial-action {
-    yydebug = 1;
-}
-%printer {
-        fprintf(yyo, "$$ = %p", $$);
-} <>
+// NOT USED:
+//      Enabled only when testing
+// %verbose
+// %define parse.trace
+// %initial-action {
+//     yydebug = 1;
+// }
 
 
         // If you want to use glr-parse enable this 2 down below
@@ -68,37 +67,6 @@
 #include "yacc_utils.h"
 #define YYERROR_VERBOSE 1
 
-
-#define PUSH(X) \
-    ast_push(yyltoken, YY_##X, #X, (isize)0, NULL)
-
-#define INIT_I32(node)                           \
-    do {                                      \
-        if (!(yyval = yacc_from_str_to_i32(node))) { \
-            YYERROR;                          \
-        }                                     \
-    } while (0)
-
-#define INIT_F32(node)                           \
-    do {                                      \
-        if (!(yyval = yacc_from_str_to_f32(node))) { \
-            YYERROR;                          \
-        }                                     \
-    } while (0)
-
-#define INIT_CHAR(node)                           \
-    do {                                       \
-        if (!(yyval = yacc_from_str_to_char(node))) { \
-            YYERROR;                           \
-        }                                      \
-    } while (0)
-
-#define INIT_BOOL(node)                           \
-    do {                                       \
-        if (!(yyval = yacc_from_str_to_bool(node))) { \
-            YYERROR;                           \
-        }                                      \
-    } while (0)
 
 
 %}
@@ -207,6 +175,9 @@
         // When error recovery, bison may want to discard some symbols. So
         // it is generally good practice to free any allocated memory here.
 
+// NOT USED: We track our allocations by pushing into an allocator that can be
+//           freed all at once in demand. After a parse. We just clear the entire
+//           allocator
 // %destructor { printf ("Discarding TAG-FILLED symbol\n"); if(0) free ($$); } <*>
 // %destructor { printf ("Discarding TAG-LESS symbol\n"); if(0) free($$); } <>
 

@@ -4,6 +4,8 @@
 #include "lexer.h"
 #include "parser.h"
 #include "log.h"
+#include "types.h"
+
 #define YYERROR_VERBOSE 1
 
 int yylex(void);
@@ -61,3 +63,42 @@ static ast_node_t *yacc_from_str_to_bool(ast_node_t *node)
     }
     return node;
 }
+
+#define PUSH(X) \
+    ast_push(yyltoken, YY_##X, #X, (isize)0, NULL)
+
+#define INIT_I32(node)                               \
+    do {                                             \
+        if (!(yyval = yacc_from_str_to_i32(node))) { \
+            YYERROR;                                 \
+        } else {                                     \
+            node->type = TYPE_I32;                   \
+        }                                            \
+    } while (0)
+
+#define INIT_F32(node)                               \
+    do {                                             \
+        if (!(yyval = yacc_from_str_to_f32(node))) { \
+            YYERROR;                                 \
+        } else {                                     \
+            node->type = TYPE_F32;                   \
+        }                                            \
+    } while (0)
+
+#define INIT_CHAR(node)                               \
+    do {                                              \
+        if (!(yyval = yacc_from_str_to_char(node))) { \
+            YYERROR;                                  \
+        } else {                                      \
+            node->type = TYPE_I32;                    \
+        }                                             \
+    } while (0)
+
+#define INIT_BOOL(node)                               \
+    do {                                              \
+        if (!(yyval = yacc_from_str_to_bool(node))) { \
+            YYERROR;                                  \
+        } else {                                      \
+            node->type = TYPE_BOOL;                   \
+        }                                             \
+    } while (0)

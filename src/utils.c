@@ -4,11 +4,11 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <string.h>
+#include <stdarg.h>
+#include <assert.h>
 
 #include "types.h"
 #include "globals.h"
-
-#include <stdarg.h>
 
 /// Equivalent to malloc
 void *dallnew(mctx_t *ctx, size_t size)
@@ -84,6 +84,16 @@ void *dallstl(mctx_t *ctx, void *ptr)
     ctx->allocs[ctx->num_allocs] = ptr;
     ctx->num_allocs += 1;
     return ctx->allocs[ctx->num_allocs - 1];
+}
+
+bool dallarr(mctx_t *ctx, void **ptr, size_t num_elems, size_t sizeof_each_elem)
+{
+    void *temp = dallrsz(ctx, *ptr, num_elems * sizeof_each_elem);
+    if (temp != NULL) {
+        *ptr = temp;
+        return true;
+    }
+    return false;
 }
 
 bool str_to_i32(char *string, i32 *out)

@@ -55,11 +55,20 @@ typedef struct {
     i32 tokens_cnt;
 } token_seq_t;
 
+enum AST_TYPE {
+    TYPE_NONE,
+    TYPE_BOOL,
+    TYPE_I32,
+    TYPE_F32,
+};
+
 typedef struct ast_node {
     token_t *tok;
     i32 kind;
     char *skind;
 
+    enum AST_TYPE type;
+    int32_t num_childs;
     struct ast_node **childs;
 
     union {

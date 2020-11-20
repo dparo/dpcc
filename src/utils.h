@@ -68,6 +68,8 @@ void *dallrsz(mctx_t *ctx, void *ptr, size_t new_size);
 void dalldel(mctx_t *ctx, void *ptr);
 /// Clears all memory allocations
 void dallclr(mctx_t *ctx);
+/// Alloc, realloc array to ensure the correct number of elements
+bool dallarr(mctx_t *ctx, void **ptr, size_t num_elems, size_t sizeof_each_elem);
 
 /// Steal memory allocations from typical malloc
 void *dallstl(mctx_t *ctx, void *ptr);
@@ -80,6 +82,7 @@ token_t *token_push(tokloc_t loc, char *yytext, int yychar, char *yychar_str);
 
 void ast_clear(ast_t *ast);
 ast_node_t *ast_push(token_t *t, int32_t kind, char *skind, isize num_childs, ast_node_t **childs);
+void ast_node_destroy(ast_node_t **node);
 
 bool str_to_i32(char *string, i32 *out);
 bool str_to_f32(char *string, f32 *out);
