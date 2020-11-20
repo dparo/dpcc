@@ -10,6 +10,7 @@ git clone --recursive https://github.com/dparo/dpcc
 - `gcc`
 - `make`
 - `CMake`
+- `python3`
 - `Flex`
 - `Bison >= 3.6`:
   - Ubuntu 20.10 (Tested):
