@@ -1,4 +1,13 @@
-%require "3.6"   // Required for %define parse.error {custom,detailed}
+// Required for %define parse.error {custom,detailed}
+// Ubuntu 20.10 (Tested):
+//      sudo apt install bison   # should be enough
+// Ubuntu 18.04 (Tested), Ubuntu: 20.04:
+//      # We need to pull a deb package from the official ubuntu launchpad repos, and then install it
+//      wget 'https://launchpad.net/ubuntu/+source/bison/2:3.7+dfsg-1/+build/19640339/+files/bison_3.7+dfsg-1_amd64.deb'
+//      sudo apt install ./bison_3.7+dfsg-1_amd64.deb
+
+%require "3.6"
+
 
 // If you want to use glr-parse enable this 2 down below
 //     The second line specifies the expected number of reduce-reduce conflicts.
@@ -25,7 +34,6 @@
 // Write an extra output file containing verbose descriptions of the parser states
 //  and what is done for each type of lookahead token in that state
 %verbose
-
 
 // As from the Bison MANUAL using LAC parser instead of the default LALR parser
 // table implementations can lead to better error messages provided.
