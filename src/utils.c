@@ -211,6 +211,7 @@ token_t *token_push(tokloc_t loc, char *yytext, int yychar, char *yychar_str)
 
 void print_node(FILE *f, ast_node_t *node)
 {
+    assert(node);
     fprintf(f, "NODE: { (%s) -- type: `%s` (.i = %d, .f = %f, .b = %d) \n"
                "        ---- lexeme: \"%s\", tok->skind = `%s` }\n",
         node->skind,
@@ -218,7 +219,7 @@ void print_node(FILE *f, ast_node_t *node)
         node->val.i,
         node->val.f,
         node->val.b,
-        node->tok->lexeme,
+        node->tok ? node->tok->lexeme : "",
         node->skind);
 }
 
@@ -357,11 +358,21 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t)
     if (t->stack_cnt == 0) {
         return NULL;
     }
+
     while (t->stack_childs[t->stack_cnt - 1] < t->stack_nodes[t->stack_cnt - 1]->num_childs) {
         ast_node_t *cn = t->stack_nodes[t->stack_cnt - 1];
         int32_t ci = t->stack_childs[t->stack_cnt - 1];
-        ast_traversal_push(t, cn, ci);
-        t->stack_childs[t->stack_cnt - 1] += 1;
+        ast_node_t *child = NULL;
+
+        while (((child = t->stack_nodes[t->stack_cnt - 1]->childs[ci]) == NULL) && (ci < t->stack_nodes[t->stack_cnt - 1]->num_childs) ) {
+            ci++;
+        }
+        if (child) {
+            t->stack_childs[t->stack_cnt - 1] = ci + 1;
+            ast_traversal_push(t, child, 0);
+        } else {
+            break;
+        }
     }
 
     ast_node_t *nvcs = t->stack_nodes[t->stack_cnt - 1];
