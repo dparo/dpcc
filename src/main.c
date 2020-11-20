@@ -49,6 +49,14 @@ int main(int argc, char **argv)
         }
 
         // Broken ass code
+
+        ast_traversal_t att = { 0 };
+        ast_traversal_begin(&att);
+        ast_node_t *n = NULL;
+        while ((n = ast_traverse_next(&att)) != NULL) {
+            print_node(stdout, n);
+        }
+
 #if 0
         for (i32 i = 0; i < G_ast.nodes_cnt; i++) {
             ast_node_t *node = &G_ast.nodes[i];

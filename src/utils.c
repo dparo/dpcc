@@ -209,6 +209,19 @@ token_t *token_push(tokloc_t loc, char *yytext, int yychar, char *yychar_str)
     return &tseq->tokens[tseq->tokens_cnt - 1];
 }
 
+void print_node(FILE *f, ast_node_t *node)
+{
+    fprintf(f, "NODE: { (%s) -- type: `%s` (.i = %d, .f = %f, .b = %d) \n"
+               "        ---- lexeme: \"%s\", tok->skind = `%s` }\n",
+        node->skind,
+        node->stype,
+        node->val.i,
+        node->val.f,
+        node->val.b,
+        node->tok->lexeme,
+        node->skind);
+}
+
 ast_node_t *new_node(token_t *t, int32_t kind, char *skind)
 {
     ast_node_t *result = result = dallnew(&G_allctx, sizeof(*result));
@@ -309,4 +322,44 @@ char *sfcat(char *string, int32_t string_len, char *fmt, ...)
     vsnprintf(bumped, chars_to_write, fmt, ap);
     va_end(ap);
     return result;
+}
+
+static void ast_traversal_push(ast_traversal_t *t, ast_node_t *parent, int32_t current_child)
+{
+    t->stack_nodes = dallnew(&G_allctx, (t->stack_cnt + 1) * sizeof(parent));
+    t->stack_childs = dallnew(&G_allctx, (t->stack_cnt + 1) * sizeof(current_child));
+    t->stack_cnt += 1;
+    t->stack_nodes[t->stack_cnt - 1] = parent;
+    t->stack_childs[t->stack_cnt - 1] = current_child;
+}
+
+static inline bool ast_traversal_pop(ast_traversal_t *t)
+{
+    if (t->stack_cnt == 0) {
+        return false;
+    }
+    t->stack_cnt -= 1;
+    return true;
+}
+
+void ast_traversal_begin(ast_traversal_t *t)
+{
+    ast_traversal_push(t, &G_root_node, 0);
+}
+
+ast_node_t *ast_traverse_next(ast_traversal_t *t)
+{
+    if (t->stack_cnt == 0) {
+        return NULL;
+    }
+    while (t->stack_childs[t->stack_cnt - 1] < t->stack_nodes[t->stack_cnt - 1]->num_childs) {
+        ast_node_t *cn = t->stack_nodes[t->stack_cnt - 1];
+        int32_t ci = t->stack_childs[t->stack_cnt - 1];
+        ast_traversal_push(t, cn, ci);
+        t->stack_childs[t->stack_cnt - 1] += 1;
+    }
+
+    ast_node_t *nvcs = t->stack_nodes[t->stack_cnt - 1];
+    ast_traversal_pop(t);
+    return nvcs;
 }

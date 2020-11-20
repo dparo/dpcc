@@ -80,9 +80,13 @@ char *string_intern(char *yytext);
 void tokens_seq_clear(token_seq_t *tseq);
 token_t *token_push(tokloc_t loc, char *yytext, int yychar, char *yychar_str);
 
+void print_node(FILE *f, ast_node_t *node);
 ast_node_t *new_node(token_t *t, int32_t kind, char *skind);
 void push_child(ast_node_t *parent, ast_node_t *child);
 void push_childs(ast_node_t *parent, int32_t num_childs, ast_node_t **childs);
+
+void ast_traversal_begin(ast_traversal_t *t);
+ast_node_t *ast_traverse_next(ast_traversal_t *t);
 
 bool str_to_i32(char *string, i32 *out);
 bool str_to_f32(char *string, f32 *out);
