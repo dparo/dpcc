@@ -200,7 +200,7 @@ stmts:          stmts stmt                        { $$ = NULL; }
         ;
 
 
-stmt:           assignment
+stmt:           assignment ";"
         |       print_stmt
         |       var_decl
         |       if_stmt
@@ -211,7 +211,7 @@ stmt:           assignment
         |       error ";"                         { yyerrok; } /* Upon syntax error synchronize to next ";". yyerrok: Resume generating error messages immediately for subsequent syntax errors. */
         ;
 
-assignment:     ID "=" expr ";"                           { PUSH(STATEMENT); }
+assignment:     ID "=" expr                               { PUSH(STATEMENT); }
 print_stmt:     "print" "(" expr ")" ";"                  { PUSH(STATEMENT); }
 
 var_decl:       "let" ID ";"                              { PUSH(STATEMENT); }
