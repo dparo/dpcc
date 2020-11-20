@@ -189,7 +189,7 @@
 
 %%
 
-root:    stmts
+root:    stmts                                   { push_childs(&G_root_node, 1, (ast_node_t *[]) { $1 }); }
        | %empty
        ;
 

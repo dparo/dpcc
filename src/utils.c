@@ -326,8 +326,8 @@ char *sfcat(char *string, int32_t string_len, char *fmt, ...)
 
 static void ast_traversal_push(ast_traversal_t *t, ast_node_t *parent, int32_t current_child)
 {
-    t->stack_nodes = dallnew(&G_allctx, (t->stack_cnt + 1) * sizeof(parent));
-    t->stack_childs = dallnew(&G_allctx, (t->stack_cnt + 1) * sizeof(current_child));
+    t->stack_nodes = dallrsz(&G_allctx, t->stack_nodes, (t->stack_cnt + 1) * sizeof(parent));
+    t->stack_childs = dallrsz(&G_allctx, t->stack_childs, (t->stack_cnt + 1) * sizeof(current_child));
     t->stack_cnt += 1;
     t->stack_nodes[t->stack_cnt - 1] = parent;
     t->stack_childs[t->stack_cnt - 1] = current_child;

@@ -83,12 +83,13 @@ static ast_node_t *yacc_from_str_to_bool(ast_node_t *node)
         return (TOK_##X);                                       \
     } while (0)
 
-#define PUSH(X, ...)                                                                                 \
-    do {                                                                                             \
-        yyval->kind = (YY_##X);                                                                      \
-        yyval->skind = (#X);                                                                         \
-        /* push_childs(yyval, ARRAY_LEN((ast_node_t *[])__VA_ARGS), (ast_node_t *[])__VA_ARGS__); */ \
-    } while (0)
+#define A ast_node_t **
+
+#define NEW_NODE(TOKEN_PTR, KIND) \
+    new_node(TOKEN_PTR, KIND, #KIND)
+
+#define PUSH_CHILDS(CNT, ...) \
+    push_childs(yyval, CNT, (ast_node_t *[])__VA_ARGS__)
 
 #define INIT_I32(node)                               \
     do {                                             \
