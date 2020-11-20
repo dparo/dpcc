@@ -9,7 +9,7 @@
 
 int main(int argc, char **argv)
 {
-    // My fucking comment
+    yydebug = 1;
 
     char *filepath = "run_tree/in/input.txt";
     char *mode = "compile";

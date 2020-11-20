@@ -1,41 +1,63 @@
-// Required for %define parse.error {custom,detailed}
-// Ubuntu 20.10 (Tested):
-//      sudo apt install bison   # should be enough
-// Ubuntu 18.04 (Tested), Ubuntu: 20.04:
-//      # We need to pull a deb package from the official ubuntu launchpad repos, and then install it
-//      wget 'https://launchpad.net/ubuntu/+source/bison/2:3.7+dfsg-1/+build/19640339/+files/bison_3.7+dfsg-1_amd64.deb'
-//      sudo apt install ./bison_3.7+dfsg-1_amd64.deb
+        // Required for %define parse.error {custom,detailed}
+        // Ubuntu 20.10 (Tested):
+        //      sudo apt install bison   # should be enough
+        // Ubuntu 18.04 (Tested), Ubuntu: 20.04:
+        //      # We need to pull a deb package from the official ubuntu launchpad repos, and then install it
+        //      wget 'https://launchpad.net/ubuntu/+source/bison/2:3.7+dfsg-1/+build/19640339/+files/bison_3.7+dfsg-1_amd64.deb'
+        //      sudo apt install ./bison_3.7+dfsg-1_amd64.deb
 
 %require "3.6"
+%language "C"
+
+        // Used for getting a trace of the parsing. Usefull for debugging
+        // a particular input string to the parser. The custom printer function
+        // is used to specify how to print the given token for the trace.
+        // Also you must setup the global var `yydebug` to a non zero value
+        // to enable the traces at runtime. Also the ill-named `%verbose` is required
+        // in this case
+%verbose
+%define parse.trace
+%initial-action {
+    yydebug = 1;
+}
+%printer {
+   if ($$ == NULL) {
+       fprintf(yyo, "$$ = NULL", $$);
+   } else if ($$->tok == NULL) {
+        fprintf(yyo, "$$->tok = NULL", $$->tok);
+   } else {
+        fprintf(yyo, "node -> %p --- node.tok -> %p --- node.tok.lexeme -> %p", $$, $$->tok, $$->tok->lexeme);
+        fprintf(yyo, "{lexeme: \"%s\", skind: %s, yylloc=[%d, %d]}", $$->tok->lexeme, $$->tok->skind, $$->tok->loc.line, $$->tok->loc.column);
+   }
+} <>
 
 
-// If you want to use glr-parse enable this 2 down below
-//     The second line specifies the expected number of reduce-reduce conflicts.
-//     Even though bison still reports conflicts. GLR parsers are meant to
-//     solve this type of conflicts any way. Thus it is possible to disable
+        // If you want to use glr-parse enable this 2 down below
+        //     The second line specifies the expected number of reduce-reduce conflicts.
+        //     Even though bison still reports conflicts. GLR parsers are meant to
+        //     solve this type of conflicts any way. Thus it is possible to disable
 //%glr-parser
 //%expect-rr 1
 
-/*
-    Bison track locations. In the documentation setting this flag, or
-    using any of @n for getting the locations enables bison to track
-    in its context the locations of the tokens. Bison manual
-    says that enabling this feature makes the parser considerably
-    slower. Thus Since we don't use this in the grammar,
-    and we do our location tracking externally anyway we leave this flag
-    commented out and we avoid using any `@n` locations refering in the actions
-    of the grammar
-*/
 
+        // Bison track locations. In the documentation setting this flag, or
+        // using any of @n for getting the locations enables bison to track
+        // in its context the locations of the tokens. Bison manual
+        // says that enabling this feature makes the parser considerably
+        // slower. Thus Since we don't use this in the grammar,
+        // and we do our location tracking externally anyway we leave this flag
+        // commented out and we avoid using any `@n` locations refering in the actions
+        // of the grammar
 // %locations
 // %define api.location.type {tokloc_t}
 
-// As from the Bison MANUAL using LAC parser instead of the default LALR parser
-// table implementations can lead to better error messages provided.
-// Also user actions associated with tokens lookahead are not executed in case
-// of syntax errors. Also since it stores stack frame of the parser state
-// prior to do expolarion it can lead to better identification of
-// the token causing the syntax error
+
+        // As from the Bison MANUAL using LAC parser instead of the default LALR parser
+        // table implementations can lead to better error messages provided.
+        // Also user actions associated with tokens lookahead are not executed in case
+        // of syntax errors. Also since it stores stack frame of the parser state
+        // prior to do expolarion it can lead to better identification of
+        // the token causing the syntax error
 %define parse.lac   full
 %define parse.error detailed
 
@@ -43,9 +65,10 @@
 %define api.token.prefix  {TOK_}
 %define api.value.type    {ast_node_t*}
 
+        // This code block will be exported to the generated header file by bison
+
 %code requires {
-    /* This code block will be exported to the generated header file by bison */
-    #include "globals.h"
+#include "globals.h"
 }
 %{
 
@@ -64,9 +87,10 @@
 %token                  STRING_LIT
 
 
-// The string representation of the tokens allows to show in the error message it's
-// string representation rather than it's associated token kind name. And also
-// it allows us to refer to this tokens in the grammar using their string representation
+        // The string representation of the tokens allows to show in the error message it's
+        // string representation rather than it's associated token kind name. And also
+        // it allows us to refer to this tokens in the grammar using their string representation
+
 %token                  ASSIGN "="
 %token                  ADD "+"
 %token                  SUB "-"
@@ -108,7 +132,7 @@
 %token                  CLOSE_BRACE "}"
 
 
-// Derived ast nodes kind
+        // Derived ast nodes kind
 %token                  STATEMENT
 
 
@@ -127,19 +151,20 @@
 
 
 
-// Precedence of the operators
-// From top to bottom:
-// - TOP: Lowest precedence
-// - Bottom: Higher precedence
-// Spaces can be used to separate operators on the same line,
-//  and assign the same precedence
-// %precedence can be used to declare a token with no associatvity (eg for unary operators)
-// --- Most of this precedence table is C derived.
-// --- Differences:
-// --- 1. The bitwise and, or, xor are pushed higher in precedence compared to the "==", "!=" operators
-// ---    the reasons in mainly for convenience. Most modern languaes applied the same form of change
-// --- 2. Equality comparison operators are non associative by default. This avoids possible logical errors
-// --- 3. A right associative power operator
+        // Precedence of the operators
+        // From top to bottom:
+        // - TOP: Lowest precedence
+        // - Bottom: Higher precedence
+        // Spaces can be used to separate operators on the same line,
+        //  and assign the same precedence
+        // %precedence can be used to declare a token with no associatvity (eg for unary operators)
+        // --- Most of this precedence table is C derived.
+        // --- Differences:
+        // --- 1. The bitwise and, or, xor are pushed higher in precedence compared to the "==", "!=" operators
+        // ---    the reasons in mainly for convenience. Most modern languaes applied the same form of change
+        // --- 2. Equality comparison operators are non associative by default. This avoids possible logical errors
+        // --- 3. A right associative power operator
+
 %left                   ASSIGN
 %left                   LOR
 %left                   LAND
@@ -157,12 +182,11 @@
 %precedence             OPEN_PAREN CLOSE_PAREN
 
 
-// Printers are usefull for generating traces of the debugger
-%printer { fprintf (yyo, "{lexeme: \"%s\"skind: %s, yylloc=[%d, %d]}", $$->tok->lexeme, $$->tok->skind, $$->tok->yylloc.line, $$->tok->yylloc.column); } <>
 
 
-/* When error recovery, bison may want to discard some symbols. So
-   it is generally good practice to free any allocated memory here. */
+        // When error recovery, bison may want to discard some symbols. So
+        // it is generally good practice to free any allocated memory here.
+
 // %destructor { printf ("Discarding TAG-FILLED symbol\n"); if(0) free ($$); } <*>
 // %destructor { printf ("Discarding TAG-LESS symbol\n"); if(0) free($$); } <>
 
@@ -179,7 +203,8 @@ root: stmts ;
 
 /* Bison MANUAL says to prefer left recursion where possible (bounded stack space) */
 stmts:          stmts stmt                        { $$ = $1; }
-        |       "end of file"                     { }
+        |       stmt "end of file"
+        |       %empty                            { }
         ;
 
 
@@ -220,8 +245,8 @@ else_if_stmt:   "else" "if" "(" expr ")" code_block
 else_if_stmts:  else_if_stmts else_if_stmt
         |       %empty;
 
-if_stmt:        "if" "(" expr ")" "{" stmts "}" else_if_stmts "else" "{" stmts "}"
-                "if" "(" error ")" "{" stmts "}" else_if_stmts "else" "{" stmts "}"           { yyerrok; }
+if_stmt:        "if" "(" expr ")" code_block else_if_stmts "else" code_block
+                "if" "(" error ")" code_block else_if_stmts "else" code_block           { yyerrok; }
         ;
 
 for_stmt:       "for" "(" for_1 ";" for_2 ";" for_3 ")" code_block
@@ -238,15 +263,15 @@ do_while_stmt:  "do" code_block "while" "(" expr ")" ";"
 assignment:     ID "=" expr ";"                               { PUSH(STATEMENT); }
         ;
 
-expr:           "(" expr[e] ")"                           { PUSH(OPEN_PAREN); }
-        |       "(" error ")"                             { yyerrok; }
+expr:          "(" error ")"                              { yyerrok; }
+        |      "(" expr[e] ")"                            { PUSH(OPEN_PAREN); }
+        |       "+" expr[e]              %prec POS        { PUSH(POS); }
+        |       "-" expr[e]              %prec NEG        { PUSH(NEG); }
         |       expr[lhs] "+" expr[rhs]  %prec ADD        { PUSH(ADD); }
         |       expr[lhs] "-" expr[rhs]  %prec SUB        { PUSH(SUB); }
         |       expr[lhs] "*" expr[rhs]  %prec MUL        { PUSH(MUL); }
         |       expr[lhs] "/" expr[rhs]  %prec DIV        { PUSH(DIV); }
         |       expr[lhs] "%" expr[rhs]  %prec MOD        { PUSH(MOD); }
-        |       "+" expr[e]              %prec POS        { PUSH(POS); }
-        |       "-" expr[e]              %prec NEG        { PUSH(NEG); }
         |       expr[lhs] "==" expr[rhs] %prec EQ         { PUSH(EQ); }
         |       expr[lhs] "!=" expr[rhs] %prec NEQ        { PUSH(NEQ); }
         |       expr[lhs] "<" expr[rhs]  %prec LT         { PUSH(LT); }
@@ -263,8 +288,6 @@ expr:           "(" expr[e] ")"                           { PUSH(OPEN_PAREN); }
         ;
 
 %%
-
-
 
 void yyerror(char const *s)
 {

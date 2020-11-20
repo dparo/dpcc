@@ -5,13 +5,16 @@ cd "$(dirname "$0")"
 mkdir -p report
 
 echo "Calling Bison (Generate verbose output, XML report, and GRAPH representation)..."
-bison -Wcounterexamples -Wempty-rule -Wmidrule-values \
+bison -Wall -Wother -Wcounterexamples -Wdangling-alias \
       --color=auto \
+      -fcaret -ffixit -fsyntax-only \
       --report=itemset --report=lookahead --report=solved --report=counterexamples \
       --verbose \
       --graph=report/parser.dot \
       --xml=report/parser.xml \
-      ../src/parser.y \
+      ../src/parser.y
+
+
 
 mv parser.output                     report
 
