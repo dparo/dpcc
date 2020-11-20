@@ -268,38 +268,38 @@ do_while_stmt:  "do" code_block "while" "(" expr ")" ";"
 
 
 expr:          "(" error ")"                              { yyerrok; }
-        |      "(" expr[e] ")"                            { PUSH(OPEN_PAREN); }
-        |       "+" expr[rhs]            %prec POS        { $$ = $2; }
-        |       "-" expr[rhs]            %prec NEG        { PUSH(NEG); }
-        |       expr[lhs] "+" expr[rhs]  %prec ADD        { PUSH(ADD); }
-        |       expr[lhs] "-" expr[rhs]  %prec SUB        { PUSH(SUB); }
-        |       expr[lhs] "*" expr[rhs]  %prec MUL        { PUSH(MUL); }
-        |       expr[lhs] "/" expr[rhs]  %prec DIV        { PUSH(DIV); }
-        |       expr[lhs] "%" expr[rhs]  %prec MOD        { PUSH(MOD); }
-        |       expr[lhs] "=" expr[rhs]  %prec ASSIGN     { PUSH(ASSIGN); }
-        |       "!" expr[rhs]            %prec LNOT       { PUSH(LNOT); }
-        |       expr[lhs] "&&" expr[rhs] %prec LAND       { PUSH(LAND); }
-        |       expr[lhs] "||" expr[rhs] %prec LOR        { PUSH(LOR); }
-        |       "~" expr[rhs]            %prec BNOT       { PUSH(BNOT); }
-        |       expr[lhs] "&" expr[rhs]  %prec BAND       { PUSH(BAND); }
-        |       expr[lhs] "|" expr[rhs]  %prec BOR        { PUSH(BOR); }
-        |       expr[lhs] "^" expr[rhs]  %prec BXOR       { PUSH(BXOR); }
-        |       expr[lhs] "<<" expr[rhs] %prec BLSHIFT    { PUSH(BLSHIFT); }
-        |       expr[lhs] ">>" expr[rhs] %prec BRSHIFT    { PUSH(BRSHIFT); }
-        |       expr[lhs] "==" expr[rhs] %prec EQ         { PUSH(EQ); }
-        |       expr[lhs] "!=" expr[rhs] %prec NEQ        { PUSH(NEQ); }
-        |       expr[lhs] "<" expr[rhs]  %prec LT         { PUSH(LT); }
-        |       expr[lhs] "<=" expr[rhs] %prec LTEQ       { PUSH(LTEQ); }
-        |       expr[lhs] ">" expr[rhs]  %prec GT         { PUSH(GT); }
-        |       expr[lhs] ">=" expr[rhs] %prec GTEQ       { PUSH(GTEQ); }
-        |       expr[lhs] "**" expr[rhs] %prec POW        { PUSH(POW); }
-        |       ID[lhs] "++"             %prec INC        { PUSH(INC); }
-        |       ID[lhs] "--"             %prec DEC        { PUSH(DEC); }
-        |       ID                                        { PUSH(ID);            }
-        |       I32_LIT                                   { PUSH(I32_LIT);  INIT_I32($$); }
-        |       F32_LIT                                   { PUSH(F32_LIT);  INIT_F32($$); }
-        |       CHAR_LIT                                  { PUSH(CHAR_LIT); INIT_CHAR($$); }
-        |       BOOL_LIT                                  { PUSH(BOOL_LIT); INIT_BOOL($$); }
+        |      "(" expr[e] ")"                            { $$ = $e }
+        |       "+"[op] expr[rhs]            %prec POS        { $$ = $rhs; }
+        |       "-"[op] expr[rhs]            %prec NEG        { $$ = NEW_NODE($op->tok, NEG); push_child($$, $rhs); }
+        |       expr[lhs] "+"[op] expr[rhs]  %prec ADD        { $$ = NEW_NODE($op->tok, ADD); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "-"[op] expr[rhs]  %prec SUB        { $$ = NEW_NODE($op->tok, SUB); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "*"[op] expr[rhs]  %prec MUL        { $$ = NEW_NODE($op->tok, MUL); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "/"[op] expr[rhs]  %prec DIV        { $$ = NEW_NODE($op->tok, DIV); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "%"[op] expr[rhs]  %prec MOD        { $$ = NEW_NODE($op->tok, MOD); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       "!"[op] expr[rhs]            %prec LNOT       { $$ = NEW_NODE($op->tok, LNOT); push_child($$, $rhs); }
+        |       expr[lhs] "&&"[op] expr[rhs] %prec LAND       { $$ = NEW_NODE($op->tok, LAND); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "||"[op] expr[rhs] %prec LOR        { $$ = NEW_NODE($op->tok, LOR); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       "~"[op] expr[rhs]            %prec BNOT       { $$ = NEW_NODE($op->tok, BNOT); push_child($$, $rhs); }
+        |       expr[lhs] "&"[op] expr[rhs]  %prec BAND       { $$ = NEW_NODE($op->tok, BAND); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "|"[op] expr[rhs]  %prec BOR        { $$ = NEW_NODE($op->tok, BOR); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "^"[op] expr[rhs]  %prec BXOR       { $$ = NEW_NODE($op->tok, BXOR); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "<<"[op] expr[rhs] %prec BLSHIFT    { $$ = NEW_NODE($op->tok, BLSHIFT); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] ">>"[op] expr[rhs] %prec BRSHIFT    { $$ = NEW_NODE($op->tok, BRSHIFT); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "=="[op] expr[rhs] %prec EQ         { $$ = NEW_NODE($op->tok, EQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "!="[op] expr[rhs] %prec NEQ        { $$ = NEW_NODE($op->tok, NEQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "<"[op] expr[rhs]  %prec LT         { $$ = NEW_NODE($op->tok, LT); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "<="[op] expr[rhs] %prec LTEQ       { $$ = NEW_NODE($op->tok, LTEQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] ">"[op] expr[rhs]  %prec GT         { $$ = NEW_NODE($op->tok, GT); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] ">="[op] expr[rhs] %prec GTEQ       { $$ = NEW_NODE($op->tok, GTEQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "**"[op] expr[rhs] %prec POW        { $$ = NEW_NODE($op->tok, POW); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       ID[lhs] "++"[op]             %prec INC        { $$ = NEW_NODE($op->tok, INC); push_child($$, $lhs); }
+        |       ID[lhs] "--"[op]             %prec DEC        { $$ = NEW_NODE($op->tok, DEC); push_child($$, $lhs); }
+        |       assignment                   %prec ASSIGN
+        |       ID                                        { NODE_KIND($$, ID); }
+        |       I32_LIT                                   { NODE_KIND($$, I32_LIT); INIT_I32($$); }
+        |       F32_LIT                                   { NODE_KIND($$, F32_LIT); INIT_F32($$); }
+        |       CHAR_LIT                                  { NODE_KIND($$, CHAR_LIT); INIT_CHAR($$); }
+        |       BOOL_LIT                                  { NODE_KIND($$, BOOL_LI); INIT_BOOL($$); }
         ;
 
 %%
