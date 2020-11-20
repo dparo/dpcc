@@ -218,7 +218,9 @@
 
 %%
 
-root: stmts | %empty ;
+root:    stmts
+       | %empty
+       ;
 
         // Bison MANUAL says to prefer left recursion where possible. Better memory footprint (bounded stack space)
 
@@ -267,8 +269,10 @@ else_if_stmt:   "else" "if" "(" expr ")" code_block
 else_if_stmts:  else_if_stmts else_if_stmt
         |       %empty;
 
-if_stmt:        "if" "(" expr ")" code_block else_if_stmts "else" code_block
-                "if" "(" error ")" code_block else_if_stmts "else" code_block           { yyerrok; }
+if_stmt:         "if" "(" expr ")" code_block else_if_stmts
+        |        "if" "(" error ")" code_block else_if_stmts
+        |        "if" "(" expr ")" code_block else_if_stmts "else" code_block
+        |        "if" "(" error ")" code_block else_if_stmts "else" code_block           { yyerrok; }
         ;
 
 for_stmt:       "for" "(" for_1 ";" for_2 ";" for_3 ")" code_block

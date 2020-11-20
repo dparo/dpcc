@@ -1,6 +1,10 @@
 a = 10;
 
+if (a) {
+    let v = 10;
+    for (let i = 0; i < 10; i++) {
+    }
+} else if (a) {
 
-for(;;) {
-
+} else {
 }
