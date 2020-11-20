@@ -198,13 +198,12 @@
 
 %%
 
-root: stmts ;
+root: stmts | %empty ;
 
 
 /* Bison MANUAL says to prefer left recursion where possible (bounded stack space) */
 stmts:          stmts stmt                        { $$ = $1; }
-        |       stmt "end of file"
-        |       %empty                            { }
+        |       stmt                            { }
         ;
 
 
@@ -230,9 +229,9 @@ type:           "int"
         |       "bool"
         ;
 
-code_block:   "{" stmts "}"
-        |     "{" "}"
-        |     "{" error "}"                                  { yyerrok; }
+code_block:    "{" stmts "}"
+        |      "{" "}"
+        |      "{" error "}"                                  { yyerrok; }
         ;
 
 for_1:          var_decl | assignment | %empty ;

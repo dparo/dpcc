@@ -7,7 +7,7 @@ mkdir -p report
 echo "Calling Bison (Generate verbose output, XML report, and GRAPH representation)..."
 bison -Wall -Wother -Wcounterexamples -Wdangling-alias \
       --color=auto \
-      -fcaret -ffixit -fsyntax-only \
+      -fcaret -ffixit \
       --report=itemset --report=lookahead --report=solved --report=counterexamples \
       --verbose \
       --graph=report/parser.dot \
