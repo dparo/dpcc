@@ -3,32 +3,11 @@
 %{
 #include "parser.h"
 #include "utils.h"
-
-
-#define STRIP() \
-    do { \
-        yylloc.column += yyprevcol; \
-        yyprevcol = yyleng; \
-    } while(0)
-
-#define ERROR() \
-    do { \
-        STRIP(); \
-        fprintf(stderr, "LEXER UNRECOGNIZED CHAR '%s'\n", yytext);\
-        return TOK_YYUNDEF; \
-    } while(0)
-
-#define FWD(X) \
-    do {  \
-        STRIP();                    \
-        yyltoken = token_push(yylloc, yytext, TOK_##X, (#X)); \
-        return (TOK_##X);   \
-    } while(0)
-
+#include "yacc_utils.h"
 
 /// yywrap: return 1 to stop the parser/lexer upon encountering EOF.
 /// Return 0 and setup a new yyin in order to continue lexing from the new file
-static inline int yywrap(void)
+int yywrap(void)
 {
     return 1;
 }
@@ -79,77 +58,77 @@ NASCII      {UTF8_H2}|{UTF8_H3}|{UTF8_H4}
 %%
 
 
-NASCII           { FWD(YYUNDEF); }
-EOF              { FWD(YYEOF); }   /* Must return YYEOF upon EOF in order for bison to work */
+NASCII           { LEX_FWD(YYUNDEF); }
+EOF              { LEX_FWD(YYEOF); }   /* Must return YYEOF upon EOF in order for bison to work */
 
 {eol}             { yylloc.line += 1; yylloc.column = 0; yyprevcol = 0; }
-{ws}              { STRIP(); }
-{comment}         { STRIP(); }
+{ws}              { LEX_STRIP(); }
+{comment}         { LEX_STRIP(); }
 
 
-{i32_lit}        { FWD(I32_LIT);  }
-{f32_lit}        { FWD(F32_LIT); }
-{char_lit}       { FWD(CHAR_LIT); }
-{bool_lit}       { FWD(BOOL_LIT); }
-{string_lit}     { FWD(STRING_LIT); }
+{i32_lit}        { LEX_FWD(I32_LIT);  }
+{f32_lit}        { LEX_FWD(F32_LIT); }
+{char_lit}       { LEX_FWD(CHAR_LIT); }
+{bool_lit}       { LEX_FWD(BOOL_LIT); }
+{string_lit}     { LEX_FWD(STRING_LIT); }
 
 
-":"              { FWD(COLON); }
-";"              { FWD(SEMICOLON); }
-"="              { FWD(ASSIGN); }
-"+"              { FWD(ADD); }
-"-"              { FWD(SUB); }
-"*"              { FWD(MUL); }
-"/"              { FWD(DIV); }
-"%"              { FWD(MOD); }
+":"              { LEX_FWD(COLON); }
+";"              { LEX_FWD(SEMICOLON); }
+"="              { LEX_FWD(ASSIGN); }
+"+"              { LEX_FWD(ADD); }
+"-"              { LEX_FWD(SUB); }
+"*"              { LEX_FWD(MUL); }
+"/"              { LEX_FWD(DIV); }
+"%"              { LEX_FWD(MOD); }
 
 
-"=="             { FWD(EQ); }
-"!="             { FWD(NEQ); }
-">"              { FWD(GT); }
-">="             { FWD(GTEQ); }
-"<"              { FWD(LT); }
-"<="             { FWD(LTEQ); }
+"=="             { LEX_FWD(EQ); }
+"!="             { LEX_FWD(NEQ); }
+">"              { LEX_FWD(GT); }
+">="             { LEX_FWD(GTEQ); }
+"<"              { LEX_FWD(LT); }
+"<="             { LEX_FWD(LTEQ); }
 
-"++"             { FWD(INC); }
-"--"             { FWD(DEC); }
-"!"              { FWD(LNOT); }
-"&&"             { FWD(LAND); }
-"||"             { FWD(LOR); }
+"++"             { LEX_FWD(INC); }
+"--"             { LEX_FWD(DEC); }
+"!"              { LEX_FWD(LNOT); }
+"&&"             { LEX_FWD(LAND); }
+"||"             { LEX_FWD(LOR); }
 
-"~"              { FWD(BNOT); }
-"&"              { FWD(BAND); }
-"|"              { FWD(BOR); }
-"^"              { FWD(BXOR); }
+"~"              { LEX_FWD(BNOT); }
+"&"              { LEX_FWD(BAND); }
+"|"              { LEX_FWD(BOR); }
+"^"              { LEX_FWD(BXOR); }
 
-"<<"             { FWD(BLSHIFT); }
-">>"             { FWD(BRSHIFT); }
+"<<"             { LEX_FWD(BLSHIFT); }
+">>"             { LEX_FWD(BRSHIFT); }
 
-"**"             { FWD(POW); }
-
-
-
-"("              { FWD(OPEN_PAREN); }
-")"              { FWD(CLOSE_PAREN); }
-
-"{"              { FWD(OPEN_BRACE); }
-"}"              { FWD(CLOSE_BRACE); }
+"**"             { LEX_FWD(POW); }
 
 
-"int"         { FWD(KW_INT); }
-"float"       { FWD(KW_FLOAT); }
-"bool"        { FWD(KW_BOOL); }
 
-"let"         { FWD(KW_LET); }
-"print"       { FWD(KW_PRINT); }
-"if"          { FWD(KW_IF); }
-"else"        { FWD(KW_ELSE); }
-"do"          { FWD(KW_DO); }
-"while"       { FWD(KW_WHILE); }
-"for"         { FWD(KW_FOR);  }
+"("              { LEX_FWD(OPEN_PAREN); }
+")"              { LEX_FWD(CLOSE_PAREN); }
 
-{id}          { FWD(ID); }
-.             { ERROR(); } /* Returning YYUNDEF tells the parser that some lexical error was found. It will emit an error message about an “invalid token”, and enter error-recovery */
+"{"              { LEX_FWD(OPEN_BRACE); }
+"}"              { LEX_FWD(CLOSE_BRACE); }
+
+
+"int"         { LEX_FWD(KW_INT); }
+"float"       { LEX_FWD(KW_FLOAT); }
+"bool"        { LEX_FWD(KW_BOOL); }
+
+"let"         { LEX_FWD(KW_LET); }
+"print"       { LEX_FWD(KW_PRINT); }
+"if"          { LEX_FWD(KW_IF); }
+"else"        { LEX_FWD(KW_ELSE); }
+"do"          { LEX_FWD(KW_DO); }
+"while"       { LEX_FWD(KW_WHILE); }
+"for"         { LEX_FWD(KW_FOR);  }
+
+{id}          { LEX_FWD(ID); }
+.             { LEX_ERROR(); } /* Returning YYUNDEF tells the parser that some lexical error was found. It will emit an error message about an “invalid token”, and enter error-recovery */
 
 
 %%

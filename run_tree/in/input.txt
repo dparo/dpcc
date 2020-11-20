@@ -1,10 +1,8 @@
 a = 10;
+b = 20;
 
-if (a) {
-    let v = 10;
-    for (let i = 0; i < 10; i++) {
-    }
-} else if (a) {
+if (a == 10) {
+    let new_var: float = 0.0;
 
-} else {
+    print(var);
 }

@@ -17,13 +17,13 @@ static void number_lexing_test(void)
     for (size_t i = 0; i < ARRAY_LEN(i32_tests); i++) {
         TEST_ASSERT_TRUE(lex(NULL, open_from_string(i32_tests[i].string)));
         TEST_ASSERT_EQUAL_INT32(1, G_tok_seq.tokens_cnt);
-        TEST_ASSERT_EQUAL_INT32(TOK_I32_LIT, G_tok_seq.tokens[0].kind);
+        TEST_ASSERT_EQUAL_INT32(TOK_I32_LIT, G_tok_seq.tokens[0]->kind);
     }
 
     for (size_t i = 0; i < ARRAY_LEN(f32_tests); i++) {
         TEST_ASSERT_TRUE(lex(NULL, open_from_string(f32_tests[i].string)));
         TEST_ASSERT_EQUAL_INT32(1, G_tok_seq.tokens_cnt);
-        TEST_ASSERT_EQUAL_INT32(TOK_F32_LIT, G_tok_seq.tokens[0].kind);
+        TEST_ASSERT_EQUAL_INT32(TOK_F32_LIT, G_tok_seq.tokens[0]->kind);
     }
 }
 
@@ -56,7 +56,7 @@ static void lex_test(i32 testidx, dpcc_test_t *test)
     for (i32 i = 0; i < G_tok_seq.tokens_cnt; i++) {
         char *tokmsg;
         i32 expected_kind = test->expected_tokens.buf[i];
-        i32 found_kind = G_tok_seq.tokens[i].kind;
+        i32 found_kind = G_tok_seq.tokens[i]->kind;
         asprintf(&tokmsg,
             "%s"
             "- token_idx: %d\n"
@@ -67,8 +67,8 @@ static void lex_test(i32 testidx, dpcc_test_t *test)
             i,
             expected_kind,
             found_kind,
-            G_tok_seq.tokens[i].skind,
-            G_tok_seq.tokens[i].lexeme);
+            G_tok_seq.tokens[i]->skind,
+            G_tok_seq.tokens[i]->lexeme);
 
         TEST_ASSERT_EQUAL_INT32_MESSAGE(expected_kind, found_kind, tokmsg);
         free(tokmsg);

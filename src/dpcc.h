@@ -15,6 +15,9 @@
 FILE *open_file_for_reading(char *filepath);
 FILE *open_from_string(char *string);
 
+void ast_traversal_begin(ast_traversal_t *t);
+ast_node_t *ast_traverse_next(ast_traversal_t *t);
+
 bool lex(char *filepath, FILE *input_stream);
 bool parse(char *filepath, FILE *input_stream);
 bool compile(char *filepath, FILE *input_stream, FILE *output_stream);

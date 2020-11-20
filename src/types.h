@@ -30,16 +30,21 @@ typedef struct {
     isize cnt;
 } int32_array_t, i32_array_t, int32_t_array_t;
 
+typedef struct mctx {
+    void **allocs;
+    i32 num_allocs;
+} mctx_t;
+
+typedef struct {
+    char *key;
+    char *value;
+} str_str_key_value_t;
+
 typedef struct {
     char *filepath;
     i32 line;
     i32 column;
 } tokloc_t;
-
-typedef struct mctx {
-    void **allocs;
-    i32 num_allocs;
-} mctx_t;
 
 typedef struct {
     i32 idx; /// Index withing the array containing all the tokens
@@ -51,7 +56,7 @@ typedef struct {
 } token_t;
 
 typedef struct {
-    token_t *tokens;
+    token_t **tokens;
     i32 tokens_cnt;
 } token_seq_t;
 
@@ -64,10 +69,13 @@ enum AST_TYPE {
 
 typedef struct ast_node {
     token_t *tok;
+
     i32 kind;
     char *skind;
 
     enum AST_TYPE type;
+    char *stype;
+
     int32_t num_childs;
     struct ast_node **childs;
 
@@ -80,11 +88,7 @@ typedef struct ast_node {
 } ast_node_t;
 
 typedef struct {
-    ast_node_t *nodes;
-    i32 nodes_cnt;
-} ast_t;
-
-typedef struct {
-    char *key;
-    char *value;
-} str_str_key_value_t;
+    int32_t stack_cnt;
+    ast_node_t **stack_nodes;
+    int32_t *stack_childs;
+} ast_traversal_t;

@@ -7,12 +7,11 @@
 int32_t yyprevcol = 0;
 tokloc_t yylloc = { NULL, 1, 0 };
 
-token_t *yyltoken = NULL;
-
 str_str_key_value_t *G_str_intern = NULL;
 mctx_t G_allctx = { 0 };
-ast_t G_ast = { 0 };
+
 token_seq_t G_tok_seq = { 0 };
+ast_node_t G_root_node = { 0 };
 
 void clear_all_global_vars()
 {
@@ -20,19 +19,16 @@ void clear_all_global_vars()
     yylloc.line = 1;
     yylloc.column = 0;
 
-    yyltoken = NULL;
-
     tokens_seq_clear(&G_tok_seq);
-    ast_clear(&G_ast);
 
     shfree(G_str_intern);
     G_str_intern = NULL;
 
-    dallclr(&G_allctx);
+    memset(&G_root_node, 0, sizeof(G_root_node));
     memset(&G_allctx, 0, sizeof(G_allctx));
     memset(&G_tok_seq, 0, sizeof(G_tok_seq));
-    memset(&G_ast, 0, sizeof(G_ast));
 
     free(yylloc.filepath);
     yylloc.filepath = "";
+    dallclr(&G_allctx);
 }

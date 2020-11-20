@@ -1,8 +1,6 @@
 #pragma once
 
 #include "utils.h"
-#include "lexer.h"
-#include "parser.h"
 #include "log.h"
 #include "types.h"
 
@@ -64,41 +62,71 @@ static ast_node_t *yacc_from_str_to_bool(ast_node_t *node)
     return node;
 }
 
-#define PUSH(X) \
-    ast_push(yyltoken, YY_##X, #X, (isize)0, NULL)
+#define LEX_STRIP()                 \
+    do {                            \
+        yylloc.column += yyprevcol; \
+        yyprevcol = yyleng;         \
+    } while (0)
+
+#define LEX_ERROR()                                                \
+    do {                                                           \
+        LEX_STRIP();                                               \
+        fprintf(stderr, "LEXER UNRECOGNIZED CHAR '%s'\n", yytext); \
+        return TOK_YYUNDEF;                                        \
+    } while (0)
+
+#define LEX_FWD(X)                                             \
+    do {                                                       \
+        LEX_STRIP();                                           \
+        token_t *t = token_new(yylloc, yytext, TOK_##X, (#X)); \
+        yylval = new_node(t, TOK_##X, (#X));                   \
+        return (TOK_##X);                                      \
+    } while (0)
+
+#define NEW_NODE(TOKEN_PTR, KIND) \
+    new_node(TOKEN_PTR, YY_##KIND, #KIND)
+
+#define NODE_KIND(node, KIND) \
+    node_set_kind(node, YY_##KIND, (#KIND))
+
+#define NODE_TYPE(node, TYPE)  \
+    do {                       \
+        node->type = (TYPE);   \
+        node->stype = (#TYPE); \
+    } while (0)
 
 #define INIT_I32(node)                               \
     do {                                             \
         if (!(yyval = yacc_from_str_to_i32(node))) { \
             YYERROR;                                 \
-        } else {                                     \
-            node->type = TYPE_I32;                   \
         }                                            \
+        NODE_TYPE(node, TYPE_I32);                   \
+        NODE_KIND(node, I32_LIT);                    \
     } while (0)
 
 #define INIT_F32(node)                               \
     do {                                             \
         if (!(yyval = yacc_from_str_to_f32(node))) { \
             YYERROR;                                 \
-        } else {                                     \
-            node->type = TYPE_F32;                   \
         }                                            \
+        NODE_TYPE(node, TYPE_F32);                   \
+        NODE_KIND(node, F32_LIT);                    \
     } while (0)
 
 #define INIT_CHAR(node)                               \
     do {                                              \
         if (!(yyval = yacc_from_str_to_char(node))) { \
             YYERROR;                                  \
-        } else {                                      \
-            node->type = TYPE_I32;                    \
         }                                             \
+        NODE_TYPE(node, TYPE_I32);                    \
+        NODE_KIND(node, I32_LIT);                     \
     } while (0)
 
 #define INIT_BOOL(node)                               \
     do {                                              \
         if (!(yyval = yacc_from_str_to_bool(node))) { \
             YYERROR;                                  \
-        } else {                                      \
-            node->type = TYPE_BOOL;                   \
         }                                             \
+        NODE_TYPE(node, TYPE_BOOL);                   \
+        NODE_KIND(node, BOOL_LIT);                    \
     } while (0)
