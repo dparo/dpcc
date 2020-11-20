@@ -9,15 +9,12 @@
 int yylex(void);
 void yyerror(char const *s);
 
-#define PUSH(X) \
-    ast_push(yyltoken, YY_##X, #X, (isize)0, NULL)
-
 static inline void gen_error(char *msg)
 {
     fprintf(stderr, "%s\n", msg);
 }
 
-static bool yacc_from_str_to_i32(ast_node_t *node)
+static ast_node_t *yacc_from_str_to_i32(ast_node_t *node)
 {
     int32_t i = 0;
     bool success = str_to_i32(node->tok->lexeme, &i);
@@ -26,10 +23,10 @@ static bool yacc_from_str_to_i32(ast_node_t *node)
     } else {
         node->val.i = i;
     }
-    return success;
+    return node;
 }
 
-static bool yacc_from_str_to_f32(ast_node_t *node)
+static ast_node_t *yacc_from_str_to_f32(ast_node_t *node)
 {
     f32 f = 0;
     bool success = str_to_f32(node->tok->lexeme, &f);
@@ -38,10 +35,10 @@ static bool yacc_from_str_to_f32(ast_node_t *node)
     } else {
         node->val.f = f;
     }
-    return success;
+    return node;
 }
 
-static bool yacc_from_str_to_char(ast_node_t *node)
+static ast_node_t *yacc_from_str_to_char(ast_node_t *node)
 {
     char c = 0;
     bool success = str_to_char(node->tok->lexeme, &c);
@@ -50,10 +47,10 @@ static bool yacc_from_str_to_char(ast_node_t *node)
     } else {
         node->val.c = c;
     }
-    return success;
+    return node;
 }
 
-static bool yacc_from_str_to_bool(ast_node_t *node)
+static ast_node_t *yacc_from_str_to_bool(ast_node_t *node)
 {
     bool b = 0;
     bool success = str_to_bool(node->tok->lexeme, &b);
@@ -62,33 +59,5 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
     } else {
         node->val.b = b;
     }
-    return success;
+    return node;
 }
-
-#define PUSH_I32(X)                           \
-    do {                                      \
-        if (!yacc_from_str_to_i32(PUSH(X))) { \
-            YYERROR;                          \
-        }                                     \
-    } while (0)
-
-#define PUSH_F32(X)                           \
-    do {                                      \
-        if (!yacc_from_str_to_f32(PUSH(X))) { \
-            YYERROR;                          \
-        }                                     \
-    } while (0)
-
-#define PUSH_CHAR(X)                           \
-    do {                                       \
-        if (!yacc_from_str_to_char(PUSH(X))) { \
-            YYERROR;                           \
-        }                                      \
-    } while (0)
-
-#define PUSH_BOOL(X)                           \
-    do {                                       \
-        if (!yacc_from_str_to_bool(PUSH(X))) { \
-            YYERROR;                           \
-        }                                      \
-    } while (0)
