@@ -4,26 +4,25 @@ cd "$(dirname "$0")"
 
 mkdir -p report
 
-echo "Generating textual verbose representation..."
-bison --verbose --color=auto ../src/parser.y \
-      -Wcounterexamples -Wempty-rule -Wmidrule-values \
+echo "Calling Bison (Generate verbose output, XML report, and GRAPH representation)..."
+bison -Wcounterexamples -Wempty-rule -Wmidrule-values \
+      --color=auto \
+      --report=itemset --report=lookahead --report=solved --report=counterexamples \
+      --verbose \
+      --graph=report/parser.dot \
+      --xml=report/parser.xml \
+      ../src/parser.y \
 
-mv *.output                     report
+mv parser.output                     report
 
-echo "Generating graph representation..."
-bison --graph=report/parser.dot ../src/parser.y           1> /dev/null 2> /dev/null
-
-echo "Generating XML report..."
-bison --xml=report/parser.xml ../src/parser.y             1> /dev/null 2> /dev/null
-
-echo "Generating graph PDF..."
-dot -Tpdf report/parser.dot -o report/parser.pdf
+# echo "Generating graph PDF..."
+# dot -Tpdf report/parser.dot -o report/parser.pdf
 
 echo "Generating HTML from the xml report..."
 xsltproc /usr/share/bison/xslt/xml2xhtml.xsl report/parser.xml >report/parser.html
 
 echo "Finishing, removing temp files."
-rm report/parser.xml bison_out *.c
+rm report/parser.xml *.c
 rm -rf ../report
 mv report ../
 
