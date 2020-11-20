@@ -8,6 +8,7 @@ out
 report
 
 .vscode
+.lite_workspace.lua
 
 CMakeLists.txt.user
 CMakeCache.txt

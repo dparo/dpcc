@@ -211,15 +211,22 @@ type:           "int"
         ;
 
 code_block:   "{" stmts "}"
+        |     "{" "}"
         |     "{" error "}"                                  { yyerrok; }
         ;
 
-for_1: var_decl | assignment | %empty ;
-for_2: expr | %empty ;
-for_3: expr | %empty ;
+for_1:          var_decl | assignment | %empty ;
+for_2:          expr | %empty ;
+for_3:          expr | %empty ;
 
-if_stmt:      "if" "(" expr ")" "{" stmts "}"
-        |     "if" "(" expr ")" "{" stmts "}" "else" "{" stmts "}"
+else_if_stmt:   "else" "if" "(" expr ")" code_block
+        |       "else" "if" "(" error ")" code_block          { yyerrok; }
+
+else_if_stmts:  else_if_stmts else_if_stmt
+        |       %empty;
+
+if_stmt:        "if" "(" expr ")" "{" stmts "}" else_if_stmts "else" "{" stmts "}"
+                "if" "(" error ")" "{" stmts "}" else_if_stmts "else" "{" stmts "}"           { yyerrok; }
         ;
 
 for_stmt:       "for" "(" for_1 ";" for_2 ";" for_3 ")" code_block
@@ -233,7 +240,7 @@ do_while_stmt:  "do" code_block "while" "(" expr ")" ";"
         ;
 
 
-assignment: ID "=" expr ";"                               { PUSH(STATEMENT); }
+assignment:     ID "=" expr ";"                               { PUSH(STATEMENT); }
         ;
 
 expr:           "(" expr[e] ")"                           { PUSH(OPEN_PAREN); }
