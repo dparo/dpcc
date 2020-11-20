@@ -35,7 +35,7 @@ FILE *open_file_for_reading(char *filepath)
     return result;
 }
 
-static void reset(void)
+void dpcc_reset(void)
 {
     yylex_destroy();
     clear_all_global_vars();
@@ -52,7 +52,7 @@ static void setup_filepath(char *filepath)
 
 bool lex(char *filepath, FILE *input_stream)
 {
-    reset();
+    dpcc_reset();
     setup_filepath(filepath);
 
     if (input_stream == NULL) {
@@ -80,7 +80,7 @@ bool lex(char *filepath, FILE *input_stream)
 
 bool parse(char *filepath, FILE *input_stream)
 {
-    reset();
+    dpcc_reset();
     setup_filepath(filepath);
 
     if (input_stream == NULL) {
@@ -96,7 +96,7 @@ bool parse(char *filepath, FILE *input_stream)
 
 bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
 {
-    reset();
+    dpcc_reset();
     setup_filepath(filepath);
 
     if (input_stream == NULL) {

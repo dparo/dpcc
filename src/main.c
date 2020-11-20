@@ -31,15 +31,7 @@ int main(int argc, char **argv)
         }
 
         for (i32 i = 0; i < G_tok_seq.tokens_cnt; i++) {
-            token_t *t = G_tok_seq.tokens[i];
-
-            printf("Token[%d]: \"%s\"\t\t[kind = %s (%d), yylloc=(%d, %d)]\n",
-                i,
-                t->lexeme,
-                t->skind,
-                t->kind,
-                t->loc.line,
-                t->loc.column);
+            print_token(stdout, G_tok_seq.tokens[i]);
         }
 
     } else if (0 == strcmp(mode, "parse")) {
@@ -47,26 +39,12 @@ int main(int argc, char **argv)
         if (!parsesuccess) {
             return -1;
         }
-
-        // Broken ass code
-
         ast_traversal_t att = { 0 };
         ast_traversal_begin(&att);
         ast_node_t *n = NULL;
         while ((n = ast_traverse_next(&att)) != NULL) {
             print_node(stdout, n, att.stack_cnt - 1);
         }
-
-#if 0
-        for (i32 i = 0; i < G_ast.nodes_cnt; i++) {
-            ast_node_t *node = &G_ast.nodes[i];
-            printf("NODE: {idx: %d, lexeme: \"%s\", kind = %d, skind = %s}\n",
-                i,
-                node->tok->lexeme,
-                node->kind,
-                node->skind);
-        }
-#endif
     } else if ((0 == strcmp(mode, "compile")) || (0 == strcmp(mode, "cc"))) {
         bool compile_success = compile(filepath, input_stream, stdout);
         if (!compile_success) {
@@ -78,6 +56,7 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    dpcc_reset();
     fflush(stderr);
     return 0;
 }

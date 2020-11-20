@@ -207,16 +207,16 @@ void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
 {
     assert(node);
 
-    char *indent_string = NULL;
+    char *hdr_string = NULL;
     for (int32_t i = 0; i < indentation_level; i++) {
-        indent_string = sfcat(indent_string, 0, "  |");
+        hdr_string = sfcat(hdr_string, 0, "  |");
     }
 
-    indent_string = sfcat(indent_string, 0, "%s%s", indentation_level != 0 ? "--" : "", node->skind);
+    hdr_string = sfcat(hdr_string, 0, "%s%s", indentation_level != 0 ? "--" : "", node->skind);
 
     fprintf(f,
         " %-48s { type: `%s` (.i = %d, .f = %f, .b = %d) ---- lexeme: \"%s\", tok->skind = `%s` tok->loc=[%d,%d] }\n",
-        indent_string,
+        hdr_string,
         node->stype,
         node->val.i,
         node->val.f,
@@ -225,7 +225,21 @@ void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
         node->tok ? node->tok->skind : "",
         node->tok ? node->tok->loc.line : 0,
         node->tok ? node->tok->loc.line : 0);
-    free(indent_string);
+    free(hdr_string);
+}
+
+void print_token(FILE *f, token_t *t)
+{
+    char *hdr_string = NULL;
+
+    hdr_string = sfcat(hdr_string, 0, "%-8d (%s)", t->idx, t->skind);
+    fprintf(f, "%-48s { lexeme = '%s', yylloc = [%d, %d], kind = %d }\n",
+        hdr_string,
+        t->lexeme,
+        t->loc.line, t->loc.column,
+        t->kind);
+
+    free(hdr_string);
 }
 
 ast_node_t *new_node(token_t *t, int32_t kind, char *skind)
