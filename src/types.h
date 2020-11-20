@@ -80,11 +80,6 @@ typedef struct ast_node {
 } ast_node_t;
 
 typedef struct {
-    ast_node_t *nodes;
-    i32 nodes_cnt;
-} ast_t;
-
-typedef struct {
     char *key;
     char *value;
 } str_str_key_value_t;

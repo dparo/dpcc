@@ -75,14 +75,14 @@ bool dallarr(mctx_t *ctx, void **ptr, size_t num_elems, size_t sizeof_each_elem)
 void *dallstl(mctx_t *ctx, void *ptr);
 
 /// Used for string interning
-char *lexeme_intern(char *yytext);
+char *string_intern(char *yytext);
 
 void tokens_seq_clear(token_seq_t *tseq);
 token_t *token_push(tokloc_t loc, char *yytext, int yychar, char *yychar_str);
 
-void ast_clear(ast_t *ast);
-ast_node_t *ast_push(token_t *t, int32_t kind, char *skind, isize num_childs, ast_node_t **childs);
-void ast_node_destroy(ast_node_t **node);
+ast_node_t *new_node(token_t *t, int32_t kind, char *skind);
+void push_child(ast_node_t *parent, ast_node_t *child);
+void push_childs(ast_node_t *parent, int32_t num_childs, ast_node_t **childs);
 
 bool str_to_i32(char *string, i32 *out);
 bool str_to_f32(char *string, f32 *out);

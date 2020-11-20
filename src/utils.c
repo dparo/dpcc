@@ -165,14 +165,7 @@ void tokens_seq_clear(token_seq_t *tseq)
     tseq->tokens_cnt = 0;
 }
 
-void ast_clear(ast_t *ast)
-{
-    dalldel(&G_allctx, ast->nodes);
-    ast->nodes = NULL;
-    ast->nodes_cnt = 0;
-}
-
-char *lexeme_intern(char *yytext)
+char *string_intern(char *yytext)
 {
     char *intern = NULL;
     ptrdiff_t index = shgeti(G_str_intern, yytext);
@@ -193,9 +186,9 @@ token_t *token_push(tokloc_t loc, char *yytext, int yychar, char *yychar_str)
     token_seq_t *tseq = &G_tok_seq;
 
     token_t token = {
-        .lexeme = (char *)lexeme_intern(yytext),
+        .lexeme = string_intern(yytext),
         .kind = yychar,
-        .skind = yychar_str,
+        .skind = string_intern(yychar_str),
         .loc = loc,
     };
 
@@ -216,33 +209,35 @@ token_t *token_push(tokloc_t loc, char *yytext, int yychar, char *yychar_str)
     return &tseq->tokens[tseq->tokens_cnt - 1];
 }
 
-ast_node_t *ast_push(token_t *t, int32_t kind, char *skind, isize num_childs, ast_node_t **childs)
+ast_node_t *new_node(token_t *t, int32_t kind, char *skind)
 {
-    ast_t *ast = &G_ast;
+    ast_node_t *result = result = dallnew(&G_allctx, sizeof(*result));
 
-    ast_node_t node = {
-        .tok = t,
-        .kind = kind,
-        .skind = skind,
-    };
-
-    void *ptr = dallrsz(&G_allctx, ast->nodes, (ast->nodes_cnt + 1) * sizeof(*ast->nodes));
-
-    if (ptr == NULL) {
-        fprintf(stderr, "ast_push :: Failed memory allocation\n");
-        fflush(stderr);
-        abort();
+    if (result) {
+        result->tok = t;
+        result->kind = kind;
+        result->skind = string_intern(skind);
     }
 
-    for (isize i = 0; i < num_childs; i++) {
-        arrpush(node.childs, childs[i]);
+    return result;
+}
+
+void push_child(ast_node_t *parent, ast_node_t *child)
+{
+    assert(parent);
+    assert(child);
+
+    dallarr(&G_allctx, (void **)&parent->childs, parent->num_childs + 1, sizeof(child));
+    parent->childs[parent->num_childs++] = child;
+}
+
+void push_childs(ast_node_t *parent, int32_t num_childs, ast_node_t **childs)
+{
+    dallarr(&G_allctx, (void **)&parent->childs, parent->num_childs + num_childs, sizeof(childs[0]));
+
+    for (int32_t i = 0; i < num_childs; i++) {
+        parent->childs[parent->num_childs++] = childs[i];
     }
-
-    ast->nodes = ptr;
-    ast->nodes_cnt += 1;
-
-    memcpy(&ast->nodes[ast->nodes_cnt - 1], &node, sizeof(node));
-    return &ast->nodes[ast->nodes_cnt - 1];
 }
 
 bool str_to_char(char *string, char *out)

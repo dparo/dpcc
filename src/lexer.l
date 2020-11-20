@@ -3,6 +3,7 @@
 %{
 #include "parser.h"
 #include "utils.h"
+#include "yacc_utils.h"
 
 
 #define STRIP() \
@@ -21,7 +22,8 @@
 #define FWD(X) \
     do {  \
         STRIP();                    \
-        yyltoken = token_push(yylloc, yytext, TOK_##X, (#X)); \
+        token_t t = token_push(yylloc, yytext, TOK_##X, (#X)); \
+
         return (TOK_##X);   \
     } while(0)
 
