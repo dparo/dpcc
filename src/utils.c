@@ -288,6 +288,8 @@ char *sfcat(char *string, int32_t string_len, char *fmt, ...)
     if (string == NULL || string[0] == '\0') {
         string = calloc(1, 1);
         string_len = 0;
+    } else if (string_len == 0) {
+        string_len = strlen(string);
     }
 
     va_list ap;

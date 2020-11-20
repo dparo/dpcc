@@ -21,14 +21,7 @@
     yydebug = 1;
 }
 %printer {
-   if ($$ == NULL) {
-       fprintf(yyo, "$$ = NULL", $$);
-   } else if ($$->tok == NULL) {
-        fprintf(yyo, "$$->tok = NULL", $$->tok);
-   } else {
-        fprintf(yyo, "node -> %p --- node.tok -> %p --- node.tok.lexeme -> %p", $$, $$->tok, $$->tok->lexeme);
-        fprintf(yyo, "{lexeme: \"%s\", skind: %s, yylloc=[%d, %d]}", $$->tok->lexeme, $$->tok->skind, $$->tok->loc.line, $$->tok->loc.column);
-   }
+        fprintf(yyo, "$$ = %p", $$);
 } <>
 
 
@@ -59,7 +52,7 @@
         // prior to do expolarion it can lead to better identification of
         // the token causing the syntax error
 %define parse.lac   full
-%define parse.error detailed
+%define parse.error detailed       // custom
 
 %define api.symbol.prefix {YY_}
 %define api.token.prefix  {TOK_}
@@ -202,8 +195,8 @@ root: stmts | %empty ;
 
 
 /* Bison MANUAL says to prefer left recursion where possible (bounded stack space) */
-stmts:          stmts stmt                        { $$ = $1; }
-        |       stmt                            { }
+stmts:          stmts stmt                        { $$ = NULL; }
+        |       stmt                              { $$ = NULL; }
         ;
 
 

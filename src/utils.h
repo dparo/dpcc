@@ -85,3 +85,8 @@ bool str_to_i32(char *string, i32 *out);
 bool str_to_f32(char *string, f32 *out);
 bool str_to_char(char *string, char *out);
 bool str_to_bool(char *string, bool *out);
+
+static inline int breakme(void)
+{
+    return 1;
+}
