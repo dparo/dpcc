@@ -211,13 +211,13 @@ stmt:           assignment
         |       error ";"                         { yyerrok; } /* Upon syntax error synchronize to next ";". yyerrok: Resume generating error messages immediately for subsequent syntax errors. */
         ;
 
-assignment:     ID "=" expr ";"                           { $$ = PUSH(STATEMENT); }
-print_stmt:     "print" "(" expr ")" ";"                  { $$ = PUSH(STATEMENT); }
+assignment:     ID "=" expr ";"                           { PUSH(STATEMENT); }
+print_stmt:     "print" "(" expr ")" ";"                  { PUSH(STATEMENT); }
 
-var_decl:       "let" ID ";"                              { $$ = PUSH(STATEMENT); }
-        |       "let" ID "=" expr ";"                     { $$ = PUSH(STATEMENT); }
-        |       "let" ID ":" type ";"                     { $$ = PUSH(STATEMENT); }
-        |       "let" ID ":" type "=" expr ";"            { $$ = PUSH(STATEMENT); }
+var_decl:       "let" ID ";"                              { PUSH(STATEMENT); }
+        |       "let" ID "=" expr ";"                     { PUSH(STATEMENT); }
+        |       "let" ID ":" type ";"                     { PUSH(STATEMENT); }
+        |       "let" ID ":" type "=" expr ";"            { PUSH(STATEMENT); }
         ;
 
 type:           "int"
@@ -230,9 +230,16 @@ code_block:    "{" stmts "}"                                  { $$ = $2; }
         |      "{" error "}"                                  { yyerrok; }
         ;
 
-for_1:          var_decl | assignment | %empty ;
-for_2:          expr | %empty ;
-for_3:          expr | %empty ;
+for_1: var_decl
+     | assignment
+     | %empty
+     ;
+for_2: expr
+     | %empty
+     ;
+for_3: expr
+     | %empty
+     ;
 
 else_if_stmt:   "else" "if" "(" expr ")" code_block
         |       "else" "if" "(" error ")" code_block          { yyerrok; }
@@ -260,38 +267,38 @@ do_while_stmt:  "do" code_block "while" "(" expr ")" ";"
 
 
 expr:          "(" error ")"                              { yyerrok; }
-        |      "(" expr[e] ")"                            { $$ = PUSH(OPEN_PAREN); }
+        |      "(" expr[e] ")"                            { PUSH(OPEN_PAREN); }
         |       "+" expr[rhs]            %prec POS        { $$ = $2; }
-        |       "-" expr[rhs]            %prec NEG        { $$ = PUSH(NEG); }
-        |       expr[lhs] "+" expr[rhs]  %prec ADD        { $$ = PUSH(ADD); }
-        |       expr[lhs] "-" expr[rhs]  %prec SUB        { $$ = PUSH(SUB); }
-        |       expr[lhs] "*" expr[rhs]  %prec MUL        { $$ = PUSH(MUL); }
-        |       expr[lhs] "/" expr[rhs]  %prec DIV        { $$ = PUSH(DIV); }
-        |       expr[lhs] "%" expr[rhs]  %prec MOD        { $$ = PUSH(MOD); }
-        |       expr[lhs] "=" expr[rhs]  %prec ASSIGN     { $$ = PUSH(ASSIGN); }
-        |       "!" expr[rhs]            %prec LNOT       { $$ = PUSH(LNOT); }
-        |       expr[lhs] "&&" expr[rhs] %prec LAND       { $$ = PUSH(LAND); }
-        |       expr[lhs] "||" expr[rhs] %prec LOR        { $$ = PUSH(LOR); }
-        |       "~" expr[rhs]            %prec BNOT       { $$ = PUSH(BNOT); }
-        |       expr[lhs] "&" expr[rhs]  %prec BAND       { $$ = PUSH(BAND); }
-        |       expr[lhs] "|" expr[rhs]  %prec BOR        { $$ = PUSH(BOR); }
-        |       expr[lhs] "^" expr[rhs]  %prec BXOR       { $$ = PUSH(BXOR); }
-        |       expr[lhs] "<<" expr[rhs] %prec BLSHIFT    { $$ = PUSH(BLSHIFT); }
-        |       expr[lhs] ">>" expr[rhs] %prec BRSHIFT    { $$ = PUSH(BRSHIFT); }
-        |       expr[lhs] "==" expr[rhs] %prec EQ         { $$ = PUSH(EQ); }
-        |       expr[lhs] "!=" expr[rhs] %prec NEQ        { $$ = PUSH(NEQ); }
-        |       expr[lhs] "<" expr[rhs]  %prec LT         { $$ = PUSH(LT); }
-        |       expr[lhs] "<=" expr[rhs] %prec LTEQ       { $$ = PUSH(LTEQ); }
-        |       expr[lhs] ">" expr[rhs]  %prec GT         { $$ = PUSH(GT); }
-        |       expr[lhs] ">=" expr[rhs] %prec GTEQ       { $$ = PUSH(GTEQ); }
-        |       expr[lhs] "**" expr[rhs] %prec POW        { $$ = PUSH(POW); }
-        |       ID[lhs] "++"             %prec INC        { $$ = PUSH(INC); }
-        |       ID[lhs] "--"             %prec DEC        { $$ = PUSH(DEC); }
-        |       ID                                        { $$ = PUSH(ID);            }
-        |       I32_LIT                                   { $$ = PUSH(I32_LIT);  INIT_I32($$); }
-        |       F32_LIT                                   { $$ = PUSH(F32_LIT);  INIT_F32($$); }
-        |       CHAR_LIT                                  { $$ = PUSH(CHAR_LIT); INIT_CHAR($$); }
-        |       BOOL_LIT                                  { $$ = PUSH(BOOL_LIT); INIT_BOOL($$); }
+        |       "-" expr[rhs]            %prec NEG        { PUSH(NEG); }
+        |       expr[lhs] "+" expr[rhs]  %prec ADD        { PUSH(ADD); }
+        |       expr[lhs] "-" expr[rhs]  %prec SUB        { PUSH(SUB); }
+        |       expr[lhs] "*" expr[rhs]  %prec MUL        { PUSH(MUL); }
+        |       expr[lhs] "/" expr[rhs]  %prec DIV        { PUSH(DIV); }
+        |       expr[lhs] "%" expr[rhs]  %prec MOD        { PUSH(MOD); }
+        |       expr[lhs] "=" expr[rhs]  %prec ASSIGN     { PUSH(ASSIGN); }
+        |       "!" expr[rhs]            %prec LNOT       { PUSH(LNOT); }
+        |       expr[lhs] "&&" expr[rhs] %prec LAND       { PUSH(LAND); }
+        |       expr[lhs] "||" expr[rhs] %prec LOR        { PUSH(LOR); }
+        |       "~" expr[rhs]            %prec BNOT       { PUSH(BNOT); }
+        |       expr[lhs] "&" expr[rhs]  %prec BAND       { PUSH(BAND); }
+        |       expr[lhs] "|" expr[rhs]  %prec BOR        { PUSH(BOR); }
+        |       expr[lhs] "^" expr[rhs]  %prec BXOR       { PUSH(BXOR); }
+        |       expr[lhs] "<<" expr[rhs] %prec BLSHIFT    { PUSH(BLSHIFT); }
+        |       expr[lhs] ">>" expr[rhs] %prec BRSHIFT    { PUSH(BRSHIFT); }
+        |       expr[lhs] "==" expr[rhs] %prec EQ         { PUSH(EQ); }
+        |       expr[lhs] "!=" expr[rhs] %prec NEQ        { PUSH(NEQ); }
+        |       expr[lhs] "<" expr[rhs]  %prec LT         { PUSH(LT); }
+        |       expr[lhs] "<=" expr[rhs] %prec LTEQ       { PUSH(LTEQ); }
+        |       expr[lhs] ">" expr[rhs]  %prec GT         { PUSH(GT); }
+        |       expr[lhs] ">=" expr[rhs] %prec GTEQ       { PUSH(GTEQ); }
+        |       expr[lhs] "**" expr[rhs] %prec POW        { PUSH(POW); }
+        |       ID[lhs] "++"             %prec INC        { PUSH(INC); }
+        |       ID[lhs] "--"             %prec DEC        { PUSH(DEC); }
+        |       ID                                        { PUSH(ID);            }
+        |       I32_LIT                                   { PUSH(I32_LIT);  INIT_I32($$); }
+        |       F32_LIT                                   { PUSH(F32_LIT);  INIT_F32($$); }
+        |       CHAR_LIT                                  { PUSH(CHAR_LIT); INIT_CHAR($$); }
+        |       BOOL_LIT                                  { PUSH(BOOL_LIT); INIT_BOOL($$); }
         ;
 
 %%

@@ -48,6 +48,8 @@ int main(int argc, char **argv)
             return -1;
         }
 
+        // Broken ass code
+#if 0
         for (i32 i = 0; i < G_ast.nodes_cnt; i++) {
             ast_node_t *node = &G_ast.nodes[i];
             printf("NODE: {idx: %d, lexeme: \"%s\", kind = %d, skind = %s}\n",
@@ -56,6 +58,7 @@ int main(int argc, char **argv)
                 node->kind,
                 node->skind);
         }
+#endif
     } else if ((0 == strcmp(mode, "compile")) || (0 == strcmp(mode, "cc"))) {
         bool compile_success = compile(filepath, input_stream, stdout);
         if (!compile_success) {

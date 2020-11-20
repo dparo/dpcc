@@ -1,8 +1,6 @@
 #pragma once
 
 #include "utils.h"
-#include "lexer.h"
-#include "parser.h"
 #include "log.h"
 #include "types.h"
 
@@ -64,8 +62,33 @@ static ast_node_t *yacc_from_str_to_bool(ast_node_t *node)
     return node;
 }
 
-#define PUSH(X) \
-    ast_push(yyltoken, YY_##X, #X, (isize)0, NULL)
+#define LEX_STRIP()                 \
+    do {                            \
+        yylloc.column += yyprevcol; \
+        yyprevcol = yyleng;         \
+    } while (0)
+
+#define LEX_ERROR()                                                \
+    do {                                                           \
+        LEX_STRIP();                                               \
+        fprintf(stderr, "LEXER UNRECOGNIZED CHAR '%s'\n", yytext); \
+        return TOK_YYUNDEF;                                        \
+    } while (0)
+
+#define LEX_FWD(X)                                              \
+    do {                                                        \
+        LEX_STRIP();                                            \
+        token_t *t = token_push(yylloc, yytext, TOK_##X, (#X)); \
+        yylval = new_node(t, TOK_##X, (#X));                    \
+        return (TOK_##X);                                       \
+    } while (0)
+
+#define PUSH(X, ...)                                                                                 \
+    do {                                                                                             \
+        yyval->kind = (YY_##X);                                                                      \
+        yyval->skind = (#X);                                                                         \
+        /* push_childs(yyval, ARRAY_LEN((ast_node_t *[])__VA_ARGS), (ast_node_t *[])__VA_ARGS__); */ \
+    } while (0)
 
 #define INIT_I32(node)                               \
     do {                                             \
