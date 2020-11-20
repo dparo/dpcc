@@ -159,7 +159,6 @@ void ast_traversal_begin(ast_traversal_t *t)
 
 ast_node_t *ast_traverse_next(ast_traversal_t *t)
 {
-    static int32_t cnt = 0;
     if (t->stack_cnt == 0) {
         return NULL;
     }
@@ -169,7 +168,6 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t)
         ast_node_t *child = NULL;
 
         while ((ci < t->stack_nodes[t->stack_cnt - 1]->num_childs) && ((child = t->stack_nodes[t->stack_cnt - 1]->childs[ci]) == NULL)) {
-            printf("cnt: %d\n", cnt++);
             ci++;
         }
         if (child) {

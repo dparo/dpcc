@@ -209,13 +209,13 @@ void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
 
     char *indent_string = NULL;
     for (int32_t i = 0; i < indentation_level; i++) {
-        indent_string = sfcat(indent_string, 0, "   |");
+        indent_string = sfcat(indent_string, 0, "  |");
     }
 
-    indent_string = sfcat(indent_string, 0, "%s", node->skind);
+    indent_string = sfcat(indent_string, 0, "%s%s", indentation_level != 0 ? "--" : "", node->skind);
 
     fprintf(f,
-        " %-8s { type: `%s` (.i = %d, .f = %f, .b = %d) ---- lexeme: \"%s\", tok->skind = `%s` tok->loc=[%d,%d] }\n",
+        " %-48s { type: `%s` (.i = %d, .f = %f, .b = %d) ---- lexeme: \"%s\", tok->skind = `%s` tok->loc=[%d,%d] }\n",
         indent_string,
         node->stype,
         node->val.i,
@@ -330,7 +330,7 @@ char *sfcat(char *string, int32_t string_len, char *fmt, ...)
 
     char *bumped = result + string_len;
     va_start(ap, fmt);
-    vsnprintf(bumped, chars_to_write, fmt, ap);
+    vsnprintf(bumped, chars_to_write + 1, fmt, ap);
     va_end(ap);
     return result;
 }
