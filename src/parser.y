@@ -174,9 +174,6 @@
 %token KW_DO       "do"
 %token KW_FOR      "for"
 
-
-
-
         // Precedence of the operators
         // From top to bottom:
         // - TOP: Lowest precedence
@@ -207,9 +204,6 @@
 %left                   INC DEC
 %precedence             OPEN_PAREN CLOSE_PAREN
 
-
-
-
         // When error recovery, bison may want to discard some symbols. So
         // it is generally good practice to free any allocated memory here.
 
@@ -226,28 +220,31 @@
 
 root: stmts | %empty ;
 
+        // Bison MANUAL says to prefer left recursion where possible. Better memory footprint (bounded stack space)
 
-/* Bison MANUAL says to prefer left recursion where possible (bounded stack space) */
 stmts:          stmts stmt                        { $$ = NULL; }
-        |       stmt                              { $$ = NULL; }
+        |       stmt
         ;
 
 
 stmt:           assignment
+        |       print_stmt
         |       var_decl
         |       if_stmt
         |       for_stmt
         |       while_stmt
         |       do_while_stmt
-        |       "print" "(" expr ")" ";"
-        |       error ";"                         { yyerrok; } /* Upon syntax error synchronize to next ";". yyerrok: Resume generating error messages immediately for subsequent syntax errors. */
         |       ";"                               { $$ = NULL; }
+        |       error ";"                         { yyerrok; } /* Upon syntax error synchronize to next ";". yyerrok: Resume generating error messages immediately for subsequent syntax errors. */
         ;
 
-var_decl:       "let" ID ";"
-        |       "let" ID "=" expr ";"
-        |       "let" ID ":" type ";"
-        |       "let" ID ":" type "=" expr ";"
+assignment:     ID "=" expr ";"                           { $$ = PUSH(STATEMENT); }
+print_stmt:     "print" "(" expr ")" ";"                  { $$ = PUSH(STATEMENT); }
+
+var_decl:       "let" ID ";"                              { $$ = PUSH(STATEMENT); }
+        |       "let" ID "=" expr ";"                     { $$ = PUSH(STATEMENT); }
+        |       "let" ID ":" type ";"                     { $$ = PUSH(STATEMENT); }
+        |       "let" ID ":" type "=" expr ";"            { $$ = PUSH(STATEMENT); }
         ;
 
 type:           "int"
@@ -255,8 +252,8 @@ type:           "int"
         |       "bool"
         ;
 
-code_block:    "{" stmts "}"
-        |      "{" "}"
+code_block:    "{" stmts "}"                                  { $$ = $2; }
+        |      "{" "}"                                        { $$ = NULL; }
         |      "{" error "}"                                  { yyerrok; }
         ;
 
@@ -285,8 +282,7 @@ do_while_stmt:  "do" code_block "while" "(" expr ")" ";"
         ;
 
 
-assignment:     ID "=" expr ";"                           { $$ = PUSH(STATEMENT); }
-        ;
+
 
 expr:          "(" error ")"                              { yyerrok; }
         |      "(" expr[e] ")"                            { $$ = PUSH(OPEN_PAREN); }
