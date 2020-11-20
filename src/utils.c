@@ -233,9 +233,10 @@ void print_token(FILE *f, token_t *t)
     char *hdr_string = NULL;
 
     hdr_string = sfcat(hdr_string, 0, "%-8d (%s)", t->idx, t->skind);
-    fprintf(f, "%-48s { lexeme = '%s', yylloc = [%d, %d], kind = %d }\n",
+    fprintf(f, "%-48s { lexeme = '%s', lexemelen: %d, yylloc = [%d, %d], kind = %d }\n",
         hdr_string,
         t->lexeme,
+        t->loc.len,
         t->loc.line, t->loc.column,
         t->kind);
 

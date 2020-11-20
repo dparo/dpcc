@@ -44,9 +44,9 @@ void dpcc_reset(void)
 static void setup_filepath(char *filepath)
 {
     if (!filepath) {
-        yylloc.filepath = strdup("<UNNAMED>");
+        G_filepath = strdup("<UNNAMED>");
     } else {
-        yylloc.filepath = strdup(filepath);
+        G_filepath = strdup(filepath);
     }
 }
 

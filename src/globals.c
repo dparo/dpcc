@@ -4,8 +4,9 @@
 #include "utils.h"
 #include <stb_ds.h>
 
+char *G_filepath = NULL;
 int32_t yyprevcol = 0;
-tokloc_t yylloc = { NULL, 1, 0 };
+tokloc_t yylloc = { 0, 1, 0 };
 
 str_str_key_value_t *G_str_intern = NULL;
 mctx_t G_allctx = { 0 };
@@ -28,7 +29,8 @@ void clear_all_global_vars()
     memset(&G_allctx, 0, sizeof(G_allctx));
     memset(&G_tok_seq, 0, sizeof(G_tok_seq));
 
-    free(yylloc.filepath);
-    yylloc.filepath = "";
+    free(G_filepath);
+    G_filepath = NULL;
+
     dallclr(&G_allctx);
 }

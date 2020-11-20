@@ -41,7 +41,7 @@ typedef struct {
 } str_str_key_value_t;
 
 typedef struct {
-    char *filepath;
+    i32 len;
     i32 line;
     i32 column;
 } tokloc_t;

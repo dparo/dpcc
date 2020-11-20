@@ -78,6 +78,7 @@ static ast_node_t *yacc_from_str_to_bool(ast_node_t *node)
 #define LEX_FWD(X)                                             \
     do {                                                       \
         LEX_STRIP();                                           \
+        yylloc.len = yyleng;                                   \
         token_t *t = token_new(yylloc, yytext, TOK_##X, (#X)); \
         yylval = new_node(t, TOK_##X, (#X));                   \
         return (TOK_##X);                                      \
