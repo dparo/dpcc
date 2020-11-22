@@ -129,12 +129,6 @@
 %token                  CLOSE_BRACE "}"
 
 
-        // Derived ast nodes kind
-%token                  STATEMENT
-%token                  PRINT
-%token                  VAR_DECL
-
-
 
 %token KW_INT     "int"
 %token KW_FLOAT   "float"
@@ -208,7 +202,7 @@ root:    main       { breakme(); NODE_KIND(&G_root_node, YYEOF); push_childs(&G_
 main: "fn" "main"[op] "(" ")" code_block[cb]                 { $$ = NEW_NODE($op->tok, KW_MAIN); push_child($$, $cb); }
 
 stmts:          stmts[car] stmt[self]                        { $$ = $car; push_child($car, $self); }
-        |       stmt[self]                                   { $$ = NEW_NODE($self->tok, STATEMENT); push_child($$, $self); }
+        |       stmt[self]                                   { $$ = NEW_NODE($self->tok, YYUNDEF); push_child($$, $self); }
         ;
 
 
@@ -225,12 +219,12 @@ stmt:           assignment ";"                    { $$ = $1; }
         ;
 
 assignment:     ID[lhs] "="[op] expr[rhs]                     { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 2, CAST {$lhs, $rhs}); }
-print_stmt:     "print"[op] "(" expr[e] ")" ";"               { $$ = NEW_NODE($op->tok, PRINT); push_child($$, $e); }
+print_stmt:     "print"[op] "(" expr[e] ")" ";"               { $$ = NEW_NODE($op->tok, KW_PRINT); push_child($$, $e); }
 
-var_decl:       "let"[op] ID[id] ";"                          { $$ = NEW_NODE($op->tok, VAR_DECL); push_childs($$, 3, CAST {NULL, $id, NULL}); }
-        |       "let"[op] ID[id] "=" expr[e] ";"              { $$ = NEW_NODE($op->tok, VAR_DECL); push_childs($$, 3, CAST {NULL, $id, $e}); }
-        |       "let"[op] ID[id] ":" type[t] ";"              { $$ = NEW_NODE($op->tok, VAR_DECL); push_childs($$, 3, CAST {$t, $id, NULL}); }
-        |       "let"[op] ID[id] ":" type[t] "=" expr[e] ";"  { $$ = NEW_NODE($op->tok, VAR_DECL); push_childs($$, 3, CAST {$t, $id, $e}); }
+var_decl:       "let"[op] ID[id] ";"                          { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, NULL}); }
+        |       "let"[op] ID[id] "=" expr[e] ";"              { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, $e}); }
+        |       "let"[op] ID[id] ":" type[t] ";"              { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, NULL}); }
+        |       "let"[op] ID[id] ":" type[t] "=" expr[e] ";"  { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, $e}); }
         ;
 
 type:           "int"      { $$ = $1; $$->type = TYPE_I32; }
@@ -238,7 +232,7 @@ type:           "int"      { $$ = $1; $$->type = TYPE_I32; }
         |       "bool"     { $$ = $1; $$->type = TYPE_BOOL; }
         ;
 
-code_block:    "{" stmts[ss] "}"                              { $$ = $ss; }
+code_block:    "{"[op] stmts[ss] "}"                          { $$ = NEW_NODE($op->tok, OPEN_BRACE); push_childs($$, $ss->num_childs, $ss->childs);}
         |      "{" "}"                                        { $$ = NULL; }
         |      "{" error "}"                                  { yyerrok; }
         ;
