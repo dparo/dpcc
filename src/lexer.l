@@ -73,6 +73,10 @@ EOF              { LEX_FWD(YYEOF); }   /* Must return YYEOF upon EOF in order fo
 {string_lit}     { LEX_FWD(STRING_LIT); }
 
 
+
+"."              { LEX_FWD(DOT); }
+"->"             { LEX_FWD(ARROW); }
+
 ":"              { LEX_FWD(COLON); }
 ";"              { LEX_FWD(SEMICOLON); }
 "="              { LEX_FWD(ASSIGN); }
@@ -119,6 +123,8 @@ EOF              { LEX_FWD(YYEOF); }   /* Must return YYEOF upon EOF in order fo
 "float"       { LEX_FWD(KW_FLOAT); }
 "bool"        { LEX_FWD(KW_BOOL); }
 
+"fn"          { LEX_FWD(KW_FN); }
+"main"        { LEX_FWD(KW_MAIN); }
 "let"         { LEX_FWD(KW_LET); }
 "print"       { LEX_FWD(KW_PRINT); }
 "if"          { LEX_FWD(KW_IF); }

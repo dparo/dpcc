@@ -118,6 +118,8 @@
 
 %token                  POW     "**"
 
+%token                  DOT "."
+%token                  ARROW "->"
 
 %token                  COLON ":"
 %token                  SEMICOLON ";"
@@ -138,6 +140,9 @@
 %token KW_FLOAT   "float"
 %token KW_BOOL    "bool"
 
+
+%token KW_FN       "fn"
+%token KW_MAIN     "main"
 %token KW_LET      "let"
 %token KW_PRINT    "print"
 %token KW_IF       "if"
@@ -193,11 +198,14 @@
 
 %%
 
-root:    stmts       { breakme(); NODE_KIND(&G_root_node, YYEOF); push_childs(&G_root_node, 1, CAST { $1 }); }
+      // Bison MANUAL says to prefer left recursion where possible. Better memory footprint (bounded stack space)
+
+root:    main       { breakme(); NODE_KIND(&G_root_node, YYEOF); push_childs(&G_root_node, 1, CAST { $1 }); }
        | %empty
        ;
 
-        // Bison MANUAL says to prefer left recursion where possible. Better memory footprint (bounded stack space)
+
+main: "fn" "main"[op] "(" ")" code_block[cb]                 { $$ = NEW_NODE($op->tok, KW_MAIN); push_child($$, $cb); }
 
 stmts:          stmts[car] stmt[self]                        { $$ = $car; push_child($car, $self); }
         |       stmt[self]                                   { $$ = NEW_NODE($self->tok, STATEMENT); push_child($$, $self); }
@@ -211,6 +219,7 @@ stmt:           assignment ";"                    { $$ = $1; }
         |       for_stmt
         |       while_stmt
         |       do_while_stmt
+        |       code_block
         |       ";"                               { $$ = NULL; }
         |       error ";"                         { yyerrok; } /* Upon syntax error synchronize to next ";". yyerrok: Resume generating error messages immediately for subsequent syntax errors. */
         ;
