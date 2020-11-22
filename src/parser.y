@@ -232,7 +232,16 @@ type:           "int"      { $$ = $1; $$->type = TYPE_I32; }
         |       "bool"     { $$ = $1; $$->type = TYPE_BOOL; }
         ;
 
-code_block:    "{"[op] stmts[ss] "}"                          { $$ = NEW_NODE($op->tok, OPEN_BRACE); push_childs($$, $ss->num_childs, $ss->childs);}
+code_block:    "{"[op] stmts[ss] "}"                          {
+                        $$ = NEW_NODE($op->tok, OPEN_BRACE);
+                        // Reverse the order of the childs
+                        for (int32_t i = 0; i < $ss->num_childs / 2; i++) {
+                            YYSTYPE temp = $ss->childs[0];
+                            $ss->childs[0] = $ss->childs[$ss->num_childs - 1 - i];
+                            $ss->childs[$ss->num_childs - 1 - i] = temp;
+                        }
+                        push_childs($$, $ss->num_childs, $ss->childs);
+                }
         |      "{" "}"                                        { $$ = NULL; }
         |      "{" error "}"                                  { yyerrok; }
         ;

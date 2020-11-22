@@ -57,6 +57,8 @@ int main(int argc, char **argv)
     }
 
     dpcc_reset();
+    dallclr(&G_allctx);
+
     fflush(stderr);
     return 0;
 }
