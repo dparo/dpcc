@@ -12,11 +12,11 @@ enum DPCC_LOG_COLOR {
 };
 
 enum DPCC_LOG_SEVERITY {
-    DPCC_SEVERITY_ERROR,
-    DPCC_SEVERITY_WARNING,
     DPCC_SEVERITY_INFO,
+    DPCC_SEVERITY_WARNING,
+    DPCC_SEVERITY_ERROR,
 };
 
 void dpcc_set_log_color(FILE *stream, enum DPCC_LOG_COLOR out_color);
-void dpcc_log(enum DPCC_LOG_SEVERITY severity, ast_node_t *node, char *fmt, ...)
+void dpcc_log(enum DPCC_LOG_SEVERITY severity, tokloc_t *loc, char *fmt, ...)
     __attribute__((format(printf, 3, 4)));

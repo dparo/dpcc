@@ -18,26 +18,26 @@ void dpcc_set_log_color(FILE *stream, enum DPCC_LOG_COLOR color)
     }
 }
 
-void dpcc_log(enum DPCC_LOG_SEVERITY severity, ast_node_t *node, char *fmt, ...)
+void dpcc_log(enum DPCC_LOG_SEVERITY severity, tokloc_t *loc, char *fmt, ...)
 {
 
     int32_t color_table[] = {
-        DPCC_LOG_COLOR_RED,
-        DPCC_LOG_COLOR_YELLOW,
         DPCC_LOG_COLOR_GREEN,
+        DPCC_LOG_COLOR_YELLOW,
+        DPCC_LOG_COLOR_RED,
     };
 
     char *severity_string[] = {
         "info",
         "warning",
-        "info",
+        "error",
     };
 
     dpcc_set_log_color(stderr, color_table[severity]);
 
     char *filepath = G_filepath;
-    int32_t line = node->tok->loc.line;
-    int32_t column = node->tok->loc.column;
+    int32_t line = loc->line;
+    int32_t column = loc->column;
 
     va_list ap;
     va_start(ap, fmt);

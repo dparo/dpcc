@@ -51,7 +51,7 @@
         // prior to do expolarion it can lead to better identification of
         // the token causing the syntax error
 %define parse.lac   full
-%define parse.error detailed       // custom
+%define parse.error custom       // detailed
 
 %define api.symbol.prefix {YY_}
 %define api.token.prefix  {TOK_}
@@ -66,7 +66,7 @@
 %{
 
 #include "yacc_utils.h"
-#define YYERROR_VERBOSE 1
+#include "log.h"
 
 
 
@@ -333,10 +333,30 @@ void yyerror(char const *s)
 }
 
 
-#if 0
 int yyreport_syntax_error (const yypcontext_t *ctx)
 {
+    yysymbol_kind_t unexpected = yypcontext_token(ctx);
+    YYLTYPE *loc = yypcontext_location(ctx);
 
+    yysymbol_kind_t *expected = NULL;
+    int num_expected = yypcontext_expected_tokens(ctx, NULL, 0);
+
+    expected = malloc(sizeof(*expected) * num_expected);
+    int result = yypcontext_expected_tokens(ctx, expected, num_expected);
+
+
+    dpcc_log(DPCC_SEVERITY_ERROR, loc, "Syntax error. Unexpected token `%s` found", yysymbol_name(unexpected));
+
+    if (expected[0] != YY_YYEMPTY) {
+        char *expected_string = NULL;
+
+        for (int32_t i = 0; i < num_expected; i++) {
+            expected_string = sfcat(expected_string, 0, "%s%s", yysymbol_name(expected[i]), i == (num_expected - 1) ? " " : ", ") ;
+        }
+        dpcc_log(DPCC_SEVERITY_INFO, loc, "Expected one of [ %s ]", expected_string);
+        free(expected_string);
+    }
+
+    free(expected);
 }
 
-#endif
