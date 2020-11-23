@@ -13,7 +13,54 @@
 #include "types.h"
 #include "utils.h"
 
-FILE *open_from_string(char *string)
+static void symtable_clear(void)
+{
+    for (int32_t list_idx = G_symtable.num_lists - 1; list_idx > 0; list_idx--) {
+        dalldel(&G_allctx, G_symtable.lists[list_idx].syms);
+    }
+
+    dalldel(&G_allctx, G_symtable.lists);
+}
+
+/// NOTE: the token lexeme is considered to be corretly interned.
+///       This will allows us to do string matching by a simple pointer comparison
+///       isntead of using a full blown strcmp (which requires to iterate all characters)
+static ast_node_t *symtable_query(token_t *tok)
+{
+    // Walk the stack backward. Lasts created symbols have higher precedence
+    for (int32_t list_idx = G_symtable.num_lists - 1; list_idx > 0; list_idx--) {
+        for (int32_t sym_idx = 0; sym_idx < G_symtable.lists[list_idx].num_syms; sym_idx++) {
+            if (G_symtable.lists[list_idx].syms[sym_idx]->tok->lexeme == tok->lexeme) {
+                return G_symtable.lists[list_idx].syms[sym_idx];
+            }
+        }
+    }
+    return NULL;
+}
+
+static void symtable_begin_block(void)
+{
+    size_t new_size = (G_symtable.num_lists + 1) * sizeof(*G_symtable.lists);
+
+    G_symtable.lists = dallrsz(&G_allctx, G_symtable.lists, new_size);
+    G_symtable.lists[G_symtable.num_lists].num_syms = 0;
+    G_symtable.lists[G_symtable.num_lists].syms = NULL;
+    G_symtable.num_lists += 1;
+}
+
+static void symtable_push_sym(ast_node_t *sym_var_decl)
+{
+    assert(sym_var_decl->kind == TOK_KW_LET);
+    symlist_t *list = &G_symtable.lists[G_symtable.num_lists - 1];
+
+    size_t new_size = (list->num_syms + 1) * sizeof(*list->syms);
+    dallrsz(&G_allctx, list->syms, new_size);
+    list->syms[list->num_syms] = sym_var_decl;
+    list->num_syms += 1;
+}
+
+FILE *
+open_from_string(char *string)
 {
     FILE *result = fmemopen(string, strlen(string), "r");
     if (result == NULL) {
@@ -39,6 +86,8 @@ void dpcc_reset(void)
 {
     yylex_destroy();
     clear_all_global_vars();
+    symtable_clear();
+    symtable_begin_block();
 }
 
 static void setup_filepath(char *filepath)

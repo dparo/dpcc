@@ -214,7 +214,7 @@ stmt:           assignment ";"                    { $$ = $1; }
         |       do_while_stmt
         |       code_block
         |       ";"                               { $$ = NULL; }
-        |       error ";"                         { yyerrok; } /* Upon syntax error synchronize to next ";". yyerrok: Resume generating error messages immediately for subsequent syntax errors. */
+        |       error ";"                         {  } /* Upon syntax error synchronize to next ";". yyerrok: Resume generating error messages immediately for subsequent syntax errors. */
         ;
 
 assignment:     ID[lhs] "="[op] expr[rhs]                     { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 2, CAST {$lhs, $rhs}); }
@@ -243,7 +243,7 @@ code_block:    "{"[op] stmts[ss] "}"                          {
                         push_childs($$, $ss->num_childs, $ss->childs);
                 }
         |      "{" "}"                                        { $$ = NULL; }
-        |      "{" error "}"                                  { yyerrok; }
+        |      "{" error "}"                                  {  }
         ;
 
 for_1: var_decl
@@ -258,7 +258,7 @@ for_3: expr
      ;
 
 else_if_stmt:   "else" "if"[op] "(" expr[e] ")" code_block[cb]     { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 2, CAST { $e, $cb}); }
-        |       "else" "if" "(" error ")" code_block               { yyerrok; }
+        |       "else" "if" "(" error ")" code_block               {  }
 
 else_if_stmts:  else_if_stmts[car] else_if_stmt[eif]               { $$ = $car; push_child($car, $eif); }
         |       %empty                                             { $$ = NULL; }
@@ -267,23 +267,23 @@ else_if_stmts:  else_if_stmts[car] else_if_stmt[eif]               { $$ = $car; 
 if_stmt:         "if"[op] "(" expr[e] ")" code_block[cb] else_if_stmts[car]                           { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, $car, NULL}); }
         |        "if" "(" error ")" code_block else_if_stmts
         |        "if"[op] "(" expr[e] ")" code_block[cb] else_if_stmts[car] "else" code_block[ecb]    { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, $car, $ecb}); }
-        |        "if" "(" error ")" code_block else_if_stmts "else" code_block           { yyerrok; }
+        |        "if" "(" error ")" code_block else_if_stmts "else" code_block           {  }
         ;
 
 for_stmt:       "for"[op] "(" for_1[f1] ";" for_2[f2] ";" for_3[f3] ")" code_block[cb]        { $$ = NEW_NODE($op->tok, KW_FOR); push_childs($$, 4, CAST {$f1, $f2, $f3, $cb} ); }
-        |       "for" "(" error ")" code_block            { yyerrok; }
+        |       "for" "(" error ")" code_block            {  }
         ;
 while_stmt:     "while"[op] "(" expr[e] ")" code_block[cb]           { $$ = NEW_NODE($op->tok, KW_WHILE); push_childs($$, 2, CAST {$e, $cb} ); }
-        |       "while" "(" error ")" code_block          { yyerrok; }
+        |       "while" "(" error ")" code_block          {  }
         ;
 do_while_stmt:  "do"[op] code_block[cb] "while" "(" expr[e] ")" ";"  { $$ = NEW_NODE($op->tok, KW_DO); push_childs($$, 2, CAST {$e, $cb} ); }
-        |       "do" code_block "while" "(" error ")" ";" { yyerrok; }
+        |       "do" code_block "while" "(" error ")" ";" {  }
         ;
 
 
 
 
-expr:          "(" error ")"                                  { yyerrok; }
+expr:          "(" error ")"                                  {  }
         |      "(" expr[e] ")"                                { $$ = $e; }
         // Type conversions
         |      "int"[op] "(" expr[e] ")"                      { $$ = NEW_NODE($op->tok, KW_INT); push_child($$, $e); }

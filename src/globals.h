@@ -2,6 +2,7 @@
 
 #include "types.h"
 
+extern symtable_t G_symtable;
 extern char *G_filepath;
 extern int32_t yyprevcol;
 extern tokloc_t yylloc;

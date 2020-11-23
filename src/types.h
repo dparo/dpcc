@@ -92,3 +92,13 @@ typedef struct {
     ast_node_t **stack_nodes;
     int32_t *stack_childs;
 } ast_traversal_t;
+
+typedef struct {
+    int32_t num_syms;
+    ast_node_t **syms;
+} symlist_t;
+
+typedef struct {
+    int32_t num_lists;
+    symlist_t *lists;
+} symtable_t;

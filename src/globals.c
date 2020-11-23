@@ -14,8 +14,12 @@ mctx_t G_allctx = { 0 };
 token_seq_t G_tok_seq = { 0 };
 ast_node_t G_root_node = { 0 };
 
+symtable_t G_symtable = { 0 };
+
 void clear_all_global_vars()
 {
+    extern int yynerrs;
+    yynerrs = 0;
     yyprevcol = 0;
     yylloc.line = 1;
     yylloc.column = 0;
