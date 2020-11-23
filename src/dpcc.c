@@ -25,12 +25,15 @@ void symtable_clear(void)
 /// NOTE: the token lexeme is considered to be corretly interned.
 ///       This will allows us to do string matching by a simple pointer comparison
 ///       isntead of using a full blown strcmp (which requires to iterate all characters)
-ast_node_t *symtable_query(token_t *tok)
+ast_node_t *symtable_lookup(token_t *tok)
 {
     // Walk the stack backward. Lasts created symbols have higher precedence
     for (int32_t list_idx = G_symtable.num_lists - 1; list_idx > 0; list_idx--) {
         for (int32_t sym_idx = 0; sym_idx < G_symtable.lists[list_idx].num_syms; sym_idx++) {
-            if (G_symtable.lists[list_idx].syms[sym_idx]->tok->lexeme == tok->lexeme) {
+
+            // NOTE: Child number 1 is the actual ID provided in the declaration
+
+            if (G_symtable.lists[list_idx].syms[sym_idx]->childs[1]->tok->lexeme == tok->lexeme) {
                 return G_symtable.lists[list_idx].syms[sym_idx];
             }
         }
@@ -60,17 +63,15 @@ ast_node_t *symtable_push_sym(ast_node_t *symvar_decl)
     assert(symvar_decl->num_childs == 3);
     symlist_t *list = &G_symtable.lists[G_symtable.num_lists - 1];
 
-#if 0
     for (int32_t i = 0; i < list->num_syms; i++) {
-        // NOTE: Child number 1 is the actual ID provided in the declaration
-        if (list->syms[i]->tok->lexeme == symvar_decl->childs[1]->tok->lexeme) {
+        if (list->syms[i]->childs[1]->tok->lexeme == symvar_decl->childs[1]->tok->lexeme) {
             return list->syms[i];
         }
     }
-#endif
+
     size_t new_size = (list->num_syms + 1) * sizeof(*list->syms);
     list->syms = dallrsz(&G_allctx, list->syms, new_size);
-    list->syms[list->num_syms] = symvar_decl->childs[1];
+    list->syms[list->num_syms] = symvar_decl;
     list->num_syms += 1;
     return NULL;
 }

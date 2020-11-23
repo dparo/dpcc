@@ -207,7 +207,7 @@ stmts:          stmts[car] stmt[self]                        { $$ = $car; push_c
 
 stmt:           assignment ";"                    { $$ = $1; }
         |       print_stmt
-        |       decl
+        |       decl ";"
         |       if_stmt
         |       for_stmt
         |       while_stmt
@@ -217,18 +217,18 @@ stmt:           assignment ";"                    { $$ = $1; }
         |       error ";"                         {  } /* Upon syntax error synchronize to next ";". yyerrok: Resume generating error messages immediately for subsequent syntax errors. */
         ;
 
-assignment:     ID[lhs] "="[op] expr[rhs]                     { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 2, CAST {$lhs, $rhs}); }
+assignment:     id_ref[lhs] "="[op] expr[rhs]                 { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 2, CAST {$lhs, $rhs}); }
 print_stmt:     "print"[op] "(" expr[e] ")" ";"               { $$ = NEW_NODE($op->tok, KW_PRINT); push_child($$, $e); }
 
 
 decl:
-        var_decl                                              { $$ = $1; symtable_push_sym($1); }
+        var_decl                                              { $$ = $1; if (!var_decl($1)) { PARSE_ERROR(); } }
         ;
 
-var_decl:       "let"[op] ID[id] ";"                          { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, NULL}); }
-        |       "let"[op] ID[id] "=" expr[e] ";"              { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, $e}); }
-        |       "let"[op] ID[id] ":" type[t] ";"              { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, NULL}); }
-        |       "let"[op] ID[id] ":" type[t] "=" expr[e] ";"  { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, $e}); }
+var_decl:       "let"[op] ID[id]                              { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, NULL}); }
+        |       "let"[op] ID[id] "=" expr[e]                  { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, $e}); }
+        |       "let"[op] ID[id] ":" type[t]                  { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, NULL}); }
+        |       "let"[op] ID[id] ":" type[t] "=" expr[e]      { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, $e}); }
         ;
 
 type:           "int"      { $$ = $1; $$->type = TYPE_I32; }
@@ -252,7 +252,7 @@ code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                 
         |      "{" error "}"                                  {  }
         ;
 
-for_1: var_decl
+for_1: decl
      | assignment
      | %empty { $$ = NULL; }
      ;
@@ -287,6 +287,8 @@ do_while_stmt:  "do"[op] code_block[cb] "while" "(" expr[e] ")" ";"  { $$ = NEW_
         ;
 
 
+
+id_ref: ID                                                    { $$ = $1; NODE_KIND($$, ID); if (!symtable_lookup($$->tok)) { dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Use of undeclared identifier `%s`", $$->tok->lexeme); PARSE_ERROR(); } }
 
 
 expr:          "(" error ")"                                  {  }
@@ -325,13 +327,7 @@ expr:          "(" error ")"                                  {  }
         |       F32_LIT                                       { NODE_KIND($$, F32_LIT); INIT_F32($$); }
         |       CHAR_LIT                                      { NODE_KIND($$, CHAR_LIT); INIT_CHAR($$); }
         |       BOOL_LIT                                      { NODE_KIND($$, BOOL_LIT); INIT_BOOL($$); }
-        |       ID                                            { NODE_KIND($$, ID);
-                                                                ast_node_t *decl = symtable_query($$->tok);
-                                                                if (decl == NULL) {
-                                                                    dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Use of undeclared identifier `%s`", $$->tok->lexeme);
-                                                                    PARSE_ERROR();
-                                                                }
-                                                        }
+        |       id_ref                                        { $$ = $1; }
         ;
 
 %%

@@ -139,7 +139,19 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
     } while (0)
 
 void symtable_clear(void);
-ast_node_t *symtable_query(token_t *tok);
+ast_node_t *symtable_lookup(token_t *tok);
 void symtable_begin_block(void);
 void symtable_end_block(void);
-void symtable_push_sym(ast_node_t *sym_var_decl);
+ast_node_t *symtable_push_sym(ast_node_t *sym_var_decl);
+
+static inline bool var_decl(ast_node_t *var_decl_node)
+{
+    ast_node_t *already_declared = symtable_push_sym(var_decl_node);
+    if (!already_declared) {
+        return true;
+    } else {
+        dpcc_log(DPCC_SEVERITY_ERROR, &var_decl_node->tok->loc, "Redefinition of previously declared identifier");
+        dpcc_log(DPCC_SEVERITY_INFO, &already_declared->tok->loc, "Previous declaration was here");
+        return false;
+    }
+}
