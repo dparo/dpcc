@@ -48,9 +48,19 @@ void dpcc_log(enum DPCC_LOG_SEVERITY severity, loc_t *loc, char *fmt, ...)
     vsnprintf(msg, msg_required_len + 1, fmt, ap);
     va_end(ap);
 
-    fprintf(stderr, "%s:%d:%d: %s: %s\n", filepath, line, column, severity_string[severity], msg);
+    size_t s = 4096;
+    char *current_dir = malloc(s);
+    char *success = NULL;
+
+    while ((success = getcwd(current_dir, s)) == NULL) {
+        s += 4096;
+        current_dir = realloc(current_dir, s);
+    }
+
+    fprintf(stderr, "%s/%s:%d:%d: %s: %s\n", current_dir, filepath, line, column, severity_string[severity], msg);
 
     dpcc_set_log_color(stderr, DPCC_LOG_COLOR_RESET);
 
     free(msg);
+    free(current_dir);
 }

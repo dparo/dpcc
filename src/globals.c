@@ -21,7 +21,7 @@ void clear_all_global_vars()
     yynerrs = 0;
 
     yylloc.first_line = 1;
-    yylloc.first_column = 0;
+    yylloc.first_column = 1;
     yylloc.last_column = 0;
 
     tokens_seq_clear(&G_tok_seq);
