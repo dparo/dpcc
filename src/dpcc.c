@@ -91,8 +91,8 @@ bool parse(char *filepath, FILE *input_stream)
     yyin = input_stream;
 
     int result = yyparse();
-    printf("yyparse result = %d\n", result);
-    return result == 0;
+    extern int yynerrs;
+    return result == 0 && yynerrs == 0;
 }
 
 bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
