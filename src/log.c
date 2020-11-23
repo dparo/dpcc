@@ -1,5 +1,6 @@
 #include "log.h"
 #include "globals.h"
+#include "utils.h"
 #include <stdarg.h>
 #include <unistd.h>
 
@@ -48,14 +49,7 @@ void dpcc_log(enum DPCC_LOG_SEVERITY severity, loc_t *loc, char *fmt, ...)
     vsnprintf(msg, msg_required_len + 1, fmt, ap);
     va_end(ap);
 
-    size_t s = 4096;
-    char *current_dir = malloc(s);
-    char *success = NULL;
-
-    while ((success = getcwd(current_dir, s)) == NULL) {
-        s += 4096;
-        current_dir = realloc(current_dir, s);
-    }
+    char *current_dir = get_current_working_dir();
 
     fprintf(stderr, "%s/%s:%d:%d: %s: %s\n", current_dir, filepath, line, column, severity_string[severity], msg);
 

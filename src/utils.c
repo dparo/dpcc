@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <unistd.h>
 
 #include "types.h"
 #include "globals.h"
@@ -353,4 +354,18 @@ char *sfcat(char *string, int32_t string_len, char *fmt, ...)
     vsnprintf(bumped, chars_to_write + 1, fmt, ap);
     va_end(ap);
     return result;
+}
+
+char *get_current_working_dir(void)
+{
+    size_t s = 4096;
+    char *current_dir = malloc(s);
+    char *success = NULL;
+
+    while ((success = getcwd(current_dir, s)) == NULL) {
+        s += 4096;
+        current_dir = realloc(current_dir, s);
+    }
+
+    return current_dir;
 }

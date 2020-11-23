@@ -89,6 +89,8 @@ void node_set_kind(ast_node_t *node, int32_t kind, char *skind);
 void push_child(ast_node_t *parent, ast_node_t *child);
 void push_childs(ast_node_t *parent, int32_t num_childs, ast_node_t **childs);
 
+char *get_current_working_dir(void);
+
 bool str_to_i32(char *string, i32 *out);
 bool str_to_f32(char *string, f32 *out);
 bool str_to_char(char *string, char *out);

@@ -193,7 +193,7 @@
 
       // Bison MANUAL says to prefer left recursion where possible. Better memory footprint (bounded stack space)
 
-root:    main       { breakme(); NODE_KIND(&G_root_node, YYEOF); push_childs(&G_root_node, 1, CAST { $1 }); }
+root:    main       { NODE_KIND(&G_root_node, YYEOF); push_child(&G_root_node, $1); }
        | %empty
        ;
 
@@ -220,7 +220,7 @@ stmt:           assignment ";"                    { $$ = $1; }
 assignment:     ID[lhs] "="[op] expr[rhs]                     { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 2, CAST {$lhs, $rhs}); }
 print_stmt:     "print"[op] "(" expr[e] ")" ";"               { $$ = NEW_NODE($op->tok, KW_PRINT); push_child($$, $e); }
 
-var_decl:       "let"[op] ID[id] ";"                          { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, NULL}); }
+var_decl:       "let"[op] ID[id] ";"                          { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, NULL}); symtable_push_sym($$); }
         |       "let"[op] ID[id] "=" expr[e] ";"              { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, $e}); }
         |       "let"[op] ID[id] ":" type[t] ";"              { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, NULL}); }
         |       "let"[op] ID[id] ":" type[t] "=" expr[e] ";"  { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, $e}); }
@@ -231,7 +231,7 @@ type:           "int"      { $$ = $1; $$->type = TYPE_I32; }
         |       "bool"     { $$ = $1; $$->type = TYPE_BOOL; }
         ;
 
-code_block:    "{"[op] stmts[ss] "}"                          {
+code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                          {
                         $$ = NEW_NODE($op->tok, OPEN_BRACE);
                         // Keep bison LEFT recursive (faster) and reverse the order of the childs,
                         // only when needed
@@ -241,6 +241,7 @@ code_block:    "{"[op] stmts[ss] "}"                          {
                             $ss->childs[$ss->num_childs - 1 - i] = temp;
                         }
                         push_childs($$, $ss->num_childs, $ss->childs);
+                        symtable_end_block();
                 }
         |      "{" "}"                                        { $$ = NULL; }
         |      "{" error "}"                                  {  }
@@ -315,11 +316,17 @@ expr:          "(" error ")"                                  {  }
         |       ID[lhs] "++"[op]             %prec INC        { $$ = NEW_NODE($op->tok, INC); push_child($$, $lhs); }
         |       ID[lhs] "--"[op]             %prec DEC        { $$ = NEW_NODE($op->tok, DEC); push_child($$, $lhs); }
         |       assignment                   %prec ASSIGN     { $$ = $1; }
-        |       ID                                            { NODE_KIND($$, ID); }
         |       I32_LIT                                       { NODE_KIND($$, I32_LIT); INIT_I32($$); }
         |       F32_LIT                                       { NODE_KIND($$, F32_LIT); INIT_F32($$); }
         |       CHAR_LIT                                      { NODE_KIND($$, CHAR_LIT); INIT_CHAR($$); }
         |       BOOL_LIT                                      { NODE_KIND($$, BOOL_LIT); INIT_BOOL($$); }
+        |       ID                                            { NODE_KIND($$, ID);
+                                                                ast_node_t *decl = symtable_query($$->tok);
+                                                                if (decl == NULL) {
+                                                                    dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Use of undeclared identifier `%s`", $$->tok->lexeme);
+                                                                    PARSE_ERROR();
+                                                                }
+                                                        }
         ;
 
 %%
@@ -367,4 +374,3 @@ int yyreport_syntax_error (const yypcontext_t *ctx)
     free(expected);
     return 0;
 }
-

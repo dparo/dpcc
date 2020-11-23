@@ -13,7 +13,7 @@
 #include "types.h"
 #include "utils.h"
 
-static void symtable_clear(void)
+void symtable_clear(void)
 {
     for (int32_t list_idx = G_symtable.num_lists - 1; list_idx > 0; list_idx--) {
         dalldel(&G_allctx, G_symtable.lists[list_idx].syms);
@@ -25,7 +25,7 @@ static void symtable_clear(void)
 /// NOTE: the token lexeme is considered to be corretly interned.
 ///       This will allows us to do string matching by a simple pointer comparison
 ///       isntead of using a full blown strcmp (which requires to iterate all characters)
-static ast_node_t *symtable_query(token_t *tok)
+ast_node_t *symtable_query(token_t *tok)
 {
     // Walk the stack backward. Lasts created symbols have higher precedence
     for (int32_t list_idx = G_symtable.num_lists - 1; list_idx > 0; list_idx--) {
@@ -38,7 +38,7 @@ static ast_node_t *symtable_query(token_t *tok)
     return NULL;
 }
 
-static void symtable_begin_block(void)
+void symtable_begin_block(void)
 {
     size_t new_size = (G_symtable.num_lists + 1) * sizeof(*G_symtable.lists);
 
@@ -48,13 +48,19 @@ static void symtable_begin_block(void)
     G_symtable.num_lists += 1;
 }
 
-static void symtable_push_sym(ast_node_t *sym_var_decl)
+void symtable_end_block(void)
 {
-    assert(sym_var_decl->kind == TOK_KW_LET);
+    dalldel(&G_allctx, G_symtable.lists[G_symtable.num_lists - 1].syms);
+    G_symtable.num_lists -= 1;
+}
+
+void symtable_push_sym(ast_node_t *sym_var_decl)
+{
+    assert(sym_var_decl->tok->kind == TOK_KW_LET);
     symlist_t *list = &G_symtable.lists[G_symtable.num_lists - 1];
 
     size_t new_size = (list->num_syms + 1) * sizeof(*list->syms);
-    dallrsz(&G_allctx, list->syms, new_size);
+    list->syms = dallrsz(&G_allctx, list->syms, new_size);
     list->syms[list->num_syms] = sym_var_decl;
     list->num_syms += 1;
 }

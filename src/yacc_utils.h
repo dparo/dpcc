@@ -62,9 +62,9 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
     return success;
 }
 
-#define LEX_STRIP()                 \
-    do {                            \
-        yylloc.first_column  = yylloc.last_column; \
+#define LEX_STRIP()                                        \
+    do {                                                   \
+        yylloc.first_column = yylloc.last_column;          \
         yylloc.last_column = yylloc.first_column + yyleng; \
     } while (0)
 
@@ -91,47 +91,55 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
 #define NODE_KIND(node, KIND) \
     node_set_kind(node, YY_##KIND, (#KIND))
 
-
 #define PARSE_ERROR() \
-    do { yynerrs += 1; YYERROR; } while(0)
+    do {              \
+        yynerrs += 1; \
+        YYERROR;      \
+    } while (0)
 #define NODE_TYPE(node, TYPE)  \
     do {                       \
         node->type = (TYPE);   \
         node->stype = (#TYPE); \
     } while (0)
 
-#define INIT_I32(node)                               \
-    do {                                             \
+#define INIT_I32(node)                     \
+    do {                                   \
         if (!yacc_from_str_to_i32(node)) { \
-            PARSE_ERROR();                                 \
-        }                                            \
-        NODE_TYPE(node, TYPE_I32);                   \
-        NODE_KIND(node, I32_LIT);                    \
+            PARSE_ERROR();                 \
+        }                                  \
+        NODE_TYPE(node, TYPE_I32);         \
+        NODE_KIND(node, I32_LIT);          \
     } while (0)
 
-#define INIT_F32(node)                               \
-    do {                                             \
+#define INIT_F32(node)                     \
+    do {                                   \
         if (!yacc_from_str_to_f32(node)) { \
-            PARSE_ERROR();                           \
-        }                                            \
-        NODE_TYPE(node, TYPE_F32);                   \
-        NODE_KIND(node, F32_LIT);                    \
+            PARSE_ERROR();                 \
+        }                                  \
+        NODE_TYPE(node, TYPE_F32);         \
+        NODE_KIND(node, F32_LIT);          \
     } while (0)
 
-#define INIT_CHAR(node)                               \
-    do {                                              \
+#define INIT_CHAR(node)                     \
+    do {                                    \
         if (!yacc_from_str_to_char(node)) { \
-            PARSE_ERROR();                                  \
-        }                                             \
-        NODE_TYPE(node, TYPE_I32);                    \
-        NODE_KIND(node, I32_LIT);                     \
+            PARSE_ERROR();                  \
+        }                                   \
+        NODE_TYPE(node, TYPE_I32);          \
+        NODE_KIND(node, I32_LIT);           \
     } while (0)
 
-#define INIT_BOOL(node)                               \
-    do {                                              \
+#define INIT_BOOL(node)                     \
+    do {                                    \
         if (!yacc_from_str_to_bool(node)) { \
-            PARSE_ERROR();                                  \
-        }                                             \
-        NODE_TYPE(node, TYPE_BOOL);                   \
-        NODE_KIND(node, BOOL_LIT);                    \
+            PARSE_ERROR();                  \
+        }                                   \
+        NODE_TYPE(node, TYPE_BOOL);         \
+        NODE_KIND(node, BOOL_LIT);          \
     } while (0)
+
+void symtable_clear(void);
+ast_node_t *symtable_query(token_t *tok);
+void symtable_begin_block(void);
+void symtable_end_block(void);
+void symtable_push_sym(ast_node_t *sym_var_decl);
