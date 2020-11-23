@@ -96,8 +96,13 @@ typedef struct {
 } ast_traversal_t;
 
 typedef struct {
-    int32_t num_syms;
-    ast_node_t **syms;
+    ast_node_t *node;
+    int32_t num_usages;
+} symtable_record_t;
+
+typedef struct {
+    int32_t num_records;
+    symtable_record_t *records;
 } symlist_t;
 
 typedef struct {

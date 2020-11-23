@@ -16,7 +16,7 @@
 void symtable_clear(void)
 {
     for (int32_t list_idx = G_symtable.num_lists - 1; list_idx > 0; list_idx--) {
-        dalldel(&G_allctx, G_symtable.lists[list_idx].syms);
+        dalldel(&G_allctx, G_symtable.lists[list_idx].records);
     }
 
     dalldel(&G_allctx, G_symtable.lists);
@@ -29,12 +29,13 @@ ast_node_t *symtable_lookup(token_t *tok)
 {
     // Walk the stack backward. Lasts created symbols have higher precedence
     for (int32_t list_idx = G_symtable.num_lists - 1; list_idx > 0; list_idx--) {
-        for (int32_t sym_idx = 0; sym_idx < G_symtable.lists[list_idx].num_syms; sym_idx++) {
+        for (int32_t record_idx = 0; record_idx < G_symtable.lists[list_idx].num_records; record_idx++) {
 
             // NOTE: Child number 1 is the actual ID provided in the declaration
 
-            if (G_symtable.lists[list_idx].syms[sym_idx]->childs[1]->tok->lexeme == tok->lexeme) {
-                return G_symtable.lists[list_idx].syms[sym_idx];
+            if (G_symtable.lists[list_idx].records[record_idx].node->childs[1]->tok->lexeme == tok->lexeme) {
+                G_symtable.lists[list_idx].records[record_idx].num_usages += 1;
+                return G_symtable.lists[list_idx].records[record_idx].node;
             }
         }
     }
@@ -46,14 +47,21 @@ void symtable_begin_block(void)
     size_t new_size = (G_symtable.num_lists + 1) * sizeof(*G_symtable.lists);
 
     G_symtable.lists = dallrsz(&G_allctx, G_symtable.lists, new_size);
-    G_symtable.lists[G_symtable.num_lists].num_syms = 0;
-    G_symtable.lists[G_symtable.num_lists].syms = NULL;
+    G_symtable.lists[G_symtable.num_lists].num_records = 0;
+    G_symtable.lists[G_symtable.num_lists].records = NULL;
     G_symtable.num_lists += 1;
 }
 
 void symtable_end_block(void)
 {
-    dalldel(&G_allctx, G_symtable.lists[G_symtable.num_lists - 1].syms);
+    symlist_t *list = &G_symtable.lists[G_symtable.num_lists - 1];
+    for (int32_t record_idx = 0; record_idx < list->num_records; record_idx++) {
+        if (list->records[record_idx].num_usages == 0) {
+            dpcc_log(DPCC_SEVERITY_WARNING, &list->records[record_idx].node->tok->loc, "Variable `%s` is never used", list->records[record_idx].node->childs[1]->tok->lexeme);
+        }
+    }
+
+    dalldel(&G_allctx, G_symtable.lists[G_symtable.num_lists - 1].records);
     G_symtable.num_lists -= 1;
 }
 
@@ -63,16 +71,19 @@ ast_node_t *symtable_push_sym(ast_node_t *symvar_decl)
     assert(symvar_decl->num_childs == 3);
     symlist_t *list = &G_symtable.lists[G_symtable.num_lists - 1];
 
-    for (int32_t i = 0; i < list->num_syms; i++) {
-        if (list->syms[i]->childs[1]->tok->lexeme == symvar_decl->childs[1]->tok->lexeme) {
-            return list->syms[i];
+    for (int32_t i = 0; i < list->num_records; i++) {
+        if (list->records[i].node->childs[1]->tok->lexeme == symvar_decl->childs[1]->tok->lexeme) {
+            return list->records[i].node;
         }
     }
 
-    size_t new_size = (list->num_syms + 1) * sizeof(*list->syms);
-    list->syms = dallrsz(&G_allctx, list->syms, new_size);
-    list->syms[list->num_syms] = symvar_decl;
-    list->num_syms += 1;
+    size_t new_size = (list->num_records + 1) * sizeof(*list->records);
+    list->records = dallrsz(&G_allctx, list->records, new_size);
+
+    memset(&list->records[list->num_records], 0, sizeof(list->records[list->num_records]));
+    list->records[list->num_records].node = symvar_decl;
+
+    list->num_records += 1;
     return NULL;
 }
 
