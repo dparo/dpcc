@@ -207,7 +207,7 @@ stmts:          stmts[car] stmt[self]                        { $$ = $car; push_c
 
 stmt:           assignment ";"                    { $$ = $1; }
         |       print_stmt
-        |       var_decl
+        |       decl
         |       if_stmt
         |       for_stmt
         |       while_stmt
@@ -220,7 +220,12 @@ stmt:           assignment ";"                    { $$ = $1; }
 assignment:     ID[lhs] "="[op] expr[rhs]                     { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 2, CAST {$lhs, $rhs}); }
 print_stmt:     "print"[op] "(" expr[e] ")" ";"               { $$ = NEW_NODE($op->tok, KW_PRINT); push_child($$, $e); }
 
-var_decl:       "let"[op] ID[id] ";"                          { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, NULL}); symtable_push_sym($$); }
+
+decl:
+        var_decl                                              { $$ = $1; symtable_push_sym($1); }
+        ;
+
+var_decl:       "let"[op] ID[id] ";"                          { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, NULL}); }
         |       "let"[op] ID[id] "=" expr[e] ";"              { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, $e}); }
         |       "let"[op] ID[id] ":" type[t] ";"              { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, NULL}); }
         |       "let"[op] ID[id] ":" type[t] "=" expr[e] ";"  { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, $e}); }

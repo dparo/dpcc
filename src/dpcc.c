@@ -54,15 +54,25 @@ void symtable_end_block(void)
     G_symtable.num_lists -= 1;
 }
 
-void symtable_push_sym(ast_node_t *sym_var_decl)
+ast_node_t *symtable_push_sym(ast_node_t *symvar_decl)
 {
-    assert(sym_var_decl->tok->kind == TOK_KW_LET);
+    assert(symvar_decl->tok->kind == TOK_KW_LET);
+    assert(symvar_decl->num_childs == 3);
     symlist_t *list = &G_symtable.lists[G_symtable.num_lists - 1];
 
+#if 0
+    for (int32_t i = 0; i < list->num_syms; i++) {
+        // NOTE: Child number 1 is the actual ID provided in the declaration
+        if (list->syms[i]->tok->lexeme == symvar_decl->childs[1]->tok->lexeme) {
+            return list->syms[i];
+        }
+    }
+#endif
     size_t new_size = (list->num_syms + 1) * sizeof(*list->syms);
     list->syms = dallrsz(&G_allctx, list->syms, new_size);
-    list->syms[list->num_syms] = sym_var_decl;
+    list->syms[list->num_syms] = symvar_decl->childs[1];
     list->num_syms += 1;
+    return NULL;
 }
 
 FILE *

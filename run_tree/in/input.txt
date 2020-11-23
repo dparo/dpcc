@@ -1,8 +1,5 @@
 fn main()
 {
-    let a = 1;
-
-    if (--) {
-
-    }
+    let a = 110;
+    print(a);
 }
