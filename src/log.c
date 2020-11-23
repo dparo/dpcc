@@ -18,7 +18,7 @@ void dpcc_set_log_color(FILE *stream, enum DPCC_LOG_COLOR color)
     }
 }
 
-void dpcc_log(enum DPCC_LOG_SEVERITY severity, tokloc_t *loc, char *fmt, ...)
+void dpcc_log(enum DPCC_LOG_SEVERITY severity, loc_t *loc, char *fmt, ...)
 {
 
     int32_t color_table[] = {
@@ -36,8 +36,8 @@ void dpcc_log(enum DPCC_LOG_SEVERITY severity, tokloc_t *loc, char *fmt, ...)
     dpcc_set_log_color(stderr, color_table[severity]);
 
     char *filepath = G_filepath;
-    int32_t line = loc->line;
-    int32_t column = loc->column;
+    int32_t line = loc->first_line;
+    int32_t column = loc->first_column;
 
     va_list ap;
     va_start(ap, fmt);

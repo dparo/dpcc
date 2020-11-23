@@ -78,7 +78,7 @@ void *dallstl(mctx_t *ctx, void *ptr);
 char *string_intern(char *yytext);
 
 void tokens_seq_clear(token_seq_t *tseq);
-token_t *token_new(tokloc_t loc, char *yytext, int yychar, char *yychar_str);
+token_t *token_new(loc_t loc, char *yytext, int yychar, char *yychar_str);
 
 void print_token(FILE *f, token_t *t);
 void print_node(FILE *f, ast_node_t *node, int32_t indetation_level);

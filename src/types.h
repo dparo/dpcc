@@ -41,10 +41,11 @@ typedef struct {
 } str_str_key_value_t;
 
 typedef struct {
-    i32 len;
-    i32 line;
-    i32 column;
-} tokloc_t;
+    i32 first_line;
+    i32 first_column;
+    i32 last_line;
+    i32 last_column;
+} loc_t;
 
 typedef struct {
     i32 idx; /// Index withing the array containing all the tokens
@@ -52,7 +53,7 @@ typedef struct {
     char *lexeme;
     i32 kind;
     char *skind;
-    tokloc_t loc;
+    loc_t loc;
 } token_t;
 
 typedef struct {
@@ -70,6 +71,7 @@ enum AST_TYPE {
 typedef struct ast_node {
     token_t *tok;
 
+    loc_t loc;
     i32 kind;
     char *skind;
 

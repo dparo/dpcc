@@ -5,8 +5,6 @@
 #include <stb_ds.h>
 
 char *G_filepath = NULL;
-int32_t yyprevcol = 0;
-tokloc_t yylloc = { 0, 1, 0 };
 
 str_str_key_value_t *G_str_intern = NULL;
 mctx_t G_allctx = { 0 };
@@ -18,11 +16,13 @@ symtable_t G_symtable = { 0 };
 
 void clear_all_global_vars()
 {
+    extern loc_t yylloc;
     extern int yynerrs;
     yynerrs = 0;
-    yyprevcol = 0;
-    yylloc.line = 1;
-    yylloc.column = 0;
+
+    yylloc.first_line = 1;
+    yylloc.first_column = 0;
+    yylloc.last_column = 0;
 
     tokens_seq_clear(&G_tok_seq);
 

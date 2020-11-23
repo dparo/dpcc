@@ -66,7 +66,7 @@ NASCII      {UTF8_H2}|{UTF8_H3}|{UTF8_H4}
 NASCII           { LEX_FWD(YYUNDEF); }
 EOF              { LEX_FWD(YYEOF); }   /* Must return YYEOF upon EOF in order for bison to work */
 
-{eol}             { yylloc.line += 1; yylloc.column = 0; yyprevcol = 0; }
+{eol}             { yylloc.first_line += 1; yylloc.first_column = 0; yylloc.last_column = 0; }
 {ws}              { LEX_STRIP(); }
 {comment}         { LEX_STRIP(); }
 

@@ -18,5 +18,5 @@ enum DPCC_LOG_SEVERITY {
 };
 
 void dpcc_set_log_color(FILE *stream, enum DPCC_LOG_COLOR out_color);
-void dpcc_log(enum DPCC_LOG_SEVERITY severity, tokloc_t *loc, char *fmt, ...)
+void dpcc_log(enum DPCC_LOG_SEVERITY severity, loc_t *loc, char *fmt, ...)
     __attribute__((format(printf, 3, 4)));

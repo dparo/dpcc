@@ -64,8 +64,8 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
 
 #define LEX_STRIP()                 \
     do {                            \
-        yylloc.column += yyprevcol; \
-        yyprevcol = yyleng;         \
+        yylloc.first_column  = yylloc.last_column; \
+        yylloc.last_column = yylloc.first_column + yyleng; \
     } while (0)
 
 #define LEX_ERROR()                                                \
@@ -78,7 +78,8 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
 #define LEX_FWD(X)                                             \
     do {                                                       \
         LEX_STRIP();                                           \
-        yylloc.len = yyleng;                                   \
+        yylloc.last_line = yylloc.first_line;                  \
+        yylloc.last_column = yylloc.first_column + yyleng;     \
         token_t *t = token_new(yylloc, yytext, TOK_##X, (#X)); \
         yylval = new_node(t, TOK_##X, (#X));                   \
         return (TOK_##X);                                      \

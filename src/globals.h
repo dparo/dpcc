@@ -4,8 +4,6 @@
 
 extern symtable_t G_symtable;
 extern char *G_filepath;
-extern int32_t yyprevcol;
-extern tokloc_t yylloc;
 
 extern str_str_key_value_t *G_str_intern;
 extern mctx_t G_allctx;

@@ -181,7 +181,7 @@ void tokens_seq_clear(token_seq_t *tseq)
     tseq->tokens_cnt = 0;
 }
 
-token_t *token_new(tokloc_t loc, char *yytext, int yychar, char *yychar_str)
+token_t *token_new(loc_t loc, char *yytext, int yychar, char *yychar_str)
 {
     token_t *result = dallnew(&G_allctx, sizeof(*result));
     if (result == NULL) {
@@ -215,7 +215,7 @@ void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
     hdr_string = sfcat(hdr_string, 0, "%s%s", indentation_level != 0 ? "--" : "", node->skind);
 
     fprintf(f,
-        " %-48s { type: `%s` (.i = %d, .f = %f, .b = %d) ---- lexeme: \"%s\", tok->skind = `%s` tok->loc=[%d,%d] }\n",
+        " %-48s { type: `%s` (.i = %d, .f = %f, .b = %d) ---- lexeme: \"%s\", tok->skind = `%s` tok->loc=[[%d,%d], [%d, %d,]] }\n",
         hdr_string,
         node->stype,
         node->val.i,
@@ -223,8 +223,10 @@ void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
         node->val.b,
         node->tok ? node->tok->lexeme : "",
         node->tok ? node->tok->skind : "",
-        node->tok ? node->tok->loc.line : 0,
-        node->tok ? node->tok->loc.line : 0);
+        node->tok ? node->tok->loc.first_line : 0,
+        node->tok ? node->tok->loc.first_column : 0,
+        node->tok ? node->tok->loc.last_line : 0,
+        node->tok ? node->tok->loc.last_column : 0);
     free(hdr_string);
 }
 
@@ -233,12 +235,11 @@ void print_token(FILE *f, token_t *t)
     char *hdr_string = NULL;
 
     hdr_string = sfcat(hdr_string, 0, "%-8d (%s)", t->idx, t->skind);
-    fprintf(f, "%-48s { lexeme = '%s', lexemelen: %d, yylloc = [%d, %d], kind = %d }\n",
+    fprintf(f, "%-48s { lexeme = '%s', yylloc = [[%d, %d], [%d, %d]] }\n",
         hdr_string,
         t->lexeme,
-        t->loc.len,
-        t->loc.line, t->loc.column,
-        t->kind);
+        t->loc.first_line, t->loc.first_column,
+        t->loc.last_line, t->loc.last_column);
 
     free(hdr_string);
 }

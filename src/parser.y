@@ -40,8 +40,8 @@
         // and we do our location tracking externally anyway we leave this flag
         // commented out and we avoid using any `@n` locations refering in the actions
         // of the grammar
-// %locations
-// %define api.location.type {tokloc_t}
+%locations
+%define api.location.type {loc_t}
 
 
         // As from the Bison MANUAL using LAC parser instead of the default LALR parser
@@ -324,12 +324,10 @@ expr:          "(" error ")"                                  {  }
 
 %%
 
+
 void yyerror(char const *s)
 {
-    extern int yylineno;
-
-    fprintf(stderr, "errors thus far: %d\n", yynerrs);
-    fprintf(stderr, "Error at yylineno: %d, yylloc=(%d, %d)\n\t%s\n", yylineno, yylloc.line, yylloc.column, s);
+    dpcc_log(DPCC_SEVERITY_ERROR, &yylloc, "%s", s);
 }
 
 
@@ -342,10 +340,19 @@ int yyreport_syntax_error (const yypcontext_t *ctx)
     int num_expected = yypcontext_expected_tokens(ctx, NULL, 0);
 
     expected = malloc(sizeof(*expected) * num_expected);
+
+    if (!expected) {
+        return YYENOMEM;
+    }
+
     int result = yypcontext_expected_tokens(ctx, expected, num_expected);
 
+    if (result != num_expected) {
+        return YYENOMEM;
+    }
 
     dpcc_log(DPCC_SEVERITY_ERROR, loc, "Syntax error. Unexpected token `%s` found", yysymbol_name(unexpected));
+
 
     if (expected[0] != YY_YYEMPTY) {
         char *expected_string = NULL;
@@ -358,5 +365,6 @@ int yyreport_syntax_error (const yypcontext_t *ctx)
     }
 
     free(expected);
+    return 0;
 }
 
