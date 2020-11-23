@@ -29,9 +29,14 @@ space       " "
 punct       "!\"#$%&'()*+,-./:;<=>?@[\\]^`{|}~"
 escape_seq  \\0|\\a|\\b|\\t|\\n|\\v|\\f|\\r
 
+f32_leading     [+-]?
+f32_integral    {digit}+
+f32_fractional  [.]{digit}*
+f32_trailing    ([eE][+-]?{digit}+)?
+f32_markup      [fF]
 
 i32_lit         [+-]?({digit}+|((0[xXbB]({digit}|[abcdefABCDEF])+)))
-f32_lit         [+-]?({digit}+([.]{digit}*)?([eE][+-]?{digit}+)?|[.]{digit}+([eE][+-]?{digit}+)?)(f|F)?
+f32_lit         {f32_leading}{f32_integral}{f32_trailing}|{f32_leading}{f32_integral}{f32_trailing}?{f32_markup}|{f32_leading}{f32_integral}?{f32_fractional}{f32_trailing}?{f32_markup}?
 char_lit        "'"({alnum}|{punct}|{space}|{escape_seq}|(\\0x{hex}{2}))"'"
 bool_lit        true|false
 string_lit      ["](([\\]["])|([^"]))*["]

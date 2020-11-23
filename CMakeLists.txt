@@ -56,5 +56,6 @@ include(CTest)
 
 if(BUILD_TESTING)
   add_subdirectory("${CMAKE_SOURCE_DIR}/third_party/Unity")
+  target_compile_definitions(unity PRIVATE UNITY_INCLUDE_PRINT_FORMATTED UNITY_OUTPUT_COLOR)
   add_subdirectory(tests)
 endif()

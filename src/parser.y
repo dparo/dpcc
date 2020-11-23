@@ -159,7 +159,7 @@
         // --- 2. Equality comparison operators are non associative by default. This avoids possible logical errors
         // --- 3. A right associative power operator
 
-%left                   ASSIGN
+%precedence             ASSIGN
 %left                   LOR
 %left                   LAND
 %nonassoc               EQ NEQ
@@ -173,7 +173,6 @@
 %right                  POW
 %precedence             POS NEG
 %precedence             INC DEC LNOT BNOT
-%precedence             OPEN_PAREN CLOSE_PAREN
 
         // When error recovery, bison may want to discard some symbols. So
         // it is generally good practice to free any allocated memory here.
@@ -234,7 +233,8 @@ type:           "int"      { $$ = $1; $$->type = TYPE_I32; }
 
 code_block:    "{"[op] stmts[ss] "}"                          {
                         $$ = NEW_NODE($op->tok, OPEN_BRACE);
-                        // Reverse the order of the childs
+                        // Keep bison LEFT recursive (faster) and reverse the order of the childs,
+                        // only when needed
                         for (int32_t i = 0; i < $ss->num_childs / 2; i++) {
                             YYSTYPE temp = $ss->childs[0];
                             $ss->childs[0] = $ss->childs[$ss->num_childs - 1 - i];
@@ -285,6 +285,10 @@ do_while_stmt:  "do"[op] code_block[cb] "while" "(" expr[e] ")" ";"  { $$ = NEW_
 
 expr:          "(" error ")"                                  { yyerrok; }
         |      "(" expr[e] ")"                                { $$ = $e; }
+        // Type conversions
+        |      "int"[op] "(" expr[e] ")"                      { $$ = NEW_NODE($op->tok, KW_INT); push_child($$, $e); }
+        |      "float"[op] "(" expr[e] ")"                    { $$ = NEW_NODE($op->tok, KW_FLOAT); push_child($$, $e); }
+        |      "bool"[op] "(" expr[e] ")"                     { $$ = NEW_NODE($op->tok, KW_BOOL); push_child($$, $e); }
         |       "+"[op] expr[rhs]            %prec POS        { $$ = $rhs; }
         |       "-"[op] expr[rhs]            %prec NEG        { $$ = NEW_NODE($op->tok, NEG); push_child($$, $rhs); }
         |       expr[lhs] "+"[op] expr[rhs]  %prec ADD        { $$ = NEW_NODE($op->tok, ADD); push_childs($$, 2, CAST {$lhs, $rhs}); }

@@ -91,6 +91,7 @@ bool parse(char *filepath, FILE *input_stream)
     yyin = input_stream;
 
     int result = yyparse();
+    printf("yyparse result = %d\n", result);
     return result == 0;
 }
 

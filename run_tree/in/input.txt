@@ -1,15 +1,4 @@
 fn main()
 {
-    a = 10;
-    b = 20;
-
-    {
-        c = 30;
-    }
-
-    if (a == 10) {
-        let new_var : float = 0.0;
-
-        print(var);
-    }
+    a = b = 0++;
 }

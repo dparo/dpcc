@@ -36,6 +36,7 @@ int main(int argc, char **argv)
 
     } else if (0 == strcmp(mode, "parse")) {
         bool parsesuccess = parse(filepath, input_stream);
+        printf("parsesuccess = %d\n", parsesuccess);
         if (!parsesuccess) {
             return -1;
         }
