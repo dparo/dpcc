@@ -1,11 +1,12 @@
 #pragma once
 
+#include <assert.h>
+
+#include "parser.h"
 #include "utils.h"
 #include "log.h"
 #include "types.h"
-
-// #define YYERROR_VERBOSE 1
-
+#include "dpcc.h"
 int yylex(void);
 void yyerror(char const *s);
 
@@ -138,14 +139,15 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         NODE_KIND(node, BOOL_LIT);          \
     } while (0)
 
-void symtable_clear(void);
-ast_node_t *symtable_lookup(token_t *tok);
-void symtable_begin_block(void);
-void symtable_end_block(void);
-ast_node_t *symtable_push_sym(ast_node_t *sym_var_decl);
-
 static inline bool var_decl(ast_node_t *var_decl_node)
 {
+    assert(var_decl_node->tok->kind == TOK_KW_LET);
+    assert(var_decl_node->num_childs == 3);
+    char *lexeme = var_decl_node->childs[1]->tok->lexeme;
+    if (lexeme[0] == '_' && lexeme[1] == '_') {
+        dpcc_log(DPCC_SEVERITY_ERROR, &var_decl_node->tok->loc, "Identifiers beginning with `__` are reserved for compiler use.");
+        return false;
+    }
     ast_node_t *already_declared = symtable_push_sym(var_decl_node);
     if (!already_declared) {
         return true;

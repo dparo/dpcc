@@ -12,6 +12,12 @@
 #include "utils.h"
 #include "log.h"
 
+void symtable_clear(void);
+ast_node_t *symtable_lookup(token_t *tok);
+void symtable_begin_block(void);
+void symtable_end_block(void);
+ast_node_t *symtable_push_sym(ast_node_t *sym_var_decl);
+
 FILE *open_file_for_reading(char *filepath);
 FILE *open_from_string(char *string);
 

@@ -57,20 +57,23 @@
 %define api.token.prefix  {TOK_}
 %define api.value.type    {ast_node_t*}
 
-        // This code block will be exported to the generated header file by bison
+        // %{ %} code will be inserted in the bison C generated file
+        // %code {} Will be inserted in the bison C generated file but after %{ %} the inlcusion of the bison header file and the definition of yysymbol_kind_t
+        // %code requires {} will be insterted at the top of the H bison generated header. Mostly used to include types that are used to define typedefs by bison
+        // %code provides {} will be generated at the bottom of the H bison generated header. Use case: export functions that you define at the bottom of this bison file
+
+%code {
+        #include "globals.h"
+        #include "yacc_utils.h"
+        #include "dpcc.h"
+        #include "log.h"
+        #define CAST (ast_node_t*[])
+}
 
 %code requires {
-#include "globals.h"
-#define CAST (ast_node_t*[])
+        #include "types.h"
 }
-%{
 
-#include "yacc_utils.h"
-#include "log.h"
-
-
-
-%}
 
 %token YYEOF 0 "end of file"
 
@@ -198,7 +201,8 @@ root:    main       { NODE_KIND(&G_root_node, YYEOF); push_child(&G_root_node, $
        ;
 
 
-main: "fn" "main"[op] "(" ")" code_block[cb]                 { $$ = NEW_NODE($op->tok, KW_MAIN); push_child($$, $cb); }
+main:     "fn" "main"[op] "(" ")" code_block[cb]             { $$ = NEW_NODE($op->tok, KW_MAIN); push_child($$, $cb); }
+        ;
 
 stmts:          stmts[car] stmt[self]                        { $$ = $car; push_child($car, $self); }
         |       stmt[self]                                   { $$ = NEW_NODE($self->tok, YYUNDEF); push_child($$, $self); }
@@ -214,7 +218,7 @@ stmt:           assignment ";"                    { $$ = $1; }
         |       do_while_stmt
         |       code_block
         |       ";"                               { $$ = NULL; }
-        |       error ";"                         {  } /* Upon syntax error synchronize to next ";". yyerrok: Resume generating error messages immediately for subsequent syntax errors. */
+        |       error                             {  }
         ;
 
 assignment:     id_ref[lhs] "="[op] expr[rhs]                 { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 2, CAST {$lhs, $rhs}); }
@@ -232,8 +236,8 @@ var_decl:       "let"[op] ID[id]                              { $$ = NEW_NODE($o
         ;
 
 type:           "int"      { $$ = $1; $$->type = TYPE_I32; }
-        |       "float"    { $$ = $1; $$->type = TYPE_F32; }
-        |       "bool"     { $$ = $1; $$->type = TYPE_BOOL; }
+        |       "float"    { $$ = $1; $$->type = TYPE_F32;  dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Float types are not yet implemented and are reserved for future use."); PARSE_ERROR(); }
+        |       "bool"     { $$ = $1; $$->type = TYPE_BOOL; dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Bool types are not yet implemented and are reserved for future use."); PARSE_ERROR();}
         ;
 
 code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                          {
@@ -249,7 +253,6 @@ code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                 
                         symtable_end_block();
                 }
         |      "{" "}"                                        { $$ = NULL; }
-        |      "{" error "}"                                  {  }
         ;
 
 for_1: decl
@@ -293,10 +296,6 @@ id_ref: ID                                                    { $$ = $1; NODE_KI
 
 expr:          "(" error ")"                                  {  }
         |      "(" expr[e] ")"                                { $$ = $e; }
-        // Type conversions
-        |      "int"[op] "(" expr[e] ")"                      { $$ = NEW_NODE($op->tok, KW_INT); push_child($$, $e); }
-        |      "float"[op] "(" expr[e] ")"                    { $$ = NEW_NODE($op->tok, KW_FLOAT); push_child($$, $e); }
-        |      "bool"[op] "(" expr[e] ")"                     { $$ = NEW_NODE($op->tok, KW_BOOL); push_child($$, $e); }
         |       "+"[op] expr[rhs]            %prec POS        { $$ = $rhs; }
         |       "-"[op] expr[rhs]            %prec NEG        { $$ = NEW_NODE($op->tok, NEG); push_child($$, $rhs); }
         |       expr[lhs] "+"[op] expr[rhs]  %prec ADD        { $$ = NEW_NODE($op->tok, ADD); push_childs($$, 2, CAST {$lhs, $rhs}); }
@@ -328,6 +327,8 @@ expr:          "(" error ")"                                  {  }
         |       CHAR_LIT                                      { NODE_KIND($$, CHAR_LIT); INIT_CHAR($$); }
         |       BOOL_LIT                                      { NODE_KIND($$, BOOL_LIT); INIT_BOOL($$); }
         |       id_ref                                        { $$ = $1; }
+        |       type[op] "(" expr[e] ")"                      { $$ = NEW_NODE($op->tok, KW_INT); push_child($$, $e); }
+
         ;
 
 %%

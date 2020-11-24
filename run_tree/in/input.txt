@@ -1,5 +1,6 @@
+
 fn main()
 {
-    let a = 110;
-    print(a);
+    let __a = 10;
+    __a = 20;
 }

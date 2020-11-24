@@ -137,11 +137,7 @@ bool lex(char *filepath, FILE *input_stream)
         abort();
     }
 
-#if 1
     yyrestart(input_stream);
-#else
-    yyin = input_stream;
-#endif
 
     int result = 0;
     int kind = 0;
@@ -199,14 +195,10 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
     } while (0)
 
     bool success = true;
+    {
 
-    // Broken code
-#if 0
-    for (usize node_idx = 0; node_idx < (usize)G_ast.nodes_cnt; node_idx++) {
-        ast_node_t *node = &G_ast.nodes[node_idx];
-        LOG(DPCC_SEVERITY_WARNING, node, "Hello from node (lexeme: `%s`, skind: %s)\n", node->tok->lexeme, node->skind);
     }
-#endif
+
 
 #undef LOG
     return success;
