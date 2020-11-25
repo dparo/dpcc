@@ -196,12 +196,17 @@
 
       // Bison MANUAL says to prefer left recursion where possible. Better memory footprint (bounded stack space)
 
-root:    main       { NODE_KIND(&G_root_node, YYEOF); push_child(&G_root_node, $1); }
+root: { symtable_begin_block(); } productions { symtable_end_block(); }
+        ;
+
+productions:
+         main       { NODE_KIND(&G_root_node, YYEOF); push_child(&G_root_node, $1); }
+       | stmts      { NODE_KIND(&G_root_node, YYEOF); NODE_KIND($1, OPEN_BRACE); push_child(&G_root_node, $1); }
        | %empty
        ;
 
 
-main:     "fn" "main"[op] "(" ")" code_block[cb]             { $$ = NEW_NODE($op->tok, KW_MAIN); push_child($$, $cb); }
+main:    "fn" "main"[op] "(" ")" code_block[cb]             { $$ = NEW_NODE($op->tok, KW_MAIN); push_child($$, $cb); }
         ;
 
 stmts:          stmts[car] stmt[self]                        { $$ = $car; push_child($car, $self); }

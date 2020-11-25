@@ -82,10 +82,9 @@ typedef struct ast_node {
     struct ast_node **childs;
 
     union {
-        i32 i;
-        f32 f;
-        char c;
-        bool b;
+        i32 as_i32;
+        f32 as_f32;
+        bool as_bool;
     } val;
 } ast_node_t;
 
@@ -109,3 +108,8 @@ typedef struct {
     int32_t num_lists;
     symlist_t *lists;
 } symtable_t;
+
+typedef struct {
+    int32_t num_temp_vars;
+    int32_t num_labels;
+} codegen_ctx_t;

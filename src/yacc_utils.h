@@ -22,7 +22,7 @@ static bool yacc_from_str_to_i32(ast_node_t *node)
     if (success == false) {
         dpcc_log(DPCC_SEVERITY_ERROR, &node->tok->loc, "Invalid int32 literal: got `%s`", node->tok->lexeme);
     } else {
-        node->val.i = i;
+        node->val.as_i32 = i;
     }
     return success;
 }
@@ -34,7 +34,7 @@ static bool yacc_from_str_to_f32(ast_node_t *node)
     if (success == false) {
         dpcc_log(DPCC_SEVERITY_ERROR, &node->tok->loc, "Invalid float literal: got `%s`", node->tok->lexeme);
     } else {
-        node->val.f = f;
+        node->val.as_f32 = f;
     }
     return success;
 }
@@ -46,7 +46,7 @@ static bool yacc_from_str_to_char(ast_node_t *node)
     if (success == false) {
         dpcc_log(DPCC_SEVERITY_ERROR, &node->tok->loc, "Invalid char literal: got `%s`", node->tok->lexeme);
     } else {
-        node->val.c = c;
+        node->val.as_i32 = c;
     }
     return success;
 }
@@ -58,7 +58,7 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
     if (success == false) {
         dpcc_log(DPCC_SEVERITY_ERROR, &node->tok->loc, "Invalid bool literal: got `%s`", node->tok->lexeme);
     } else {
-        node->val.b = b;
+        node->val.as_bool = b;
     }
     return success;
 }

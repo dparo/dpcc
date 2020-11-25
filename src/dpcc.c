@@ -15,7 +15,7 @@
 
 void symtable_clear(void)
 {
-    for (int32_t list_idx = G_symtable.num_lists - 1; list_idx > 0; list_idx--) {
+    for (int32_t list_idx = 0; list_idx < G_symtable.num_lists; list_idx++) {
         dalldel(&G_allctx, G_symtable.lists[list_idx].records);
     }
 
@@ -28,7 +28,7 @@ void symtable_clear(void)
 ast_node_t *symtable_lookup(token_t *tok)
 {
     // Walk the stack backward. Lasts created symbols have higher precedence
-    for (int32_t list_idx = G_symtable.num_lists - 1; list_idx > 0; list_idx--) {
+    for (int32_t list_idx = G_symtable.num_lists - 1; list_idx >= 0; list_idx--) {
         for (int32_t record_idx = 0; record_idx < G_symtable.lists[list_idx].num_records; record_idx++) {
 
             // NOTE: Child number 1 is the actual ID provided in the declaration
@@ -115,7 +115,6 @@ void dpcc_reset(void)
     yylex_destroy();
     clear_all_global_vars();
     symtable_clear();
-    symtable_begin_block();
 }
 
 static void setup_filepath(char *filepath)
@@ -196,9 +195,14 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
 
     bool success = true;
     {
-
+        // Traverse the AST and generate the code
+        ast_traversal_t att = { 0 };
+        ast_traversal_begin(&att);
+        ast_node_t *n = NULL;
+        while ((n = ast_traverse_next(&att)) != NULL) {
+            print_node(stdout, n, att.stack_cnt - 1);
+        }
     }
-
 
 #undef LOG
     return success;
