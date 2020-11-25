@@ -146,10 +146,12 @@ cast_ops = [
 ]
 
 
-def decl_map_fn(out_type, fn_name, in_type, map_dict, default_case=DEFAULT_CASE):
+def decl_map_fn(out_type, fn_name, in_type, map_dict, default_case=DEFAULT_CASE, default_return_value="0"):
     gprint(f"static {out_type} {fn_name}({in_type} x)")
     with scope():
         switch("x", map_dict, default_case)
+    if default_return_value:
+        eprint(f"return (out_type) {default_return_value};")
 
 
 def tuple_to_comma_separated_str(t):
