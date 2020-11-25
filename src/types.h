@@ -78,6 +78,8 @@ typedef struct ast_node {
     enum AST_TYPE type;
     char *stype;
 
+    struct ast_node *parent;
+
     int32_t num_childs;
     struct ast_node **childs;
 

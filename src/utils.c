@@ -274,6 +274,9 @@ void push_child(ast_node_t *parent, ast_node_t *child)
 
     dallarr(&G_allctx, (void **)&parent->childs, parent->num_childs + 1, sizeof(child));
     parent->childs[parent->num_childs++] = child;
+    if (child) {
+        child->parent = parent;
+    }
 }
 
 void push_childs(ast_node_t *parent, int32_t num_childs, ast_node_t **childs)
@@ -282,6 +285,9 @@ void push_childs(ast_node_t *parent, int32_t num_childs, ast_node_t **childs)
 
     for (int32_t i = 0; i < num_childs; i++) {
         parent->childs[parent->num_childs++] = childs[i];
+        if (childs[i]) {
+            childs[i]->parent = parent;
+        }
     }
 }
 
