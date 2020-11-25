@@ -43,7 +43,6 @@
 %locations
 %define api.location.type {loc_t}
 
-
         // As from the Bison MANUAL using LAC parser instead of the default LALR parser
         // table implementations can lead to better error messages provided.
         // Also user actions associated with tokens lookahead are not executed in case
@@ -53,6 +52,15 @@
 %define parse.lac   full
 %define parse.error custom       // detailed
 
+        // API.token.raw: Makes the entry of the enum `yytokentype`
+        // (exported in the h file and used by flex) to make them identical 1:1
+        // to the enum `yysymbol_kind_t` which is the one used internally by bison.
+        //     From the docs. These makes parsing faster, but also the exposed enum is now
+        //     tight (easier to map the enum using an array), this however has the advantages
+        //     that character literal cannot be used in the grammar, and they cannot be returned
+        //     by flex. So both the grammar and flex must use symbolic names. This is mostly
+        //     not a problem, since bison allows to associate C-string with symbolic names anyway.
+%define api.token.raw     true
 %define api.symbol.prefix {YY_}
 %define api.token.prefix  {TOK_}
 %define api.value.type    {ast_node_t*}
@@ -190,7 +198,9 @@
 // Starting symbol. If this is not used bison assumes that the starting symbol is the
 // first one declared in the grammar
 %start root
-
+%token LAST        // NOT USED: Used mainly to export an entry in the final parser.h::yytokentype
+                   // so that we can now the number of elements in it, and thus possibly
+                   // creating arrays to map enums to values.
 
 %%
 

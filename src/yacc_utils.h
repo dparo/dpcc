@@ -87,10 +87,10 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
     } while (0)
 
 #define NEW_NODE(TOKEN_PTR, KIND) \
-    new_node(TOKEN_PTR, YY_##KIND, #KIND)
+    new_node(TOKEN_PTR, TOK_##KIND, #KIND)
 
 #define NODE_KIND(node, KIND) \
-    node_set_kind(node, YY_##KIND, (#KIND))
+    node_set_kind(node, TOK_##KIND, (#KIND))
 
 #define PARSE_ERROR() \
     do {              \

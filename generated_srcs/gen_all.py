@@ -4,8 +4,8 @@ import sys
 from datetime import datetime
 import itertools
 
-
-DEFAULT_CASE = "fprintf(stderr, \"COMPILER INTERNAL ERROR --- Invalid code path\");\nfflush(stderr);\nassert(0);"
+INVALID_CODE_PATH = "invalid_code_path();"
+DEFAULT_CASE = INVALID_CODE_PATH
 
 common_boilerplate = (
 f"""//
@@ -26,9 +26,6 @@ f"""//
 #include "utils.h"
 #include "log.h"
 #include "dpcc.h"
-#include "parser.h"
-
-extern int yynerrs;
 
 """
 )
@@ -63,7 +60,17 @@ class scope:
         gprint("}")
 
 
-def all_of(array):
+def gen_logical_or(array):
+    result = ""
+    for i in range(0, len(array)):
+        if (i != len(array) - 1):
+            result += f"{array[i]} || "
+        else:
+            result += f"{array[i]}"
+    return "(" + result + ")"
+
+
+def gen_logical_and(array):
     result = ""
     for i in range(0, len(array)):
         if (i != len(array) - 1):
@@ -72,13 +79,13 @@ def all_of(array):
             result += f"{array[i]}"
     return "(" + result + ")"
 
-def one_of(array):
+def one_of(expr, array):
     result = ""
     for i in range(0, len(array)):
         if (i != len(array) - 1):
-            result += f"{array[i]} || "
+            result += f"({expr} == {array[i]}) || "
         else:
-            result += f"{array[i]}"
+            result += f"({expr} == {array[i]})"
     return "(" + result + ")"
 
 def switch(elem, dict, default_case = DEFAULT_CASE):
@@ -176,8 +183,17 @@ def gen_info(loc, fmt, args = []):
 
 
 
-def generate():
+def generate_src_file():
     gprint(common_boilerplate)
+
+    gprint('#include "parser.h"')
+    gprint('extern int yynerrs;')
+
+    gprint('static void invalid_code_path(void)')
+    with scope():
+        gprint('fprintf(stderr, "COMPILER INTERNAL ERROR --- Invalid code path");')
+        gprint('fflush(stderr);')
+        gprint('assert(0);')
 
     decl_map_fn("char*", "type_as_str", "int", {
         "TYPE_I32": "return \"int\";",
@@ -193,7 +209,7 @@ def generate():
             with scope():
                 gen_err("&expected_type->tok->loc", '"Type mismatch"')
                 gen_info("&expected_type->tok->loc", '"Expected `%s`\"', ["type_as_str(expected_type->md.type)"])
-                gen_info("&expected_type->tok->loc", '"But got `%s`\"', ["type_as_str(got_type->md.type)"])
+                gen_info("&got_type->tok->loc", '"But got `%s`\"', ["type_as_str(got_type->md.type)"])
 
 
 
@@ -214,8 +230,8 @@ def generate():
                 }, default_case='')
                 pass
 
-                gprint("// Type deduce casting")
-                gprint(f"if (n->kind == {one_of(cast_ops)} && n->parent != {one_of(decl_ops)})")
+                gprint("// Assign the correct type to each casting operator")
+                gprint(f'if ({one_of("n->kind", cast_ops)} && !{one_of("n->parent->kind", decl_ops)})')
                 with scope():
                     switch("n->kind", {
                         "TOK_KW_INT": "n->md.type = TYPE_I32;",
@@ -224,24 +240,42 @@ def generate():
 
                     })
 
-                gprint("// Type deduce var delcs")
-                gprint(f"if (n->kind == {one_of(decl_ops)})")
+                gprint("// Assign the correct type if the var declaration has a user listed type")
+                gprint(f'if {one_of("n->kind", decl_ops)}')
                 with scope():
-                    gprint("ast_node_t *expected_type = n->childs[0];")
+                    gprint('if (n->childs[0] && n->childs[0]->md.type == TYPE_NONE)')
+                    with scope():
+                        switch('n->childs[0]->kind', {
+                            'TOK_KW_INT': 'n->childs[0]->md.type = TYPE_I32;',
+                            'TOK_KW_FLOAT': 'n->childs[0]->md.type = TYPE_F32;',
+                            'TOK_KW_BOOL': 'n->childs[0]->md.type = TYPE_BOOL;',
+                        })
+                        pass
+
+                gprint("// Deduce type of the variable declarations")
+                gprint(f'if {one_of("n->kind", decl_ops)}')
+                with scope():
+                    gprint("ast_node_t *var_decl_type = n->childs[0];")
                     gprint("ast_node_t *child_type = n->childs[2];")
-                    gprint("if (expected_type != NULL && child_type != NULL)")
+                    gprint("if (var_decl_type != NULL && child_type != NULL)")
                     with scope():
                         gprint("// We might have type mismatch")
-                        gprint("if (expected_type->md.type != child_type->md.type)")
-                        with scope():
-                            gprint("dpcc_log(DPCC_SEVERITY_ERROR, &n->tok->loc, \"\");");
+                        gprint("typemismatch_check(var_decl_type, child_type);")
+                    gprint("else if (child_type != NULL)")
+                    with scope():
+                        gprint("// Type deduce from child")
+                        gprint("n->md.type = n->childs[1]->md.type;")
                     gprint("else")
                     with scope():
-                        gprint("// Direct type deduction")
-                        gprint("n->md.type = n->childs[1]->md.type;")
+                        gprint("// Assume integer")
+                        gprint("n->md.type = TYPE_I32;")
 
 
 
+def generate_hdr_file():
+    gprint(common_boilerplate)
+    gprint("void check_and_optimize_ast(void);")
+    gprint("void codegen(void);")
 
 def main():
 
@@ -249,7 +283,8 @@ def main():
         f.write(datetime.today().strftime('%Y-%m-%d-%H:%M:%S'))
 
     gen_list = [
-        { "filepath": "src/gen.c", "fn": generate }
+        { "filepath": "src/gen.c", "fn": generate_src_file },
+        { "filepath": "src/gen.h", "fn": generate_hdr_file },
     ]
 
     for v in gen_list:

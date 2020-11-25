@@ -41,6 +41,7 @@ add_library(libdpcc STATIC
   ${FLEX_lexer_OUTPUTS}
   )
 target_include_directories(libdpcc PUBLIC src)
+target_include_directories(libdpcc PUBLIC generated_srcs/src)
 target_include_directories(libdpcc PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(libdpcc PUBLIC libstb)
 

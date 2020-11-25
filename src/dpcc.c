@@ -12,6 +12,7 @@
 #include "parser.h"
 #include "types.h"
 #include "utils.h"
+#include "gen.h"
 
 void symtable_clear(void)
 {
@@ -185,27 +186,10 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
         return false;
     }
 
-    /// Log and maybe error out (set success to false)
-#define LOG(severity, node, ...)               \
-    do {                                       \
-        dpcc_log(severity, node, __VA_ARGS__); \
-        if (severity == DPCC_SEVERITY_ERROR)   \
-            success = false;                   \
-    } while (0)
-
     bool success = true;
-    {
-        // Traverse the AST and generate the code
-        ast_traversal_t att = { 0 };
-        ast_traversal_begin(&att);
-        ast_node_t *n = NULL;
-        while ((n = ast_traverse_next(&att)) != NULL) {
-            print_node(stdout, n, att.stack_cnt - 1);
-        }
-    }
-
-#undef LOG
-    return success;
+    check_and_optimize_ast();
+    extern int yynerrs;
+    return success && yynerrs == 0;
 }
 
 static void ast_traversal_push(ast_traversal_t *t, ast_node_t *parent, int32_t current_child)
