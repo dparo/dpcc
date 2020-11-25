@@ -4,6 +4,8 @@ import sys
 from datetime import datetime
 import itertools
 
+from utils import bin2header
+
 INVALID_CODE_PATH = "invalid_code_path();"
 DEFAULT_CASE = INVALID_CODE_PATH
 

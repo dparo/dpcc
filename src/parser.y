@@ -249,18 +249,18 @@ decl:      integral_var_decl                                  { $$ = $1; if (!va
         |  array_var_decl                                     { $$ = $1; if (!var_decl($1)) { PARSE_ERROR(); } }
         ;
 
-list_init:  "{"[op] list_elems[es] "}" { printf("!!!!array_init_list\n"); $$ = NEW_NODE($es->tok, OPEN_BRACKET); push_child($$, $es); }
+list_init:  "{"[op] list_elems[es] "}" { $$ = NEW_NODE($es->tok, OPEN_BRACE); push_child($$, $es); push_childs($$, $es->num_childs, $es->childs); $es->num_childs = 0; }
         |   error           { }
         ;
 
 
-list_elems:       list_elems[car] "," list_elem[self]  { printf("ARRAY_ELEMS!!!! -> $self = %p\n", $self); $$ = $car; push_child($car, $self); }
+list_elems:       list_elems[car] "," list_elem[self]  { $$ = $car; push_child($car, $self); }
         |         list_elem[self]
         ;
 
-list_elem:         I32_LIT { printf("REACHED!!!!\n"); $$ = NEW_NODE($1->tok, F32_LIT); push_child($$, $1); }
-        |          F32_LIT { printf("REACHED!!!!\n"); $$ = NEW_NODE($1->tok, F32_LIT); push_child($$, $1); }
-        |          id_ref
+list_elem:         I32_LIT { $$ = $1; }
+        |          F32_LIT { $$ = $1; }
+        |          id_ref  { $$ = $1; }
         ;
 
 integral_var_decl: "let"[op] ID[id]                                                             { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, NULL}); }
