@@ -245,6 +245,10 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t)
             ci++;
         }
         if (child) {
+            // Assert that the parent backpointer of the child is indeed
+            // correct.
+            assert(child->parent == t->stack_nodes[t->stack_cnt - 1]);
+
             t->stack_childs[t->stack_cnt - 1] = ci + 1;
             ast_traversal_push(t, child, 0);
         } else {

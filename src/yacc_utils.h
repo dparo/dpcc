@@ -97,18 +97,12 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         yynerrs += 1; \
         YYERROR;      \
     } while (0)
-#define NODE_TYPE(node, TYPE)  \
-    do {                       \
-        node->type = (TYPE);   \
-        node->stype = (#TYPE); \
-    } while (0)
 
 #define INIT_I32(node)                     \
     do {                                   \
         if (!yacc_from_str_to_i32(node)) { \
             PARSE_ERROR();                 \
         }                                  \
-        NODE_TYPE(node, TYPE_I32);         \
         NODE_KIND(node, I32_LIT);          \
     } while (0)
 
@@ -117,7 +111,6 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         if (!yacc_from_str_to_f32(node)) { \
             PARSE_ERROR();                 \
         }                                  \
-        NODE_TYPE(node, TYPE_F32);         \
         NODE_KIND(node, F32_LIT);          \
     } while (0)
 
@@ -126,7 +119,6 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         if (!yacc_from_str_to_char(node)) { \
             PARSE_ERROR();                  \
         }                                   \
-        NODE_TYPE(node, TYPE_I32);          \
         NODE_KIND(node, I32_LIT);           \
     } while (0)
 
@@ -135,7 +127,6 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         if (!yacc_from_str_to_bool(node)) { \
             PARSE_ERROR();                  \
         }                                   \
-        NODE_TYPE(node, TYPE_BOOL);         \
         NODE_KIND(node, BOOL_LIT);          \
     } while (0)
 

@@ -240,9 +240,9 @@ var_decl:       "let"[op] ID[id]                              { $$ = NEW_NODE($o
         |       "let"[op] ID[id] ":" type[t] "=" expr[e]      { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, $e}); }
         ;
 
-type:           "int"      { $$ = $1; $$->type = TYPE_I32; }
-        |       "float"    { $$ = $1; $$->type = TYPE_F32;  dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Float types are not yet implemented and are reserved for future use."); PARSE_ERROR(); }
-        |       "bool"     { $$ = $1; $$->type = TYPE_BOOL; dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Bool types are not yet implemented and are reserved for future use."); PARSE_ERROR();}
+type:           "int"      { $$ = $1; }
+        |       "float"    { $$ = $1; dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Float types are not yet implemented and are reserved for future use."); PARSE_ERROR(); }
+        |       "bool"     { $$ = $1; dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Bool types are not yet implemented and are reserved for future use."); PARSE_ERROR();}
         ;
 
 code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                          {

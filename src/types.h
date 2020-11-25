@@ -61,12 +61,16 @@ typedef struct {
     i32 tokens_cnt;
 } token_seq_t;
 
-enum AST_TYPE {
+enum DPCC_TYPE {
     TYPE_NONE,
     TYPE_BOOL,
     TYPE_I32,
     TYPE_F32,
 };
+
+typedef struct {
+    enum DPCC_TYPE type;
+} codegen_metadata_t;
 
 typedef struct ast_node {
     token_t *tok;
@@ -75,8 +79,7 @@ typedef struct ast_node {
     i32 kind;
     char *skind;
 
-    enum AST_TYPE type;
-    char *stype;
+    codegen_metadata_t md;
 
     struct ast_node *parent;
 

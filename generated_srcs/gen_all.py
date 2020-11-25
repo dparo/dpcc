@@ -20,6 +20,7 @@ f"""//
 #include "globals.h"
 #include "utils.h"
 #include "log.h"
+#include "dpcc.h"
 
 """
 )
@@ -44,6 +45,18 @@ class scope:
 
 def generate():
     eprint(common_boilerplate)
+
+    eprint("void check_and_optimize_ast(void)")
+    with scope():
+        eprint("ast_traversal_t att = {0};")
+        eprint("ast_traversal_begin(&att);")
+        eprint("ast_node_t *n = NULL;")
+        eprint("while ((n = ast_traverse_next(&att)) != NULL)")
+        with scope():
+            eprint()
+            pass
+
+
 
 
 def main():
