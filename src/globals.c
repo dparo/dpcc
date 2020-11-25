@@ -14,6 +14,9 @@ ast_node_t G_root_node = { 0 };
 
 symtable_t G_symtable = { 0 };
 
+int32_t G_codegen_addr_inc = 0;
+int32_t G_codegen_jmp_inc = 0;
+
 void clear_all_global_vars()
 {
     extern loc_t yylloc;
@@ -23,6 +26,9 @@ void clear_all_global_vars()
     yylloc.first_line = 1;
     yylloc.first_column = 1;
     yylloc.last_column = 0;
+
+    G_codegen_addr_inc = 0;
+    G_codegen_jmp_inc = 0;
 
     tokens_seq_clear(&G_tok_seq);
 

@@ -70,6 +70,13 @@ enum DPCC_TYPE {
 
 typedef struct {
     enum DPCC_TYPE type;
+    union {
+        char *addr;
+        struct {
+            char *jmp_top;
+            char *jmp_bot;
+        };
+    };
 } codegen_metadata_t;
 
 typedef struct ast_node {

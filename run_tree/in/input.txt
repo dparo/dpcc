@@ -1,6 +1,9 @@
 
-let a = 10;
-let b = 20;
+fn main() {
+    let a = 10;
+    let b = 20;
 
-a = 10;
-b = 30;
+    let c: float = 3;
+
+    a = float(10 << b);
+}

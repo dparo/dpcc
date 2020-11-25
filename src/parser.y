@@ -241,8 +241,8 @@ var_decl:       "let"[op] ID[id]                              { $$ = NEW_NODE($o
         ;
 
 type:           "int"      { $$ = $1; }
-        |       "float"    { $$ = $1; dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Float types are not yet implemented and are reserved for future use."); PARSE_ERROR(); }
-        |       "bool"     { $$ = $1; dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Bool types are not yet implemented and are reserved for future use."); PARSE_ERROR();}
+        |       "float"    { $$ = $1; /*dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Float types are not yet implemented and are reserved for future use."); PARSE_ERROR(); */ }
+        |       "bool"     { $$ = $1; /*dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Bool types are not yet implemented and are reserved for future use."); PARSE_ERROR(); */ }
         ;
 
 code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                          {
