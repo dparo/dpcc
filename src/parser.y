@@ -129,6 +129,7 @@
 
 %token                  POW     "**"
 
+%token                  COMMA ","
 %token                  DOT "."
 %token                  ARROW "->"
 
@@ -136,6 +137,8 @@
 %token                  SEMICOLON ";"
 %token                  OPEN_PAREN "("
 %token                  CLOSE_PAREN ")"
+%token                  OPEN_BRACKET "["
+%token                  CLOSE_BRACKET "]"
 %token                  OPEN_BRACE "{"
 %token                  CLOSE_BRACE "}"
 
@@ -184,6 +187,8 @@
 %right                  POW
 %precedence             POS NEG
 %precedence             INC DEC LNOT BNOT
+%left                   AR_SUBSCR
+
 
         // When error recovery, bison may want to discard some symbols. So
         // it is generally good practice to free any allocated memory here.
@@ -216,7 +221,7 @@ productions:
        ;
 
 
-main:    "fn" "main"[op] "(" ")" code_block[cb]             { $$ = NEW_NODE($op->tok, KW_MAIN); push_child($$, $cb); }
+main:    "fn" "main"[op] "(" ")" code_block[cb]              { $$ = NEW_NODE($op->tok, KW_MAIN); push_child($$, $cb); }
         ;
 
 stmts:          stmts[car] stmt[self]                        { $$ = $car; push_child($car, $self); }
@@ -240,20 +245,53 @@ assignment:     id_ref[lhs] "="[op] expr[rhs]                 { $$ = NEW_NODE($o
 print_stmt:     "print"[op] "(" expr[e] ")" ";"               { $$ = NEW_NODE($op->tok, KW_PRINT); push_child($$, $e); }
 
 
-decl:
-        var_decl                                              { $$ = $1; if (!var_decl($1)) { PARSE_ERROR(); } }
+decl:      integral_var_decl                                  { $$ = $1; if (!var_decl($1)) { PARSE_ERROR(); } }
+        |  array_var_decl                                     { $$ = $1; if (!var_decl($1)) { PARSE_ERROR(); } }
         ;
 
-var_decl:       "let"[op] ID[id]                              { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, NULL}); }
-        |       "let"[op] ID[id] "=" expr[e]                  { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, $e}); }
-        |       "let"[op] ID[id] ":" type[t]                  { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, NULL}); }
-        |       "let"[op] ID[id] ":" type[t] "=" expr[e]      { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, $e}); }
+list_init:  "{"[op] list_elems[es] "}" { printf("!!!!array_init_list\n"); $$ = NEW_NODE($es->tok, OPEN_BRACKET); push_child($$, $es); }
+        |   error           { }
         ;
 
-type:           "int"      { $$ = $1; }
-        |       "float"    { $$ = $1; /*dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Float types are not yet implemented and are reserved for future use."); PARSE_ERROR(); */ }
-        |       "bool"     { $$ = $1; /*dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Bool types are not yet implemented and are reserved for future use."); PARSE_ERROR(); */ }
+
+list_elems:       list_elems[car] "," list_elem[self]  { printf("ARRAY_ELEMS!!!! -> $self = %p\n", $self); $$ = $car; push_child($car, $self); }
+        |         list_elem[self]
         ;
+
+list_elem:         I32_LIT { printf("REACHED!!!!\n"); $$ = NEW_NODE($1->tok, F32_LIT); push_child($$, $1); }
+        |          F32_LIT { printf("REACHED!!!!\n"); $$ = NEW_NODE($1->tok, F32_LIT); push_child($$, $1); }
+        |          id_ref
+        ;
+
+integral_var_decl: "let"[op] ID[id]                                                             { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, NULL}); }
+        |          "let"[op] ID[id] "=" expr[e]                                                 { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, $e}); }
+        |          "let"[op] ID[id] ":" integral_type[t]                                        { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, NULL}); }
+        |          "let"[op] ID[id] ":" integral_type[t] "=" expr[e]                            { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, $e}); }
+        ;
+
+array_var_decl:  "let"[op] ID[id] ":" array_type[t]                                       { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, NULL}); }
+        |        "let"[op] ID[id] ":" array_type[t] "=" list_init[il]                     { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {$t, $id, $il}); }
+        ;
+
+integral_type:  "int"      { $$ = $1; }
+        |       "float"    { $$ = $1; }
+        |       "bool"     { $$ = $1; }
+        ;
+
+array_type:  sized_array_type    { $$ = $1; }
+        |    unsized_array_type  { $$ = $1; }
+        ;
+
+
+sized_array_type:     "int"[t] "["[op] I32_LIT[n] "]"      { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST { $t, $n}); }
+        |             "float"[t] "["[op] I32_LIT[n] "]"    { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST { $t, $n}); }
+        ;
+
+unsized_array_type:   "int"[t] "["[op] "]"      { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST { $t, NULL}); }
+        |             "float"[t] "["[op] "]"    { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST { $t, NULL}); }
+        ;
+
+
 
 code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                          {
                         $$ = NEW_NODE($op->tok, OPEN_BRACE);
@@ -305,44 +343,44 @@ do_while_stmt:  "do"[op] code_block[cb] "while" "(" expr[e] ")" ";"  { $$ = NEW_
         ;
 
 
-
 id_ref: ID                                                    { $$ = $1; NODE_KIND($$, ID); if (!symtable_lookup($$->tok)) { dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Use of undeclared identifier `%s`", $$->tok->lexeme); PARSE_ERROR(); } }
 
 
-expr:          "(" error ")"                                  {  }
-        |      "(" expr[e] ")"                                { $$ = $e; }
-        |       "+"[op] expr[rhs]            %prec POS        { $$ = $rhs; }
-        |       "-"[op] expr[rhs]            %prec NEG        { $$ = NEW_NODE($op->tok, NEG); push_child($$, $rhs); }
-        |       expr[lhs] "+"[op] expr[rhs]  %prec ADD        { $$ = NEW_NODE($op->tok, ADD); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "-"[op] expr[rhs]  %prec SUB        { $$ = NEW_NODE($op->tok, SUB); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "*"[op] expr[rhs]  %prec MUL        { $$ = NEW_NODE($op->tok, MUL); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "/"[op] expr[rhs]  %prec DIV        { $$ = NEW_NODE($op->tok, DIV); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "%"[op] expr[rhs]  %prec MOD        { $$ = NEW_NODE($op->tok, MOD); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       "!"[op] expr[rhs]            %prec LNOT       { $$ = NEW_NODE($op->tok, LNOT); push_child($$, $rhs); }
-        |       expr[lhs] "&&"[op] expr[rhs] %prec LAND       { $$ = NEW_NODE($op->tok, LAND); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "||"[op] expr[rhs] %prec LOR        { $$ = NEW_NODE($op->tok, LOR); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       "~"[op] expr[rhs]            %prec BNOT       { $$ = NEW_NODE($op->tok, BNOT); push_child($$, $rhs); }
-        |       expr[lhs] "&"[op] expr[rhs]  %prec BAND       { $$ = NEW_NODE($op->tok, BAND); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "|"[op] expr[rhs]  %prec BOR        { $$ = NEW_NODE($op->tok, BOR); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "^"[op] expr[rhs]  %prec BXOR       { $$ = NEW_NODE($op->tok, BXOR); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "<<"[op] expr[rhs] %prec BLSHIFT    { $$ = NEW_NODE($op->tok, BLSHIFT); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] ">>"[op] expr[rhs] %prec BRSHIFT    { $$ = NEW_NODE($op->tok, BRSHIFT); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "=="[op] expr[rhs] %prec EQ         { $$ = NEW_NODE($op->tok, EQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "!="[op] expr[rhs] %prec NEQ        { $$ = NEW_NODE($op->tok, NEQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "<"[op] expr[rhs]  %prec LT         { $$ = NEW_NODE($op->tok, LT); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "<="[op] expr[rhs] %prec LTEQ       { $$ = NEW_NODE($op->tok, LTEQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] ">"[op] expr[rhs]  %prec GT         { $$ = NEW_NODE($op->tok, GT); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] ">="[op] expr[rhs] %prec GTEQ       { $$ = NEW_NODE($op->tok, GTEQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       expr[lhs] "**"[op] expr[rhs] %prec POW        { $$ = NEW_NODE($op->tok, POW); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       ID[lhs] "++"[op]             %prec INC        { $$ = NEW_NODE($op->tok, INC); push_child($$, $lhs); }
-        |       ID[lhs] "--"[op]             %prec DEC        { $$ = NEW_NODE($op->tok, DEC); push_child($$, $lhs); }
-        |       assignment                   %prec ASSIGN     { $$ = $1; }
-        |       I32_LIT                                       { NODE_KIND($$, I32_LIT); INIT_I32($$); }
-        |       F32_LIT                                       { NODE_KIND($$, F32_LIT); INIT_F32($$); }
-        |       CHAR_LIT                                      { NODE_KIND($$, CHAR_LIT); INIT_CHAR($$); }
-        |       BOOL_LIT                                      { NODE_KIND($$, BOOL_LIT); INIT_BOOL($$); }
-        |       id_ref                                        { $$ = $1; }
-        |       type[op] "(" expr[e] ")"                      { $$ = NEW_NODE($op->tok, KW_INT); push_child($$, $e); }
+expr:          "(" error ")"                                       {  }
+        |      "(" expr[e] ")"                                     { $$ = $e; }
+        |       "+"[op] expr[rhs]                 %prec POS        { $$ = $rhs; }
+        |       "-"[op] expr[rhs]                 %prec NEG        { $$ = NEW_NODE($op->tok, NEG); push_child($$, $rhs); }
+        |       expr[lhs] "+"[op] expr[rhs]       %prec ADD        { $$ = NEW_NODE($op->tok, ADD); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "-"[op] expr[rhs]       %prec SUB        { $$ = NEW_NODE($op->tok, SUB); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "*"[op] expr[rhs]       %prec MUL        { $$ = NEW_NODE($op->tok, MUL); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "/"[op] expr[rhs]       %prec DIV        { $$ = NEW_NODE($op->tok, DIV); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "%"[op] expr[rhs]       %prec MOD        { $$ = NEW_NODE($op->tok, MOD); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       "!"[op] expr[rhs]                 %prec LNOT       { $$ = NEW_NODE($op->tok, LNOT); push_child($$, $rhs); }
+        |       expr[lhs] "&&"[op] expr[rhs]      %prec LAND       { $$ = NEW_NODE($op->tok, LAND); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "||"[op] expr[rhs]      %prec LOR        { $$ = NEW_NODE($op->tok, LOR); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       "~"[op] expr[rhs]                 %prec BNOT       { $$ = NEW_NODE($op->tok, BNOT); push_child($$, $rhs); }
+        |       expr[lhs] "&"[op] expr[rhs]       %prec BAND       { $$ = NEW_NODE($op->tok, BAND); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "|"[op] expr[rhs]       %prec BOR        { $$ = NEW_NODE($op->tok, BOR); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "^"[op] expr[rhs]       %prec BXOR       { $$ = NEW_NODE($op->tok, BXOR); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "<<"[op] expr[rhs]      %prec BLSHIFT    { $$ = NEW_NODE($op->tok, BLSHIFT); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] ">>"[op] expr[rhs]      %prec BRSHIFT    { $$ = NEW_NODE($op->tok, BRSHIFT); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "=="[op] expr[rhs]      %prec EQ         { $$ = NEW_NODE($op->tok, EQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "!="[op] expr[rhs]      %prec NEQ        { $$ = NEW_NODE($op->tok, NEQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "<"[op] expr[rhs]       %prec LT         { $$ = NEW_NODE($op->tok, LT); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "<="[op] expr[rhs]      %prec LTEQ       { $$ = NEW_NODE($op->tok, LTEQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] ">"[op] expr[rhs]       %prec GT         { $$ = NEW_NODE($op->tok, GT); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] ">="[op] expr[rhs]      %prec GTEQ       { $$ = NEW_NODE($op->tok, GTEQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       expr[lhs] "**"[op] expr[rhs]      %prec POW        { $$ = NEW_NODE($op->tok, POW); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       ID[lhs] "++"[op]                  %prec INC        { $$ = NEW_NODE($op->tok, INC); push_child($$, $lhs); }
+        |       ID[lhs] "--"[op]                  %prec DEC        { $$ = NEW_NODE($op->tok, DEC); push_child($$, $lhs); }
+        |       assignment                        %prec ASSIGN     { $$ = $1; }
+        |       I32_LIT                                            { NODE_KIND($$, I32_LIT); INIT_I32($$); }
+        |       F32_LIT                                            { NODE_KIND($$, F32_LIT); INIT_F32($$); }
+        |       CHAR_LIT                                           { NODE_KIND($$, CHAR_LIT); INIT_CHAR($$); }
+        |       BOOL_LIT                                           { NODE_KIND($$, BOOL_LIT); INIT_BOOL($$); }
+        |       id_ref                                             { $$ = $1; }
+        |       id_ref[lhs] "["[op] expr[rhs] "]" %prec AR_SUBSCR  { $$ = NEW_NODE($op->tok, AR_SUBSCR); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       integral_type[op] "(" expr[e] ")"                  { $$ = NEW_NODE($op->tok, KW_INT); push_child($$, $e); }
 
         ;
 

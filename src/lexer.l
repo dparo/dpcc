@@ -79,6 +79,7 @@ EOF              { LEX_FWD(YYEOF); }   /* Must return YYEOF upon EOF in order fo
 
 
 
+","              { LEX_FWD(COMMA); }
 "."              { LEX_FWD(DOT); }
 "->"             { LEX_FWD(ARROW); }
 
@@ -119,6 +120,9 @@ EOF              { LEX_FWD(YYEOF); }   /* Must return YYEOF upon EOF in order fo
 
 "("              { LEX_FWD(OPEN_PAREN); }
 ")"              { LEX_FWD(CLOSE_PAREN); }
+
+"["              { LEX_FWD(OPEN_BRACKET); }
+"]"              { LEX_FWD(CLOSE_BRACKET); }
 
 "{"              { LEX_FWD(OPEN_BRACE); }
 "}"              { LEX_FWD(CLOSE_BRACE); }
