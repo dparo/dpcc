@@ -78,6 +78,7 @@ typedef struct {
         char *addr;
         struct {
             char *jmp_top;
+            char *jmp_next;
             char *jmp_bot;
         };
     };

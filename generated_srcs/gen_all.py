@@ -43,12 +43,18 @@ def gprint(*args, **kwargs):
         out = ""
 
         for i in range(0, len(lines)):
+            should_prepend_newline = lines[i].startswith("do") or lines[i].startswith("while") or lines[i].startswith("switch") or lines[i].startswith("for")
+            if should_prepend_newline:
+                out += "\n"
             out += "    " * indent_cnt + lines[i] + "\n"
 
         new_args = list(args)
         new_args[0] = out
         args = tuple(new_args)
-    print(*args, **kwargs, end='')
+    if len(args) == 0 or args[0] == "":
+        print("")
+    else:
+        print(*args, **kwargs, end='')
 
 class scope:
     def __init__(self):
@@ -109,6 +115,7 @@ def switch(elem, dict, default_case = DEFAULT_CASE):
             with scope():
                 gprint(values[i])
             gprint("break;")
+    gprint()
 
 
 
@@ -126,6 +133,7 @@ CAST_OPS = [
 
 
 def decl_map_fn(out_type, fn_name, in_type, map_dict, default_case=DEFAULT_CASE, default_return_value="0"):
+    gprint('')
     gprint(f"static {out_type} {fn_name}({in_type} x)")
     with scope():
         switch("x", map_dict, default_case)
@@ -213,6 +221,7 @@ def generate_src_file():
     gprint('#include "parser.h"')
     gprint('extern int yynerrs;')
 
+    gprint()
     gprint("void typemismatch_check(ast_node_t *expected_type, ast_node_t *got_type)")
     with scope():
         gprint("if (expected_type != NULL && got_type != NULL)")
@@ -223,7 +232,7 @@ def generate_src_file():
                 gen_info("&expected_type->tok->loc", '"Expected `%s`\"', ["dpcc_type_as_str(expected_type->md.type)"])
                 gen_info("&got_type->tok->loc", '"But got `%s`\"', ["dpcc_type_as_str(got_type->md.type)"])
 
-
+    gprint()
     gprint('static void deduce_array_type(ast_node_t *n)')
     with scope():
         gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
@@ -282,6 +291,7 @@ def generate_src_file():
         gprint("n->md.type = c0->md.type;")
         gprint("n->md.array_len = init_list_len;")
 
+    gprint()
     gprint('static void type_deduce_expr_and_operators(ast_node_t *n)')
     with scope():
         gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
@@ -291,6 +301,7 @@ def generate_src_file():
         gen_ops_type_deduction_code("n")
 
 
+    gprint()
     gprint("static void type_deduce(ast_node_t *n)")
     with scope():
         gprint("// Utilities vars t oeasily access childs")
@@ -392,6 +403,7 @@ def generate_src_file():
 
 
 
+    gprint()
     gprint("static char *gen_tmp_var(enum DPCC_TYPE type)")
     with scope():
 
@@ -404,6 +416,7 @@ def generate_src_file():
         gprint('return NULL;')
 
 
+    gprint()
     gprint("static void setup_addrs_and_jmp_tables(ast_node_t *n)")
     with scope():
         gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
@@ -411,8 +424,11 @@ def generate_src_file():
         gprint("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
         gprint("ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;")
 
+
+
         gprint('if (!n->md.addr)')
         with scope():
+            gprint('// Generate address for all temporary computations performed by operators')
             gprint(f'if ({one_of("n->kind", ALL_OPS)})')
             with scope():
                 gprint('assert(n->md.type != TYPE_NONE);')
@@ -421,6 +437,7 @@ def generate_src_file():
                 gprint('n->md.addr = gen_tmp_var(n->md.type);')
 
 
+    gprint()
     gprint("void check_and_optimize_ast(void)")
     with scope():
         gprint("ast_traversal_t att = {0};")

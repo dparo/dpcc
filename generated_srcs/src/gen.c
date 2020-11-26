@@ -19,6 +19,7 @@
 
 #include "parser.h"
 extern int yynerrs;
+
 void typemismatch_check(ast_node_t *expected_type, ast_node_t *got_type)
 {
     if (expected_type != NULL && got_type != NULL)
@@ -32,6 +33,7 @@ void typemismatch_check(ast_node_t *expected_type, ast_node_t *got_type)
         }
     }
 }
+
 static void deduce_array_type(ast_node_t *n)
 {
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
@@ -52,6 +54,7 @@ static void deduce_array_type(ast_node_t *n)
         {
             // Initializer list is provided
             enum DPCC_TYPE expected_type;
+
             switch (c0->md.type)
             {
                 default:
@@ -70,6 +73,7 @@ static void deduce_array_type(ast_node_t *n)
                 }
                 break;
             }
+
             if (c0->childs[1] && init_list_len != array_type_len)
             {
                 dpcc_log(DPCC_SEVERITY_ERROR, &c2->tok->loc, "Number of elements in initializer list do not match" );
@@ -84,6 +88,7 @@ static void deduce_array_type(ast_node_t *n)
                 dpcc_log(DPCC_SEVERITY_INFO, &c2->tok->loc, "Cannot create zero or negative sized array" );
             }
             // Now make sure that each type in the initializer list is correct
+
             for (int32_t i = 0; i < c2->num_childs; i++)
             {
                 if (c2->childs[i] && c2->childs[i]->md.type != expected_type)
@@ -110,6 +115,7 @@ static void deduce_array_type(ast_node_t *n)
     n->md.type = c0->md.type;
     n->md.array_len = init_list_len;
 }
+
 static void type_deduce_expr_and_operators(ast_node_t *n)
 {
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
@@ -220,6 +226,7 @@ static void type_deduce_expr_and_operators(ast_node_t *n)
         }
     }
 }
+
 static void type_deduce(ast_node_t *n)
 {
     // Utilities vars t oeasily access childs
@@ -228,6 +235,7 @@ static void type_deduce(ast_node_t *n)
     ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
     ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;
     // Base cases for type deduction
+
     switch (n->kind)
     {
         default: { /* EMPTY */ } break;
@@ -257,9 +265,11 @@ static void type_deduce(ast_node_t *n)
         }
         break;
     }
+
     // Assign the correct type to each casting operator
     if (((n->kind == TOK_KW_INT) || (n->kind == TOK_KW_FLOAT) || (n->kind == TOK_KW_BOOL)) && !((n->parent->kind == TOK_KW_FN) || (n->parent->kind == TOK_KW_LET)))
     {
+
         switch (n->kind)
         {
             default:
@@ -283,6 +293,7 @@ static void type_deduce(ast_node_t *n)
             }
             break;
         }
+
     }
     // Assign the correct type if the var declaration has a user listed type
     if (c0 && (((n->kind == TOK_KW_FN) || (n->kind == TOK_KW_LET))))
@@ -290,6 +301,7 @@ static void type_deduce(ast_node_t *n)
         if (c0->md.type == TYPE_NONE && c0->kind != TOK_OPEN_BRACKET)
         {
             // Handle integral types
+
             switch (c0->kind)
             {
                 default:
@@ -313,10 +325,12 @@ static void type_deduce(ast_node_t *n)
                 }
                 break;
             }
+
         }
         else if (c0->md.type == TYPE_NONE && c0->kind == TOK_OPEN_BRACKET)
         {
             // Handle array types
+
             switch (c0->childs[0]->kind)
             {
                 default:
@@ -335,6 +349,7 @@ static void type_deduce(ast_node_t *n)
                 }
                 break;
             }
+
         }
         // Forward the same type to the keyword let
         n->md.type = c0->md.type;
@@ -394,8 +409,10 @@ static void type_deduce(ast_node_t *n)
         }
     }
 }
+
 static char *gen_tmp_var(enum DPCC_TYPE type)
 {
+
     switch (type)
     {
         default:
@@ -419,8 +436,10 @@ static char *gen_tmp_var(enum DPCC_TYPE type)
         }
         break;
     }
+
     return NULL;
 }
+
 static void setup_addrs_and_jmp_tables(ast_node_t *n)
 {
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
@@ -429,6 +448,7 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
     ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;
     if (!n->md.addr)
     {
+        // Generate address for all temporary computations performed by operators
         if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_AR_SUBSCR)))
         {
             assert(n->md.type != TYPE_NONE);
@@ -438,12 +458,14 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
         }
     }
 }
+
 void check_and_optimize_ast(void)
 {
     ast_traversal_t att = {0};
     ast_traversal_begin(&att);
     {
         ast_node_t *n = NULL;
+
         while ((n = ast_traverse_next(&att)) != NULL)
         {
             if (n->md.type == TYPE_NONE)

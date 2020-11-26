@@ -1,11 +1,11 @@
 
 let a = 10;
 
-a = (20 + 40) * 30;
+// a = (20 + 40) * 30;
 
 if (a == 10) {
     let var0;
-} else {
+} else if (a == 20) {
     let var1;
 }
 
