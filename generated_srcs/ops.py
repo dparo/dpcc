@@ -14,15 +14,6 @@ class OpsBundle:
         self.types_conversion_table = types_conversion_table
 
 
-
-def gen_ops_type_deduction_code(ops):
-    all_ops_tokens = []
-    for bundle_idx in range(0, len(ops)):
-        bundle = ops[bundle_idx]
-        for op_idx in range(0, len(ops[bundle_idx])):
-            all_ops_tokens.append(bundle.ops[op_idx])
-
-
 INTEGER_OPS = OpsBundle(
     [
         "TOK_MOD",
@@ -41,13 +32,13 @@ INTEGER_OPS = OpsBundle(
 
 MATH_OPS = OpsBundle(
     [
-        "TOK_ASSIGN"
+        "TOK_ASSIGN",
         "TOK_ADD",
         "TOK_SUB",
         "TOK_MUL",
         "TOK_DIV",
         "TOK_POW",
-        "TOK_INC"
+        "TOK_INC",
         "TOK_DEC",
         "TOK_POS",
         "TOK_NEG",
@@ -67,7 +58,7 @@ MATH_OPS = OpsBundle(
 LOGICAL_COMPARISONS = OpsBundle(
     [
 
-        "TOK_EQ"
+        "TOK_EQ",
         "TOK_NEQ",
         "TOK_GT",
         "TOK_GTEQ",
@@ -85,7 +76,7 @@ LOGICAL_COMPARISONS = OpsBundle(
 
 LOGICAL_OPERATORS = OpsBundle(
     [
-        "TOK_LNOT"
+        "TOK_LNOT",
         "TOK_LAND",
         "TOK_LOR",
     ],

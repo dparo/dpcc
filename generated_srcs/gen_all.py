@@ -5,6 +5,7 @@ from datetime import datetime
 import itertools
 
 from utils import bin2header
+from ops import ALL_OPS
 
 INVALID_CODE_PATH = "invalid_code_path();"
 DEFAULT_CASE = INVALID_CODE_PATH
@@ -167,6 +168,19 @@ def debug_print(string):
 
 
 
+
+def gen_ops_type_deduction_code(n):
+    all_ops_tokens = []
+    for bundle_idx in range(0, len(ALL_OPS)):
+        bundle = ALL_OPS[bundle_idx]
+        for op_idx in range(0, len(ALL_OPS[bundle_idx].ops)):
+            all_ops_tokens.append(bundle.ops[op_idx])
+
+    gprint(f'if ({one_of("n->kind", all_ops_tokens)})')
+    with scope():
+        pass
+
+
 def generate_src_file():
     gprint(common_boilerplate)
 
@@ -183,6 +197,72 @@ def generate_src_file():
                 gen_info("&expected_type->tok->loc", '"Expected `%s`\"', ["dpcc_type_as_str(expected_type->md.type)"])
                 gen_info("&got_type->tok->loc", '"But got `%s`\"', ["dpcc_type_as_str(got_type->md.type)"])
 
+
+    gprint('static void deduce_array_type(ast_node_t *n)')
+    with scope():
+        gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
+        gprint("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
+        gprint("// Deduce type of array variable declarations")
+        gprint("assert((c0->childs[1] == NULL) || (c0->childs[1]->kind == TOK_I32_LIT && c0->childs[1]->md.type == TYPE_I32));")
+
+        gprint("int32_t array_type_len = c0->childs[1] ? c0->childs[1]->val.as_i32 : 0;")
+        gprint("int32_t init_list_len = c2 != NULL ? c2->num_childs : 0;")
+
+        gprint('if(c0->childs[1] && array_type_len <= 0)')
+        with scope():
+            gen_err("&c0->childs[1]->tok->loc", '"The number of elements in an array must be a positive integer"')
+            gen_info("&c0->childs[1]->tok->loc", '"Got `%d`"', ['array_type_len'])
+        gprint("else")
+        with scope():
+            gprint("if (c2)")
+            with scope():
+                gprint("// Initializer list is provided")
+                gprint("enum DPCC_TYPE expected_type;")
+                switch("c0->md.type", {
+                    "TYPE_I32_ARRAY": "expected_type = TYPE_I32;",
+                    "TYPE_F32_ARRAY": "expected_type = TYPE_F32;",
+                })
+
+                gprint("if (c0->childs[1] && init_list_len != array_type_len)")
+                with scope():
+                    gen_err("&c2->tok->loc", '"Number of elements in initializer list do not match"')
+                    gen_info("&c0->childs[1]->tok->loc", '"Expected number of elements: `%d`"', ['array_type_len'])
+                    gen_info("&c2->tok->loc", '"Number of elements got: `%d`"', ['init_list_len'])
+                gprint('else if (c2 && init_list_len <= 0)')
+                with scope():
+                    gen_err("&c2->tok->loc", '"Number of elements in initializer list is invalid"')
+                    gen_info("&c2->tok->loc", '"Cannot create zero or negative sized array"')
+
+
+                gprint("// Now make sure that each type in the initializer list is correct")
+                gprint("for (int32_t i = 0; i < c2->num_childs; i++)")
+                with scope():
+                    gprint("if (c2->childs[i] && c2->childs[i]->md.type != expected_type)")
+                    with scope():
+                        gen_err("&c2->childs[i]->tok->loc", '"Type mismatch in array initializer list"')
+                        gen_info("&c0->childs[0]->tok->loc", '"Expected `%s`"', ["dpcc_type_as_str(c0->childs[0]->md.type)"])
+                        gen_info("&c2->childs[i]->tok->loc", '"Got `%s`"', ["dpcc_type_as_str(c2->childs[i]->md.type)"])
+            gprint("else")
+            with scope():
+                gprint("// We don't have an initializer list, so make sure that at least the type array is sized")
+                gprint("if (c0 == NULL || c0->childs[1] == NULL || c0->childs[1]->kind != TOK_I32_LIT || c0->childs[1]->md.type != TYPE_I32)")
+                with scope():
+                    gen_err("&c0->tok->loc", '"Size of the array must be specified"')
+                    gen_info("&c0->tok->loc", '"Either specify the size inside the square brackets, or provide an initializer list"')
+
+
+
+        gprint("// Forward the same type to the keyword let")
+        gprint("n->md.type = c0->md.type;")
+        gprint("n->md.array_len = init_list_len;")
+
+    gprint('static void type_deduce_expr_and_operators(ast_node_t *n)')
+    with scope():
+        gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
+        gprint("ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;")
+        gprint("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
+        gprint("ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;")
+        gen_ops_type_deduction_code("n")
 
 
     gprint("static void type_deduce(ast_node_t *n)")
@@ -256,64 +336,14 @@ def generate_src_file():
                     gprint("n->md.type = TYPE_I32;")
             gprint("else")
             with scope():
-                gprint("// Deduce type of array variable declarations")
-
-                gprint("assert((c0->childs[1] == NULL) || (c0->childs[1]->kind == TOK_I32_LIT && c0->childs[1]->md.type == TYPE_I32));")
-
-                gprint("int32_t array_type_len = c0->childs[1] ? c0->childs[1]->val.as_i32 : 0;")
-                gprint("int32_t init_list_len = c2 != NULL ? c2->num_childs : 0;")
-
-                gprint('if(c0->childs[1] && array_type_len <= 0)')
-                with scope():
-                    gen_err("&c0->childs[1]->tok->loc", '"The number of elements in an array must be a positive integer"')
-                    gen_info("&c0->childs[1]->tok->loc", '"Got `%d`"', ['array_type_len'])
-                gprint("else")
-                with scope():
-                    gprint("if (c2)")
-                    with scope():
-                        gprint("// Initializer list is provided")
-                        gprint("enum DPCC_TYPE expected_type;")
-                        switch("c0->md.type", {
-                            "TYPE_I32_ARRAY": "expected_type = TYPE_I32;",
-                            "TYPE_F32_ARRAY": "expected_type = TYPE_F32;",
-                        })
-
-                        gprint("if (c0->childs[1] && init_list_len != array_type_len)")
-                        with scope():
-                            gen_err("&c2->tok->loc", '"Number of elements in initializer list do not match"')
-                            gen_info("&c0->childs[1]->tok->loc", '"Expected number of elements: `%d`"', ['array_type_len'])
-                            gen_info("&c2->tok->loc", '"Number of elements got: `%d`"', ['init_list_len'])
-                        gprint('else if (c2 && init_list_len <= 0)')
-                        with scope():
-                            gen_err("&c2->tok->loc", '"Number of elements in initializer list is invalid"')
-                            gen_info("&c2->tok->loc", '"Cannot create zero or negative sized array"')
-
-
-                        gprint("// Now make sure that each type in the initializer list is correct")
-                        gprint("for (int32_t i = 0; i < c2->num_childs; i++)")
-                        with scope():
-                            gprint("if (c2->childs[i] && c2->childs[i]->md.type != expected_type)")
-                            with scope():
-                                gen_err("&c2->childs[i]->tok->loc", '"Type mismatch in array initializer list"')
-                                gen_info("&c0->childs[0]->tok->loc", '"Expected `%s`"', ["dpcc_type_as_str(c0->childs[0]->md.type)"])
-                                gen_info("&c2->childs[i]->tok->loc", '"Got `%s`"', ["dpcc_type_as_str(c2->childs[i]->md.type)"])
-                    gprint("else")
-                    with scope():
-                        gprint("// We don't have an initializer list, so make sure that at least the type array is sized")
-                        gprint("if (c0 == NULL || c0->childs[1] == NULL || c0->childs[1]->kind != TOK_I32_LIT || c0->childs[1]->md.type != TYPE_I32)")
-                        with scope():
-                            gen_err("&c0->tok->loc", '"Size of the array must be specified"')
-                            gen_info("&c0->tok->loc", '"Either specify the size inside the square brackets, or provide an initializer list"')
-
-
-
-                gprint("// Forward the same type to the keyword let")
-                gprint("n->md.type = c0->md.type;")
-                gprint("n->md.array_len = init_list_len;")
+                gprint('deduce_array_type(n);')
+                
 
 
         gprint("// Deduce type of expression and operators: This is the most demanding and difficult part")
-
+        gprint('if (n->md.type == 0)')
+        with scope():
+            gprint('type_deduce_expr_and_operators(n);')
 
 
 
