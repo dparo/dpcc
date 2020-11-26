@@ -218,7 +218,7 @@ static void type_deduce(ast_node_t *n)
                         dpcc_log(DPCC_SEVERITY_INFO, &c0->childs[1]->tok->loc, "Expected number of elements: `%d`",  array_type_len);
                         dpcc_log(DPCC_SEVERITY_INFO, &c2->tok->loc, "Number of elements got: `%d`",  init_list_len);
                     }
-                    if (c2 && init_list_len <= 0)
+                    else if (c2 && init_list_len <= 0)
                     {
                         dpcc_log(DPCC_SEVERITY_ERROR, &c2->tok->loc, "Number of elements in initializer list is invalid" );
                         yynerrs += 1;

@@ -283,8 +283,7 @@ def generate_src_file():
                             gen_err("&c2->tok->loc", '"Number of elements in initializer list do not match"')
                             gen_info("&c0->childs[1]->tok->loc", '"Expected number of elements: `%d`"', ['array_type_len'])
                             gen_info("&c2->tok->loc", '"Number of elements got: `%d`"', ['init_list_len'])
-
-                        gprint('if (c2 && init_list_len <= 0)')
+                        gprint('else if (c2 && init_list_len <= 0)')
                         with scope():
                             gen_err("&c2->tok->loc", '"Number of elements in initializer list is invalid"')
                             gen_info("&c2->tok->loc", '"Cannot create zero or negative sized array"')
