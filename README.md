@@ -1,4 +1,4 @@
-# dpcc: DParo's own C-alike Compiler
+# dpcc: DParo's own C-alike Compiler frontend
 
 ## Cloning
 
