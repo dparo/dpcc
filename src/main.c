@@ -50,6 +50,12 @@ int main(int argc, char **argv)
         if (!compile_success) {
             return -1;
         }
+        ast_traversal_t att = { 0 };
+        ast_traversal_begin(&att);
+        ast_node_t *n = NULL;
+        while ((n = ast_traverse_next(&att)) != NULL) {
+            print_node(stdout, n, att.stack_cnt - 1);
+        }
     } else {
         fprintf(stderr, "Invalid code path\n");
         fflush(stderr);

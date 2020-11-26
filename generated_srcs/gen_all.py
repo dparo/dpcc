@@ -136,6 +136,10 @@ expr_tokens = [
     "TOK_POW",
 ]
 
+stmts = [
+    "TOK_ASSIGN"
+]
+
 decl_ops = [
     "TOK_KW_FN",
     "TOK_KW_LET"
@@ -148,12 +152,13 @@ cast_ops = [
 ]
 
 
+
 def decl_map_fn(out_type, fn_name, in_type, map_dict, default_case=DEFAULT_CASE, default_return_value="0"):
     gprint(f"static {out_type} {fn_name}({in_type} x)")
     with scope():
         switch("x", map_dict, default_case)
-    if default_return_value:
-        eprint(f"return (out_type) {default_return_value};")
+        if default_return_value is not None and len(default_return_value) > 0:
+            gprint(f"return ({out_type}) {default_return_value};")
 
 
 def tuple_to_comma_separated_str(t):
@@ -186,24 +191,16 @@ def gen_info(loc, fmt, args = []):
     gprint(f"dpcc_log(DPCC_SEVERITY_INFO, {loc}, {fmt}{optional_comma} {va_args});")
 
 
+def debug_print(string):
+    gprint(f'printf("--------------- %s\\n", "{string}");')
+
+
 
 def generate_src_file():
     gprint(common_boilerplate)
 
     gprint('#include "parser.h"')
     gprint('extern int yynerrs;')
-
-    gprint('static void invalid_code_path(void)')
-    with scope():
-        gprint('fprintf(stderr, "COMPILER INTERNAL ERROR --- Invalid code path");')
-        gprint('fflush(stderr);')
-        gprint('assert(0);')
-
-    decl_map_fn("char*", "type_as_str", "int", {
-        "TYPE_I32": "return \"int\";",
-        "TYPE_F32": "return \"float\";",
-        "TYPE_BOOL": "return \"bool\";",
-    })
 
     gprint("void typemismatch_check(ast_node_t *expected_type, ast_node_t *got_type)")
     with scope():
@@ -212,8 +209,124 @@ def generate_src_file():
             gprint("if (expected_type->md.type != got_type->md.type)")
             with scope():
                 gen_err("&expected_type->tok->loc", '"Type mismatch"')
-                gen_info("&expected_type->tok->loc", '"Expected `%s`\"', ["type_as_str(expected_type->md.type)"])
-                gen_info("&got_type->tok->loc", '"But got `%s`\"', ["type_as_str(got_type->md.type)"])
+                gen_info("&expected_type->tok->loc", '"Expected `%s`\"', ["dpcc_type_as_str(expected_type->md.type)"])
+                gen_info("&got_type->tok->loc", '"But got `%s`\"', ["dpcc_type_as_str(got_type->md.type)"])
+
+
+
+    gprint("static void type_deduce(ast_node_t *n)")
+    with scope():
+        gprint("// Utilities vars t oeasily access childs")
+        gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
+        gprint("ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;")
+        gprint("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
+        gprint("ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;")
+
+        gprint("// Base cases for type deduction")
+        switch("n->kind", {
+            "TOK_CHAR_LIT": "n->md.type = TYPE_I32;",
+            "TOK_I32_LIT": "n->md.type = TYPE_I32;",
+            "TOK_F32_LIT": "n->md.type = TYPE_F32;",
+            "TOK_BOOL_LIT": "n->md.type = TYPE_BOOL;",
+        }, default_case='')
+        pass
+
+        gprint("// Assign the correct type to each casting operator")
+        gprint(f'if ({one_of("n->kind", cast_ops)} && !{one_of("n->parent->kind", decl_ops)})')
+        with scope():
+            switch("n->kind", {
+                "TOK_KW_INT": "n->md.type = TYPE_I32;",
+                "TOK_KW_FLOAT": "n->md.type = TYPE_F32;",
+                "TOK_KW_BOOL": "n->md.type = TYPE_BOOL;",
+
+            })
+
+        gprint("// Assign the correct type if the var declaration has a user listed type")
+        gprint(f'if (c0 && ({one_of("n->kind", decl_ops)}))')
+        with scope():
+            gprint('if (c0->md.type == TYPE_NONE && c0->kind != TOK_OPEN_BRACKET)')
+            with scope():
+                gprint("// Handle integral types")
+                switch('c0->kind', {
+                    'TOK_KW_INT': 'c0->md.type = TYPE_I32;',
+                    'TOK_KW_FLOAT': 'c0->md.type = TYPE_F32;',
+                    'TOK_KW_BOOL': 'c0->md.type = TYPE_BOOL;',
+                })
+            gprint("else if (c0->md.type == TYPE_NONE && c0->kind == TOK_OPEN_BRACKET)")
+            with scope():
+                gprint("// Handle array types")
+                switch("c0->childs[0]->kind", {
+                    "TOK_KW_INT": "c0->md.type = TYPE_I32_ARRAY;",
+                    "TOK_KW_FLOAT": "c0->md.type = TYPE_F32_ARRAY;",
+                })
+            gprint("// Forward the same type to the keyword let")
+            gprint("n->md.type = c0->md.type;")
+
+        gprint("// Deduce type of variable declarations")
+        gprint(f'if {one_of("n->kind", decl_ops)}')
+        with scope():
+            gprint('// Deduce type of integral variable declarations')
+            gprint(f'if ((c0 == NULL) || (c0->kind != TOK_OPEN_BRACKET))')
+            with scope():
+                gprint("ast_node_t *var_decl_type = c0;")
+                gprint("ast_node_t *child_type = c2;")
+                gprint("if (var_decl_type != NULL && child_type != NULL)")
+                with scope():
+                    gprint("// We might have type mismatch")
+                    gprint("typemismatch_check(var_decl_type, child_type);")
+                gprint("else if (child_type != NULL)")
+                with scope():
+                    gprint("// Type deduce from child")
+                    gprint("n->md.type = child_type->md.type;")
+                gprint("else")
+                with scope():
+                    gprint("// Assume integer")
+                    gprint("n->md.type = TYPE_I32;")
+            gprint("else")
+            with scope():
+                gprint("// Deduce type of array variable declarations")
+                gprint("// The element inner type must be always provided to avoid ambiguity")
+                gprint("// Thus we need to fix 2 cases: No array boundaries are provided and thus must be dedudeced from the initializer list size")
+                gprint("// The initializer list size has not homogeneous types")
+
+                gprint("int32_t init_list_len = c2 != NULL ? c2->childs[0]->num_childs : 0;")
+                gprint("if (c2)")
+                with scope():
+                    gprint("// Initializer list is provided")
+                    gprint("enum DPCC_TYPE expected_type;")
+                    switch("c0->md.type", {
+                        "TYPE_I32_ARRAY": "expected_type = TYPE_I32;",
+                        "TYPE_F32_ARRAY": "expected_type = TYPE_F32;",
+                    })
+
+                    gprint("// Now make sure that each type in the initializer list is correct")
+                    gprint("for (int32_t i = 0; i < c2->num_childs; i++)")
+                    with scope():
+                        gprint("if (c2->childs[i] && c2->childs[i]->md.type != expected_type)")
+                        with scope():
+                            gen_err("&c2->childs[i]->tok->loc", '"Type mismatch in array initializer list"')
+                            gen_info("&c0->childs[0]->tok->loc", '"Expected: `%s`"', ["dpcc_type_as_str(c0->childs[0]->md.type)"])
+                            gen_info("&c2->childs[i]->tok->loc", '"Got: `%s`"', ["dpcc_type_as_str(c2->childs[i]->md.type)"])
+                gprint("if (c0->childs[1] == NULL)")
+                with scope():
+                    gprint("// Number of elements are not specified we need to deduce them")
+                gprint("else")
+                with scope():
+                    gprint("// Number of elements are specified. Make sure that they match with the initializer list")
+
+
+
+
+                gprint("// Forward the same type to the keyword let")
+                gprint("n->md.type = c0->md.type;")
+                gprint("n->md.array_len = init_list_len;")
+
+
+        gprint("// Deduce type of expression and operators: This is the most demanding and difficult part")
+
+
+
+
 
 
 
@@ -225,54 +338,10 @@ def generate_src_file():
             gprint("ast_node_t *n = NULL;")
             gprint("while ((n = ast_traverse_next(&att)) != NULL)")
             with scope():
-                gprint("// Base cases for type deduction")
-                switch("n->kind", {
-                    "TOK_CHAR_LIT": "n->md.type = TYPE_I32;",
-                    "TOK_I32_LIT": "n->md.type = TYPE_I32;",
-                    "TOK_F32_LIT": "n->md.type = TYPE_F32;",
-                    "TOK_BOOL_LIT": "n->md.type = TYPE_BOOL;",
-                }, default_case='')
-                pass
-
-                gprint("// Assign the correct type to each casting operator")
-                gprint(f'if ({one_of("n->kind", cast_ops)} && !{one_of("n->parent->kind", decl_ops)})')
+                gprint('if (n->md.type == TYPE_NONE)')
                 with scope():
-                    switch("n->kind", {
-                        "TOK_KW_INT": "n->md.type = TYPE_I32;",
-                        "TOK_KW_FLOAT": "n->md.type = TYPE_F32;",
-                        "TOK_KW_BOOL": "n->md.type = TYPE_BOOL;",
+                    gprint("type_deduce(n);")
 
-                    })
-
-                gprint("// Assign the correct type if the var declaration has a user listed type")
-                gprint(f'if {one_of("n->kind", decl_ops)}')
-                with scope():
-                    gprint('if (n->childs[0] && n->childs[0]->md.type == TYPE_NONE)')
-                    with scope():
-                        switch('n->childs[0]->kind', {
-                            'TOK_KW_INT': 'n->childs[0]->md.type = TYPE_I32;',
-                            'TOK_KW_FLOAT': 'n->childs[0]->md.type = TYPE_F32;',
-                            'TOK_KW_BOOL': 'n->childs[0]->md.type = TYPE_BOOL;',
-                        })
-                        pass
-
-                gprint("// Deduce type of the variable declarations")
-                gprint(f'if {one_of("n->kind", decl_ops)}')
-                with scope():
-                    gprint("ast_node_t *var_decl_type = n->childs[0];")
-                    gprint("ast_node_t *child_type = n->childs[2];")
-                    gprint("if (var_decl_type != NULL && child_type != NULL)")
-                    with scope():
-                        gprint("// We might have type mismatch")
-                        gprint("typemismatch_check(var_decl_type, child_type);")
-                    gprint("else if (child_type != NULL)")
-                    with scope():
-                        gprint("// Type deduce from child")
-                        gprint("n->md.type = n->childs[1]->md.type;")
-                    gprint("else")
-                    with scope():
-                        gprint("// Assume integer")
-                        gprint("n->md.type = TYPE_I32;")
 
 
 

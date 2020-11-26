@@ -11,6 +11,41 @@
 #include "types.h"
 #include "globals.h"
 
+void invalid_code_path(void)
+{
+    fprintf(stderr, "COMPILER INTERNAL ERROR --- Invalid code path");
+    fflush(stderr);
+    assert(0);
+}
+
+char *dpcc_type_as_str(enum DPCC_TYPE t)
+{
+    switch (t) {
+    default: {
+        invalid_code_path();
+    } break;
+    case TYPE_NONE: {
+        return "<NONE>";
+    } break;
+    case TYPE_I32: {
+        return "int";
+    } break;
+    case TYPE_F32: {
+        return "float";
+    } break;
+    case TYPE_BOOL: {
+        return "bool";
+    } break;
+    case TYPE_I32_ARRAY: {
+        return "int[]";
+    } break;
+    case TYPE_F32_ARRAY: {
+        return "float[]";
+    } break;
+    }
+    return NULL;
+}
+
 /// Equivalent to malloc
 void *dallnew(mctx_t *ctx, size_t size)
 {
@@ -216,9 +251,10 @@ void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
     hdr_string = sfcat(hdr_string, 0, "%s%s", indentation_level != 0 ? "--" : "", node->skind);
 
     fprintf(f,
-        " %-48s { kind: `%s`, lexeme: \"%s\", tok->loc=[[%d,%d], [%d,%d]] }\n",
+        " %-48s { kind: `%s`, type: %s, lexeme: \"%s\", tok->loc=[[%d,%d], [%d,%d]] }\n",
         hdr_string,
         node->skind,
+        dpcc_type_as_str(node->md.type),
         node->tok ? node->tok->lexeme : "",
         node->tok ? node->tok->loc.first_line : 0,
         node->tok ? node->tok->loc.first_column : 0,

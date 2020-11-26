@@ -72,6 +72,8 @@ enum DPCC_TYPE {
 
 typedef struct {
     enum DPCC_TYPE type;
+    int32_t array_len;
+
     union {
         char *addr;
         struct {

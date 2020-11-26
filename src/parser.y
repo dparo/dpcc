@@ -229,20 +229,22 @@ stmts:          stmts[car] stmt[self]                        { $$ = $car; push_c
         ;
 
 
-stmt:           assignment ";"                    { $$ = $1; }
-        |       print_stmt
-        |       decl ";"
-        |       if_stmt
-        |       for_stmt
-        |       while_stmt
-        |       do_while_stmt
+stmt:           expr[c] ";"[op]                   { $$ = NEW_NODE($op->tok, SEMICOLON); push_child($$, $c); }
+        |       print_stmt[c] ";"[op]             { $$ = NEW_NODE($op->tok, SEMICOLON); push_child($$, $c); }
+        |       decl[c] ";"[op]                   { $$ = NEW_NODE($op->tok, SEMICOLON); push_child($$, $c); }
+        |       if_stmt[c]                        { $$ = NEW_NODE($c->tok, SEMICOLON); push_child($$, $c); }
+        |       for_stmt[c]                       { $$ = NEW_NODE($c->tok, SEMICOLON); push_child($$, $c); }
+        |       while_stmt[c]                     { $$ = NEW_NODE($c->tok, SEMICOLON); push_child($$, $c); }
+        |       do_while_stmt[c]                  { $$ = NEW_NODE($c->tok, SEMICOLON); push_child($$, $c); }
         |       code_block
         |       ";"                               { $$ = NULL; }
         |       error                             {  }
         ;
 
-assignment:     id_ref[lhs] "="[op] expr[rhs]                 { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 2, CAST {$lhs, $rhs}); }
-print_stmt:     "print"[op] "(" expr[e] ")" ";"               { $$ = NEW_NODE($op->tok, KW_PRINT); push_child($$, $e); }
+assignment:     id_ref[lhs] "="[op] expr[rhs]                   { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 3, CAST {$lhs, $rhs, NULL}); }
+        |       id_ref[id] "[" expr[idx] "]" "="[op] expr[rhs]  { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 3, CAST {$id, $rhs, $idx}); }
+        ;
+print_stmt:     "print"[op] "(" expr[e] ")"                     { $$ = NEW_NODE($op->tok, KW_PRINT); push_child($$, $e); }
 
 
 decl:      integral_var_decl                                  { $$ = $1; if (!var_decl($1)) { PARSE_ERROR(); } }
@@ -258,9 +260,7 @@ list_elems:       list_elems[car] "," list_elem[self]  { $$ = $car; push_child($
         |         list_elem[self]
         ;
 
-list_elem:         I32_LIT { $$ = $1; }
-        |          F32_LIT { $$ = $1; }
-        |          id_ref  { $$ = $1; }
+list_elem:        expr  { $$ = $1; }
         ;
 
 integral_var_decl: "let"[op] ID[id]                                                             { $$ = NEW_NODE($op->tok, KW_LET); push_childs($$, 3, CAST {NULL, $id, NULL}); }
@@ -283,8 +283,8 @@ array_type:  sized_array_type    { $$ = $1; }
         ;
 
 
-sized_array_type:     "int"[t] "["[op] I32_LIT[n] "]"      { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST { $t, $n}); }
-        |             "float"[t] "["[op] I32_LIT[n] "]"    { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST { $t, $n}); }
+sized_array_type:     "int"[t] "["[op] I32_LIT[n] "]"      { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST {$t, $n}); }
+        |             "float"[t] "["[op] I32_LIT[n] "]"    { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST {$t, $n}); }
         ;
 
 unsized_array_type:   "int"[t] "["[op] "]"      { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST { $t, NULL}); }

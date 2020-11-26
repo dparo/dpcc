@@ -56,6 +56,9 @@ char (&ARRAY_LEN_HELPER(T (&array)[N]))[N];
             ARRAY_LEN_SIMPLE((int32_t[])ARGS(__VA_ARGS__)), \
     }
 
+void invalid_code_path(void);
+char *dpcc_type_as_str(enum DPCC_TYPE t);
+
 /// String format concat
 char *sfcat(char *string, int32_t string_len, char *fmt, ...)
     __attribute__((format(printf, 3, 4)));
