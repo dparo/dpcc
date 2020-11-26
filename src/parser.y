@@ -173,7 +173,7 @@
         // --- 2. Equality comparison operators are non associative by default. This avoids possible logical errors
         // --- 3. A right associative power operator
 
-%precedence             ASSIGN
+%right             ASSIGN
 %left                   LOR
 %left                   LAND
 %nonassoc               EQ NEQ
@@ -323,13 +323,15 @@ else_if_stmt:   "else" "if"[op] "(" expr[e] ")" code_block[cb]     { $$ = NEW_NO
         |       "else" "if" "(" error ")" code_block               {  }
 
 else_if_stmts:  else_if_stmts[car] else_if_stmt[eif]               { $$ = $car; push_child($car, $eif); }
-        |       %empty                                             { $$ = NULL; }
+        |       else_if_stmt[eif]                                  { $$ = $eif; }
         ;
 
 if_stmt:         "if"[op] "(" expr[e] ")" code_block[cb] else_if_stmts[car]                           { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, $car, NULL}); }
-        |        "if" "(" error ")" code_block else_if_stmts
+        |        "if" "(" error ")" code_block else_if_stmts                                          {  }
         |        "if"[op] "(" expr[e] ")" code_block[cb] else_if_stmts[car] "else" code_block[ecb]    { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, $car, $ecb}); }
-        |        "if" "(" error ")" code_block else_if_stmts "else" code_block           {  }
+        |        "if" "(" error ")" code_block else_if_stmts "else" code_block                        {  }
+        |        "if"[op] "(" expr[e] ")" code_block[cb] "else" code_block[ecb]                       { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, NULL, $ecb}); }
+        |        "if" "(" error ")" code_block "else" code_block                                      {  }
         ;
 
 for_stmt:       "for"[op] "(" for_1[f1] ";" for_2[f2] ";" for_3[f3] ")" code_block[cb]        { $$ = NEW_NODE($op->tok, KW_FOR); push_childs($$, 4, CAST {$f1, $f2, $f3, $cb} ); }
