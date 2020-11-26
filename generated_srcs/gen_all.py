@@ -112,12 +112,12 @@ def switch(elem, dict, default_case = DEFAULT_CASE):
 
 
 
-decl_ops = [
+DECL_OPS = [
     "TOK_KW_FN",
     "TOK_KW_LET"
 ]
 
-cast_ops = [
+CAST_OPS = [
     "TOK_KW_INT",
     "TOK_KW_FLOAT",
     "TOK_KW_BOOL",
@@ -315,7 +315,7 @@ def generate_src_file():
         pass
 
         gprint("// Assign the correct type to each casting operator")
-        gprint(f'if ({one_of("n->kind", cast_ops)} && !{one_of("n->parent->kind", decl_ops)})')
+        gprint(f'if ({one_of("n->kind", CAST_OPS)} && !{one_of("n->parent->kind", DECL_OPS)})')
         with scope():
             switch("n->kind", {
                 "TOK_KW_INT": "n->md.type = TYPE_I32;",
@@ -325,7 +325,7 @@ def generate_src_file():
             })
 
         gprint("// Assign the correct type if the var declaration has a user listed type")
-        gprint(f'if (c0 && ({one_of("n->kind", decl_ops)}))')
+        gprint(f'if (c0 && ({one_of("n->kind", DECL_OPS)}))')
         with scope():
             gprint('if (c0->md.type == TYPE_NONE && c0->kind != TOK_OPEN_BRACKET)')
             with scope():
@@ -346,7 +346,7 @@ def generate_src_file():
             gprint("n->md.type = c0->md.type;")
 
         gprint("// Deduce type of variable declarations")
-        gprint(f'if {one_of("n->kind", decl_ops)}')
+        gprint(f'if {one_of("n->kind", DECL_OPS)}')
         with scope():
             gprint('// Deduce type of integral variable declarations')
             gprint(f'if ((c0 == NULL) || (c0->kind != TOK_OPEN_BRACKET))')
@@ -370,6 +370,12 @@ def generate_src_file():
                 gprint('deduce_array_type(n);')
 
 
+        gprint('// Deduce the type of each identifier used')
+        gprint(f'if (n->kind == TOK_ID && n->parent && !{one_of("n->parent->kind", DECL_OPS)})')
+        with scope():
+            gprint('assert(n->decl != NULL);')
+            gprint('assert(n->decl->md.type != TYPE_NONE);')
+            gprint('n->md.type = n->decl->md.type;')
 
         gprint("// Deduce type of expression and operators: This is the most demanding and difficult part")
         gprint('if (n->md.type == 0)')

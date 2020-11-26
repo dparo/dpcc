@@ -116,7 +116,7 @@ static void type_deduce_expr_and_operators(ast_node_t *n)
     ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
     ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
     ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;
-    if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_OPEN_BRACKET)))
+    if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_AR_SUBSCR)))
     {
         if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT)))
         {
@@ -202,7 +202,7 @@ static void type_deduce_expr_and_operators(ast_node_t *n)
                 yynerrs += 1;
             }
         }
-        if (((n->kind == TOK_OPEN_BRACKET)))
+        if (((n->kind == TOK_AR_SUBSCR)))
         {
             if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_I32_ARRAY) && (n->childs[1]->md.type == TYPE_I32)))
             {
@@ -367,6 +367,13 @@ static void type_deduce(ast_node_t *n)
         {
             deduce_array_type(n);
         }
+    }
+    // Deduce the type of each identifier used
+    if (n->kind == TOK_ID && n->parent && !((n->parent->kind == TOK_KW_FN) || (n->parent->kind == TOK_KW_LET)))
+    {
+        assert(n->decl != NULL);
+        assert(n->decl->md.type != TYPE_NONE);
+        n->md.type = n->decl->md.type;
     }
     // Deduce type of expression and operators: This is the most demanding and difficult part
     if (n->md.type == 0)

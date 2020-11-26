@@ -89,12 +89,12 @@ LOGICAL_OPERATORS = OpsBundle(
 
 ARRAY_OPERATORS = OpsBundle (
     [
-        "TOK_OPEN_BRACKET",
+        "TOK_AR_SUBSCR",
     ],
     [
         ["int", ["int[]", "int"]],
         ["float", ["float[]", "int"]]
-    ]
+    ],
 )
 
 

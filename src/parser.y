@@ -241,10 +241,9 @@ stmt:           expr[c] ";"[op]                   { $$ = NEW_NODE($op->tok, SEMI
         |       error                             {  }
         ;
 
-assignment:     pID[lhs] "="[op] expr[rhs]                   { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 3, CAST {$lhs, $rhs, NULL}); }
-        |       pID[id] "[" expr[idx] "]" "="[op] expr[rhs]  { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 3, CAST {$id, $rhs, $idx}); }
+assignment:     expr[lhs] "="[op] expr[rhs]                   { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 2, CAST {$lhs, $rhs}); }
         ;
-print_stmt:     "print"[op] "(" expr[e] ")"                     { $$ = NEW_NODE($op->tok, KW_PRINT); push_child($$, $e); }
+print_stmt:     "print"[op] "(" expr[e] ")"                   { $$ = NEW_NODE($op->tok, KW_PRINT); push_child($$, $e); }
 
 
 decl:      integral_var_decl                                  { $$ = $1; if (!var_decl($1)) { PARSE_ERROR(); } }
