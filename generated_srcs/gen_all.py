@@ -228,6 +228,7 @@ def generate_src_file():
             "TOK_I32_LIT": "n->md.type = TYPE_I32;",
             "TOK_F32_LIT": "n->md.type = TYPE_F32;",
             "TOK_BOOL_LIT": "n->md.type = TYPE_BOOL;",
+            "TOK_ID": "if (n->decl) n->md.type = n->decl->md.type;",
         }, default_case='')
         pass
 

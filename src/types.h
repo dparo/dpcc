@@ -97,6 +97,10 @@ typedef struct ast_node {
     int32_t num_childs;
     struct ast_node **childs;
 
+    /// Pointer to the declaration of this variable
+    /// Only used on identifiers in statements, expressions, etc...
+    struct ast_node *decl;
+
     union {
         i32 as_i32;
         f32 as_f32;

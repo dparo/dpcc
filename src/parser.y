@@ -343,7 +343,17 @@ do_while_stmt:  "do"[op] code_block[cb] "while" "(" expr[e] ")" ";"  { $$ = NEW_
         ;
 
 
-id_ref: ID                                                    { $$ = $1; NODE_KIND($$, ID); if (!symtable_lookup($$->tok)) { dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Use of undeclared identifier `%s`", $$->tok->lexeme); PARSE_ERROR(); } }
+id_ref: ID  {
+        $$ = $1;
+        NODE_KIND($$, ID);
+        ast_node_t *decl = symtable_lookup($$->tok);
+        if (!decl) {
+                dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Use of undeclared identifier `%s`", $$->tok->lexeme);
+                PARSE_ERROR();
+        } else {
+                $$->decl = decl;
+        }
+}
 
 
 expr:          "(" error ")"                                       {  }

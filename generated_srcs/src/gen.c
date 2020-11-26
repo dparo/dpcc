@@ -63,6 +63,11 @@ static void type_deduce(ast_node_t *n)
             n->md.type = TYPE_BOOL;
         }
         break;
+        case TOK_ID:
+        {
+            if (n->decl) n->md.type = n->decl->md.type;
+        }
+        break;
     }
     // Assign the correct type to each casting operator
     if (((n->kind == TOK_KW_INT) || (n->kind == TOK_KW_FLOAT) || (n->kind == TOK_KW_BOOL)) && !((n->parent->kind == TOK_KW_FN) || (n->parent->kind == TOK_KW_LET)))
