@@ -113,3 +113,11 @@ ALL_OPS = [
 for bundle in ALL_BUNDLES:
     for yytokenstype in bundle.yytokentypes:
         ALL_OPS.append(yytokenstype)
+
+
+CONTROL_FLOW_OPS = [
+    "TOK_KW_IF",
+    "TOK_KW_DO",
+    "TOK_KW_WHILE",
+    "TOK_KW_FOR",
+]

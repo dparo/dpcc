@@ -5,7 +5,7 @@ from datetime import datetime
 import itertools
 
 from utils import bin2header
-from ops import ALL_BUNDLES, ALL_OPS, type_to_dpcc_type
+from ops import ALL_BUNDLES, ALL_OPS, CONTROL_FLOW_OPS, type_to_dpcc_type
 
 INVALID_CODE_PATH = "invalid_code_path();"
 DEFAULT_CASE = INVALID_CODE_PATH
@@ -294,10 +294,6 @@ def generate_src_file():
     gprint()
     gprint('static void type_deduce_expr_and_operators(ast_node_t *n)')
     with scope():
-        gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
-        gprint("ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;")
-        gprint("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
-        gprint("ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;")
         gen_ops_type_deduction_code("n")
 
 
@@ -306,9 +302,7 @@ def generate_src_file():
     with scope():
         gprint("// Utilities vars t oeasily access childs")
         gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
-        gprint("ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;")
         gprint("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
-        gprint("ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;")
 
         gprint("// Base cases for type deduction")
         switch("n->kind", {
@@ -419,12 +413,10 @@ def generate_src_file():
     gprint()
     gprint("static void setup_addrs_and_jmp_tables(ast_node_t *n)")
     with scope():
-        gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
-        gprint("ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;")
-        gprint("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
-        gprint("ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;")
-
-
+        #gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
+        #gprint("ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;")
+        #gprint("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
+        #gprint("ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;")
 
         gprint('if (!n->md.addr)')
         with scope():
@@ -435,6 +427,24 @@ def generate_src_file():
                 gprint('assert(n->md.type != TYPE_I32_ARRAY);')
                 gprint('assert(n->md.type != TYPE_F32_ARRAY);')
                 gprint('n->md.addr = gen_tmp_var(n->md.type);')
+
+        gprint(f'if ({one_of("n->kind", CONTROL_FLOW_OPS)})')
+        with scope():
+            gprint('if (n->kind == TOK_KW_WHILE && n->md.jmp_bot == NULL)')
+            with scope():
+                gprint('// Handle the initialization of n->md.jmp_bot for the `while` statement')
+            gprint('else if (n->kind == TOK_KW_DO && n->md.jmp_top == NULL)')
+            with scope():
+                gprint('// Handle the initiialization of n->md.jmp_top for the `do { } while` statement')
+            gprint('else if (n->kind == TOK_KW_FOR && n->md.jmp_top == NULL)')
+            with scope():
+                gprint('// Handle the initialization of n->md.jmp_top for the `for` statements')
+            gprint('else if ((n->kind == TOK_KW_IF) && (n->md.jmp_next == NULL || n->md.jmp_bot == NULL))')
+            with scope():
+                gprint('// Handle jump labels for if statements')
+            gprint('else')
+            with scope():
+                gprint('invalid_code_path();')
 
 
     gprint()

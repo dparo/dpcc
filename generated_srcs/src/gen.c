@@ -118,10 +118,6 @@ static void deduce_array_type(ast_node_t *n)
 
 static void type_deduce_expr_and_operators(ast_node_t *n)
 {
-    ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
-    ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
-    ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
-    ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;
     if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_AR_SUBSCR)))
     {
         if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT)))
@@ -231,9 +227,7 @@ static void type_deduce(ast_node_t *n)
 {
     // Utilities vars t oeasily access childs
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
-    ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
     ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
-    ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;
     // Base cases for type deduction
 
     switch (n->kind)
@@ -442,10 +436,6 @@ static char *gen_tmp_var(enum DPCC_TYPE type)
 
 static void setup_addrs_and_jmp_tables(ast_node_t *n)
 {
-    ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
-    ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
-    ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
-    ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;
     if (!n->md.addr)
     {
         // Generate address for all temporary computations performed by operators
@@ -455,6 +445,29 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
             assert(n->md.type != TYPE_I32_ARRAY);
             assert(n->md.type != TYPE_F32_ARRAY);
             n->md.addr = gen_tmp_var(n->md.type);
+        }
+    }
+    if (((n->kind == TOK_KW_IF) || (n->kind == TOK_KW_DO) || (n->kind == TOK_KW_WHILE) || (n->kind == TOK_KW_FOR)))
+    {
+        if (n->kind == TOK_KW_WHILE && n->md.jmp_bot == NULL)
+        {
+            // Handle the initialization of n->md.jmp_bot for the `while` statement
+        }
+        else if (n->kind == TOK_KW_DO && n->md.jmp_top == NULL)
+        {
+            // Handle the initiialization of n->md.jmp_top for the `do { } while` statement
+        }
+        else if (n->kind == TOK_KW_FOR && n->md.jmp_top == NULL)
+        {
+            // Handle the initialization of n->md.jmp_top for the `for` statements
+        }
+        else if ((n->kind == TOK_KW_IF) && (n->md.jmp_next == NULL || n->md.jmp_bot == NULL))
+        {
+            // Handle jump labels for if statements
+        }
+        else
+        {
+            invalid_code_path();
         }
     }
 }
