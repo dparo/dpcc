@@ -284,6 +284,12 @@ def generate_src_file():
                             gen_info("&c0->childs[1]->tok->loc", '"Expected number of elements: `%d`"', ['array_type_len'])
                             gen_info("&c2->tok->loc", '"Number of elements got: `%d`"', ['init_list_len'])
 
+                        gprint('if (c2 && init_list_len <= 0)')
+                        with scope():
+                            gen_err("&c2->tok->loc", '"Number of elements in initializer list is invalid"')
+                            gen_info("&c2->tok->loc", '"Cannot create zero or negative sized array"')
+
+
                         gprint("// Now make sure that each type in the initializer list is correct")
                         gprint("for (int32_t i = 0; i < c2->num_childs; i++)")
                         with scope():
@@ -292,14 +298,13 @@ def generate_src_file():
                                 gen_err("&c2->childs[i]->tok->loc", '"Type mismatch in array initializer list"')
                                 gen_info("&c0->childs[0]->tok->loc", '"Expected `%s`"', ["dpcc_type_as_str(c0->childs[0]->md.type)"])
                                 gen_info("&c2->childs[i]->tok->loc", '"Got `%s`"', ["dpcc_type_as_str(c2->childs[i]->md.type)"])
-                    gprint("if (c0->childs[1] == NULL)")
-                    with scope():
-                        gprint("// Number of elements are not specified we need to deduce them")
-
                     gprint("else")
                     with scope():
-                        gprint("// Number of elements are specified. Make sure that they match with the initializer list")
-
+                        gprint("// We don't have an initializer list, so make sure that at least the type array is sized")
+                        gprint("if (c0 == NULL || c0->childs[1] == NULL || c0->childs[1]->kind != TOK_I32_LIT || c0->childs[1]->md.type != TYPE_I32)")
+                        with scope():
+                            gen_err("&c0->tok->loc", '"Size of the array must be specified"')
+                            gen_info("&c0->tok->loc", '"Either specify the size inside the square brackets, or provide an initializer list"')
 
 
 

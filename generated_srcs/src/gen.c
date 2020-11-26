@@ -218,6 +218,12 @@ static void type_deduce(ast_node_t *n)
                         dpcc_log(DPCC_SEVERITY_INFO, &c0->childs[1]->tok->loc, "Expected number of elements: `%d`",  array_type_len);
                         dpcc_log(DPCC_SEVERITY_INFO, &c2->tok->loc, "Number of elements got: `%d`",  init_list_len);
                     }
+                    if (c2 && init_list_len <= 0)
+                    {
+                        dpcc_log(DPCC_SEVERITY_ERROR, &c2->tok->loc, "Number of elements in initializer list is invalid" );
+                        yynerrs += 1;
+                        dpcc_log(DPCC_SEVERITY_INFO, &c2->tok->loc, "Cannot create zero or negative sized array" );
+                    }
                     // Now make sure that each type in the initializer list is correct
                     for (int32_t i = 0; i < c2->num_childs; i++)
                     {
@@ -230,13 +236,15 @@ static void type_deduce(ast_node_t *n)
                         }
                     }
                 }
-                if (c0->childs[1] == NULL)
-                {
-                    // Number of elements are not specified we need to deduce them
-                }
                 else
                 {
-                    // Number of elements are specified. Make sure that they match with the initializer list
+                    // We don't have an initializer list, so make sure that at least the type array is sized
+                    if (c0 == NULL || c0->childs[1] == NULL || c0->childs[1]->kind != TOK_I32_LIT || c0->childs[1]->md.type != TYPE_I32)
+                    {
+                        dpcc_log(DPCC_SEVERITY_ERROR, &c0->tok->loc, "Size of the array must be specified" );
+                        yynerrs += 1;
+                        dpcc_log(DPCC_SEVERITY_INFO, &c0->tok->loc, "Either specify the size inside the square brackets, or provide an initializer list" );
+                    }
                 }
             }
             // Forward the same type to the keyword let
