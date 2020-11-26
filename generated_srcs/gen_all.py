@@ -384,6 +384,18 @@ def generate_src_file():
 
 
 
+        gprint('// Check sensisble array subscript bounds')
+        gprint('if (n->kind == TOK_AR_SUBSCR && n->childs[1]->kind == TOK_I32_LIT && n->childs[1]->md.type == TYPE_I32)')
+        with scope():
+            gprint('int32_t subscript_idx = n->childs[1]->val.as_i32;')
+            gprint('int32_t array_len = n->childs[0]->decl->md.array_len;')
+            gprint('if (subscript_idx < 0 || (subscript_idx >= array_len))')
+            with scope():
+                gen_err("&n->childs[1]->tok->loc", '"Invalid subscript constant"')
+                gen_info("&n->childs[0]->decl->tok->loc", '"As specified from declaration index should be in [%d, %d)"', ["0", "array_len"])
+                gen_info("&n->childs[1]->tok->loc", '"Got `%d` instead"', ["subscript_idx"])
+
+
 
 
 

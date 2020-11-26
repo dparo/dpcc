@@ -380,6 +380,19 @@ static void type_deduce(ast_node_t *n)
     {
         type_deduce_expr_and_operators(n);
     }
+    // Check sensisble array subscript bounds
+    if (n->kind == TOK_AR_SUBSCR && n->childs[1]->kind == TOK_I32_LIT && n->childs[1]->md.type == TYPE_I32)
+    {
+        int32_t subscript_idx = n->childs[1]->val.as_i32;
+        int32_t array_len = n->childs[0]->decl->md.array_len;
+        if (subscript_idx < 0 || (subscript_idx >= array_len))
+        {
+            dpcc_log(DPCC_SEVERITY_ERROR, &n->childs[1]->tok->loc, "Invalid subscript constant" );
+            yynerrs += 1;
+            dpcc_log(DPCC_SEVERITY_INFO, &n->childs[0]->decl->tok->loc, "As specified from declaration index should be in [%d, %d)",  0, array_len);
+            dpcc_log(DPCC_SEVERITY_INFO, &n->childs[1]->tok->loc, "Got `%d` instead",  subscript_idx);
+        }
+    }
 }
 void check_and_optimize_ast(void)
 {
