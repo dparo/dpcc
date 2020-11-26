@@ -18,7 +18,7 @@ int32_t G_codegen_i32_cnt;
 int32_t G_codegen_f32_cnt;
 int32_t G_codegen_bool_cnt;
 
-int32_t G_codegen_jmp_inc = 0;
+int32_t G_codegen_jmp_cnt = 0;
 
 void clear_all_global_vars()
 {
@@ -34,7 +34,7 @@ void clear_all_global_vars()
     G_codegen_f32_cnt = 0;
     G_codegen_bool_cnt = 0;
 
-    G_codegen_jmp_inc = 0;
+    G_codegen_jmp_cnt = 0;
 
     tokens_seq_clear(&G_tok_seq);
 

@@ -60,7 +60,7 @@ void invalid_code_path(void);
 char *dpcc_type_as_str(enum DPCC_TYPE t);
 
 /// String format concat
-char *sfcat(char *string, int32_t string_len, char *fmt, ...)
+void sfcat(mctx_t *ctx, str_t *s, char *fmt, ...)
     __attribute__((format(printf, 3, 4)));
 
 /// Equivalent to malloc
@@ -77,7 +77,7 @@ bool dallarr(mctx_t *ctx, void **ptr, size_t num_elems, size_t sizeof_each_elem)
 /// Steal memory allocations from typical malloc
 void *dallstl(mctx_t *ctx, void *ptr);
 
-///
+char *dallfmtv(mctx_t *ctx, char *fmt, va_list ap);
 char *dallfmt(mctx_t *ctx, char *fmt, ...)
     __attribute__((format(printf, 2, 3)));
 

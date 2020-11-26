@@ -24,6 +24,10 @@ FILE *open_from_string(char *string);
 void ast_traversal_begin(ast_traversal_t *t);
 ast_node_t *ast_traverse_next(ast_traversal_t *t);
 
+/// Mostly used for internal reasons and for the code generation pass
+void ast_traversal_push(ast_traversal_t *t, ast_node_t *parent, int32_t current_child);
+bool ast_traversal_pop(ast_traversal_t *t);
+
 void dpcc_reset(void);
 
 bool lex(char *filepath, FILE *input_stream);

@@ -192,7 +192,7 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
     return success && yynerrs == 0;
 }
 
-static void ast_traversal_push(ast_traversal_t *t, ast_node_t *parent, int32_t current_child)
+void ast_traversal_push(ast_traversal_t *t, ast_node_t *parent, int32_t current_child)
 {
     t->stack_nodes = dallrsz(&G_allctx, t->stack_nodes, (t->stack_cnt + 1) * sizeof(parent));
     t->stack_childs = dallrsz(&G_allctx, t->stack_childs, (t->stack_cnt + 1) * sizeof(current_child));
@@ -201,7 +201,7 @@ static void ast_traversal_push(ast_traversal_t *t, ast_node_t *parent, int32_t c
     t->stack_childs[t->stack_cnt - 1] = current_child;
 }
 
-static inline bool ast_traversal_pop(ast_traversal_t *t)
+inline bool ast_traversal_pop(ast_traversal_t *t)
 {
     if (t->stack_cnt == 0) {
         return false;

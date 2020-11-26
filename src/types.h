@@ -26,6 +26,11 @@ typedef ptrdiff_t isize;
 typedef char *cstr_t;
 
 typedef struct {
+    char *cstr;
+    int32_t len;
+} str_t;
+
+typedef struct {
     int32_t *buf;
     isize cnt;
 } int32_array_t, i32_array_t, int32_t_array_t;

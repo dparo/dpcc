@@ -132,17 +132,30 @@ bool dallarr(mctx_t *ctx, void **ptr, size_t num_elems, size_t sizeof_each_elem)
     return false;
 }
 
-char *dallfmt(mctx_t *ctx, char *fmt, ...)
+char *dallfmtv(mctx_t *ctx, char *fmt, va_list ap)
 {
-    va_list ap;
-    va_start(ap, fmt);
+    va_list inner0;
+    va_list inner1;
+    va_copy(inner0, ap);
+    va_copy(inner1, ap);
+
     int32_t chars_to_write = vsnprintf(NULL, 0, fmt, ap);
+    va_end(inner0);
+
     char *result = dallnew(ctx, chars_to_write + 2);
     result[chars_to_write] = 0;
     result[chars_to_write + 1] = 0;
 
-    va_start(ap, fmt);
     vsnprintf(result, chars_to_write + 1, fmt, ap);
+    va_end(inner1);
+    return result;
+}
+
+char *dallfmt(mctx_t *ctx, char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    char *result = dallfmtv(ctx, fmt, ap);
     va_end(ap);
     return result;
 }
@@ -258,16 +271,16 @@ void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
 {
     assert(node);
 
-    char *hdr_string = NULL;
+    str_t hdr_str = { 0 };
     for (int32_t i = 0; i < indentation_level; i++) {
-        hdr_string = sfcat(hdr_string, 0, "  |");
+        sfcat(&G_allctx, &hdr_str, "  |");
     }
 
-    hdr_string = sfcat(hdr_string, 0, "%s%s", indentation_level != 0 ? "--" : "", node->skind);
+    sfcat(&G_allctx, &hdr_str, "%s%s", indentation_level != 0 ? "--" : "", node->skind);
 
     fprintf(f,
         " %-48s { kind: `%s`, md.type: %s, md.addr: %s, md.array_len: %d, lexeme: \"%s\", tok->loc=[[%d,%d], [%d,%d]] }\n",
-        hdr_string,
+        hdr_str.cstr,
         node->skind,
         dpcc_type_as_str(node->md.type),
         node->md.addr,
@@ -277,21 +290,20 @@ void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
         node->tok ? node->tok->loc.first_column : 0,
         node->tok ? node->tok->loc.last_line : 0,
         node->tok ? node->tok->loc.last_column : 0);
-    free(hdr_string);
+    dalldel(&G_allctx, hdr_str.cstr);
 }
 
 void print_token(FILE *f, token_t *t)
 {
-    char *hdr_string = NULL;
-
-    hdr_string = sfcat(hdr_string, 0, "%-8d (%s)", t->idx, t->skind);
+    str_t hdr_str = { 0 };
+    sfcat(&G_allctx, &hdr_str, "%-8d (%s)", t->idx, t->skind);
     fprintf(f, "%-48s { lexeme = '%s', yylloc = [[%d, %d], [%d, %d]] }\n",
-        hdr_string,
+        hdr_str.cstr,
         t->lexeme,
         t->loc.first_line, t->loc.first_column,
         t->loc.last_line, t->loc.last_column);
 
-    free(hdr_string);
+    dalldel(&G_allctx, hdr_str.cstr);
 }
 
 ast_node_t *new_node(token_t *t, int32_t kind, char *skind)
@@ -384,27 +396,22 @@ bool str_to_bool(char *string, bool *out)
 }
 
 /// String format concat
-char *sfcat(char *string, int32_t string_len, char *fmt, ...)
+void sfcat(mctx_t *ctx, str_t *s, char *fmt, ...)
 {
-    if (string == NULL || string[0] == '\0') {
-        string = calloc(1, 1);
-        string_len = 0;
-    } else if (string_len == 0) {
-        string_len = strlen(string);
-    }
+    assert(s);
 
     va_list ap;
-
     va_start(ap, fmt);
     int32_t chars_to_write = vsnprintf(NULL, 0, fmt, ap);
-    char *result = realloc(string, string_len + chars_to_write + 2);
-    result[string_len + chars_to_write + 1] = 0;
+    s->cstr = dallrsz(ctx, s->cstr, s->len + chars_to_write + 1);
+    s->cstr[s->len + chars_to_write + 1] = 0;
 
-    char *bumped = result + string_len;
+    char *bumped = s->cstr + s->len;
     va_start(ap, fmt);
     vsnprintf(bumped, chars_to_write + 1, fmt, ap);
     va_end(ap);
-    return result;
+
+    s->len += chars_to_write;
 }
 
 char *get_current_working_dir(void)

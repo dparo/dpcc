@@ -409,6 +409,10 @@ def generate_src_file():
 
         gprint('return NULL;')
 
+    gprint()
+    gprint('static char *gen_tmp_label()')
+    with scope():
+        gprint('return dallfmt(&G_allctx, "__l%d", G_codegen_jmp_cnt++);')
 
     gprint()
     gprint("static void setup_addrs_and_jmp_tables(ast_node_t *n)")
@@ -432,16 +436,17 @@ def generate_src_file():
         with scope():
             gprint('if (n->kind == TOK_KW_WHILE && n->md.jmp_bot == NULL)')
             with scope():
-                gprint('// Handle the initialization of n->md.jmp_bot for the `while` statement')
+                gprint('n->md.jmp_bot = gen_tmp_label();')
             gprint('else if (n->kind == TOK_KW_DO && n->md.jmp_top == NULL)')
             with scope():
-                gprint('// Handle the initiialization of n->md.jmp_top for the `do { } while` statement')
+                gprint('n->md.jmp_top = gen_tmp_label();')
             gprint('else if (n->kind == TOK_KW_FOR && n->md.jmp_top == NULL)')
             with scope():
-                gprint('// Handle the initialization of n->md.jmp_top for the `for` statements')
+                gprint('n->md.jmp_top = gen_tmp_label();')
             gprint('else if ((n->kind == TOK_KW_IF) && (n->md.jmp_next == NULL || n->md.jmp_bot == NULL))')
             with scope():
-                gprint('// Handle jump labels for if statements')
+                gprint('n->md.jmp_next = gen_tmp_label();')
+                gprint('n->md.jmp_bot = gen_tmp_label();')
             gprint('else')
             with scope():
                 gprint('invalid_code_path();')
@@ -462,10 +467,58 @@ def generate_src_file():
                 gprint("setup_addrs_and_jmp_tables(n);")
 
 
+    gprint()
+    gprint("static ast_node_t *codegen_traverse_next(ast_traversal_t *t, bool *downside_traversal)")
+    with scope():
+        gprint('*downside_traversal = false;')
+        gprint('if (t->stack_cnt == 0)')
+        with scope():
+            gprint('return NULL;')
+
+        gprint('while (t->stack_childs[t->stack_cnt - 1] < t->stack_nodes[t->stack_cnt - 1]->num_childs)')
+        with scope():
+            gprint('int32_t ci = t->stack_childs[t->stack_cnt - 1];')
+            gprint('ast_node_t *child = NULL;')
+
+            gprint('while ((ci < t->stack_nodes[t->stack_cnt - 1]->num_childs) && ((child = t->stack_nodes[t->stack_cnt - 1]->childs[ci]) == NULL))')
+            with scope():
+                gprint('ci++;')
+            gprint('if (child)')
+            with scope():
+                gprint('// Assert that the parent backpointer of the child is indeed correct')
+                gprint('assert(child->parent == t->stack_nodes[t->stack_cnt - 1]);')
+
+                gprint('t->stack_childs[t->stack_cnt - 1] = ci + 1;')
+                gprint('ast_traversal_push(t, child, 0);')
+                gprint('*downside_traversal = true;')
+                gprint('return t->stack_nodes[t->stack_cnt - 1];')
+            gprint('else')
+            with scope():
+                gprint('break;')
+
+        gprint('ast_node_t *nvcs = t->stack_nodes[t->stack_cnt - 1];')
+        gprint('ast_traversal_pop(t);')
+
+        gprint('if (nvcs->kind == TOK_YYEOF)')
+        with scope():
+            gprint('return NULL;')
+
+        gprint('return nvcs;')
+
+
+    gprint()
+    gprint('char *codegen(void)')
+    with scope():
+        gprint("str_t str = {0};")
+        gprint('ast_traversal_t att = {0};')
+        gprint('ast_traversal_begin(&att);')
+
+        gprint("return str.cstr;")
+
 def generate_hdr_file():
     gprint(common_boilerplate)
     gprint("void check_and_optimize_ast(void);")
-    gprint("void codegen(void);")
+    gprint("char *codegen(void);")
 
 def main():
 

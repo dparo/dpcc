@@ -1,5 +1,5 @@
 //
-// generated from /home/dparo/Dropbox/UniversityProjects/compilatori/generated_srcs/gen_all.py
+// generated from /home/dparo/develop/dpcc/generated_srcs/gen_all.py
 //
 
 #include <stdbool.h>
@@ -18,4 +18,4 @@
 #include "dpcc.h"
 
 void check_and_optimize_ast(void);
-void codegen(void);
+char *codegen(void);

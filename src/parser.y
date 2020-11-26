@@ -436,13 +436,13 @@ int yyreport_syntax_error (const yypcontext_t *ctx)
 
 
     if (expected[0] != YY_YYEMPTY) {
-        char *expected_string = NULL;
+        str_t expected_str = {0};
 
         for (int32_t i = 0; i < num_expected; i++) {
-            expected_string = sfcat(expected_string, 0, "`%s`%s", yysymbol_name(expected[i]), i == (num_expected - 1) ? "" : "  ") ;
+            sfcat(&G_allctx, &expected_str, "`%s`%s", yysymbol_name(expected[i]), i == (num_expected - 1) ? "" : "  ") ;
         }
-        dpcc_log(DPCC_SEVERITY_INFO, loc, "Expected one of   %s", expected_string);
-        free(expected_string);
+        dpcc_log(DPCC_SEVERITY_INFO, loc, "Expected one of   %s", expected_str.cstr);
+        dalldel(&G_allctx, expected_str.cstr);
     }
 
     free(expected);
