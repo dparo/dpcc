@@ -1,5 +1,5 @@
 let b = 10.0;
-let a: float[] = {1.0, b};
+let a: float[] = {1.0, 4.0, 5.0, 6.0};
 
 for (let i = 0; i < 10; i++) {
 

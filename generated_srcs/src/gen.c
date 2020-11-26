@@ -178,51 +178,66 @@ static void type_deduce(ast_node_t *n)
         else
         {
             // Deduce type of array variable declarations
-            // The element inner type must be always provided to avoid ambiguity
-            // Thus we need to fix 2 cases: No array boundaries are provided and thus must be dedudeced from the initializer list size
-            // The initializer list size has not homogeneous types
-            int32_t init_list_len = c2 != NULL ? c2->childs[0]->num_childs : 0;
-            if (c2)
+            assert((c0->childs[1] == NULL) || (c0->childs[1]->kind == TOK_I32_LIT && c0->childs[1]->md.type == TYPE_I32));
+            int32_t array_type_len = c0->childs[1] ? c0->childs[1]->val.as_i32 : 0;
+            int32_t init_list_len = c2 != NULL ? c2->num_childs : 0;
+            if(c0->childs[1] && array_type_len <= 0)
             {
-                // Initializer list is provided
-                enum DPCC_TYPE expected_type;
-                switch (c0->md.type)
-                {
-                    default:
-                    {
-                        invalid_code_path();
-                    }
-                    break;
-                    case TYPE_I32_ARRAY:
-                    {
-                        expected_type = TYPE_I32;
-                    }
-                    break;
-                    case TYPE_F32_ARRAY:
-                    {
-                        expected_type = TYPE_F32;
-                    }
-                    break;
-                }
-                // Now make sure that each type in the initializer list is correct
-                for (int32_t i = 0; i < c2->num_childs; i++)
-                {
-                    if (c2->childs[i] && c2->childs[i]->md.type != expected_type)
-                    {
-                        dpcc_log(DPCC_SEVERITY_ERROR, &c2->childs[i]->tok->loc, "Type mismatch in array initializer list" );
-                        yynerrs += 1;
-                        dpcc_log(DPCC_SEVERITY_INFO, &c0->childs[0]->tok->loc, "Expected: `%s`",  dpcc_type_as_str(c0->childs[0]->md.type));
-                        dpcc_log(DPCC_SEVERITY_INFO, &c2->childs[i]->tok->loc, "Got: `%s`",  dpcc_type_as_str(c2->childs[i]->md.type));
-                    }
-                }
-            }
-            if (c0->childs[1] == NULL)
-            {
-                // Number of elements are not specified we need to deduce them
+                dpcc_log(DPCC_SEVERITY_ERROR, &c0->childs[1]->tok->loc, "The number of elements in an array must be a positive integer" );
+                yynerrs += 1;
+                dpcc_log(DPCC_SEVERITY_INFO, &c0->childs[1]->tok->loc, "Got `%d`",  array_type_len);
             }
             else
             {
-                // Number of elements are specified. Make sure that they match with the initializer list
+                if (c2)
+                {
+                    // Initializer list is provided
+                    enum DPCC_TYPE expected_type;
+                    switch (c0->md.type)
+                    {
+                        default:
+                        {
+                            invalid_code_path();
+                        }
+                        break;
+                        case TYPE_I32_ARRAY:
+                        {
+                            expected_type = TYPE_I32;
+                        }
+                        break;
+                        case TYPE_F32_ARRAY:
+                        {
+                            expected_type = TYPE_F32;
+                        }
+                        break;
+                    }
+                    if (c0->childs[1] && init_list_len != array_type_len)
+                    {
+                        dpcc_log(DPCC_SEVERITY_ERROR, &c2->tok->loc, "Number of elements in initializer list do not match" );
+                        yynerrs += 1;
+                        dpcc_log(DPCC_SEVERITY_INFO, &c0->childs[1]->tok->loc, "Expected number of elements: `%d`",  array_type_len);
+                        dpcc_log(DPCC_SEVERITY_INFO, &c2->tok->loc, "Number of elements got: `%d`",  init_list_len);
+                    }
+                    // Now make sure that each type in the initializer list is correct
+                    for (int32_t i = 0; i < c2->num_childs; i++)
+                    {
+                        if (c2->childs[i] && c2->childs[i]->md.type != expected_type)
+                        {
+                            dpcc_log(DPCC_SEVERITY_ERROR, &c2->childs[i]->tok->loc, "Type mismatch in array initializer list" );
+                            yynerrs += 1;
+                            dpcc_log(DPCC_SEVERITY_INFO, &c0->childs[0]->tok->loc, "Expected `%s`",  dpcc_type_as_str(c0->childs[0]->md.type));
+                            dpcc_log(DPCC_SEVERITY_INFO, &c2->childs[i]->tok->loc, "Got `%s`",  dpcc_type_as_str(c2->childs[i]->md.type));
+                        }
+                    }
+                }
+                if (c0->childs[1] == NULL)
+                {
+                    // Number of elements are not specified we need to deduce them
+                }
+                else
+                {
+                    // Number of elements are specified. Make sure that they match with the initializer list
+                }
             }
             // Forward the same type to the keyword let
             n->md.type = c0->md.type;

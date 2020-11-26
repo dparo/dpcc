@@ -251,10 +251,11 @@ void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
     hdr_string = sfcat(hdr_string, 0, "%s%s", indentation_level != 0 ? "--" : "", node->skind);
 
     fprintf(f,
-        " %-48s { kind: `%s`, type: %s, lexeme: \"%s\", tok->loc=[[%d,%d], [%d,%d]] }\n",
+        " %-48s { kind: `%s`, md.type: %s, md.array_len: %d, lexeme: \"%s\", tok->loc=[[%d,%d], [%d,%d]] }\n",
         hdr_string,
         node->skind,
         dpcc_type_as_str(node->md.type),
+        node->md.array_len,
         node->tok ? node->tok->lexeme : "",
         node->tok ? node->tok->loc.first_line : 0,
         node->tok ? node->tok->loc.first_column : 0,

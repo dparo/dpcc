@@ -241,8 +241,8 @@ stmt:           expr[c] ";"[op]                   { $$ = NEW_NODE($op->tok, SEMI
         |       error                             {  }
         ;
 
-assignment:     id_ref[lhs] "="[op] expr[rhs]                   { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 3, CAST {$lhs, $rhs, NULL}); }
-        |       id_ref[id] "[" expr[idx] "]" "="[op] expr[rhs]  { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 3, CAST {$id, $rhs, $idx}); }
+assignment:     pID[lhs] "="[op] expr[rhs]                   { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 3, CAST {$lhs, $rhs, NULL}); }
+        |       pID[id] "[" expr[idx] "]" "="[op] expr[rhs]  { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 3, CAST {$id, $rhs, $idx}); }
         ;
 print_stmt:     "print"[op] "(" expr[e] ")"                     { $$ = NEW_NODE($op->tok, KW_PRINT); push_child($$, $e); }
 
@@ -283,8 +283,8 @@ array_type:  sized_array_type    { $$ = $1; }
         ;
 
 
-sized_array_type:     "int"[t] "["[op] I32_LIT[n] "]"      { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST {$t, $n}); }
-        |             "float"[t] "["[op] I32_LIT[n] "]"    { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST {$t, $n}); }
+sized_array_type:     "int"[t] "["[op] pI32_LIT[n] "]"      { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST {$t, $n}); }
+        |             "float"[t] "["[op] pI32_LIT[n] "]"    { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST {$t, $n}); }
         ;
 
 unsized_array_type:   "int"[t] "["[op] "]"      { $$ = NEW_NODE($op->tok, OPEN_BRACKET); push_childs($$, 2, CAST { $t, NULL}); }
@@ -343,7 +343,7 @@ do_while_stmt:  "do"[op] code_block[cb] "while" "(" expr[e] ")" ";"  { $$ = NEW_
         ;
 
 
-id_ref: ID  {
+pID: ID  {
         $$ = $1;
         NODE_KIND($$, ID);
         ast_node_t *decl = symtable_lookup($$->tok);
@@ -354,6 +354,13 @@ id_ref: ID  {
                 $$->decl = decl;
         }
 }
+
+
+pI32_LIT:    I32_LIT                                            { NODE_KIND($$, I32_LIT); INIT_I32($$); }
+pF32_LIT:    F32_LIT                                            { NODE_KIND($$, F32_LIT); INIT_F32($$); }
+pCHAR_LIT:   CHAR_LIT                                           { NODE_KIND($$, CHAR_LIT); INIT_CHAR($$); }
+pBOOL_LIT:   BOOL_LIT                                           { NODE_KIND($$, BOOL_LIT); INIT_BOOL($$); }
+
 
 
 expr:          "(" error ")"                                       {  }
@@ -384,12 +391,12 @@ expr:          "(" error ")"                                       {  }
         |       ID[lhs] "++"[op]                  %prec INC        { $$ = NEW_NODE($op->tok, INC); push_child($$, $lhs); }
         |       ID[lhs] "--"[op]                  %prec DEC        { $$ = NEW_NODE($op->tok, DEC); push_child($$, $lhs); }
         |       assignment                        %prec ASSIGN     { $$ = $1; }
-        |       I32_LIT                                            { NODE_KIND($$, I32_LIT); INIT_I32($$); }
-        |       F32_LIT                                            { NODE_KIND($$, F32_LIT); INIT_F32($$); }
-        |       CHAR_LIT                                           { NODE_KIND($$, CHAR_LIT); INIT_CHAR($$); }
-        |       BOOL_LIT                                           { NODE_KIND($$, BOOL_LIT); INIT_BOOL($$); }
-        |       id_ref                                             { $$ = $1; }
-        |       id_ref[lhs] "["[op] expr[rhs] "]" %prec AR_SUBSCR  { $$ = NEW_NODE($op->tok, AR_SUBSCR); push_childs($$, 2, CAST {$lhs, $rhs}); }
+        |       pI32_LIT                                           { $$ = $1; }
+        |       pF32_LIT                                           { $$ = $1; }
+        |       pCHAR_LIT                                          { $$ = $1; }
+        |       pBOOL_LIT                                          { $$ = $1; }
+        |       pID                                                { $$ = $1; }
+        |       pID[lhs] "["[op] expr[rhs] "]" %prec AR_SUBSCR     { $$ = NEW_NODE($op->tok, AR_SUBSCR); push_childs($$, 2, CAST {$lhs, $rhs}); }
         |       integral_type[op] "(" expr[e] ")"                  { $$ = NEW_NODE($op->tok, KW_INT); push_child($$, $e); }
 
         ;
