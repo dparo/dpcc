@@ -394,6 +394,50 @@ static void type_deduce(ast_node_t *n)
         }
     }
 }
+static char *gen_tmp_var(enum DPCC_TYPE type)
+{
+    switch (type)
+    {
+        default:
+        {
+            invalid_code_path();
+        }
+        break;
+        case TYPE_I32:
+        {
+            return dallfmt(&G_allctx, "__i%d", G_codegen_i32_cnt++);
+        }
+        break;
+        case TYPE_F32:
+        {
+            return dallfmt(&G_allctx, "__f%d", G_codegen_f32_cnt++);
+        }
+        break;
+        case TYPE_BOOL:
+        {
+            return dallfmt(&G_allctx, "__b%d", G_codegen_bool_cnt++);
+        }
+        break;
+    }
+    return NULL;
+}
+static void setup_addrs_and_jmp_tables(ast_node_t *n)
+{
+    ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
+    ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
+    ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
+    ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;
+    if (!n->md.addr)
+    {
+        if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_AR_SUBSCR)))
+        {
+            assert(n->md.type != TYPE_NONE);
+            assert(n->md.type != TYPE_I32_ARRAY);
+            assert(n->md.type != TYPE_F32_ARRAY);
+            n->md.addr = gen_tmp_var(n->md.type);
+        }
+    }
+}
 void check_and_optimize_ast(void)
 {
     ast_traversal_t att = {0};
@@ -406,6 +450,7 @@ void check_and_optimize_ast(void)
             {
                 type_deduce(n);
             }
+            setup_addrs_and_jmp_tables(n);
         }
     }
 }

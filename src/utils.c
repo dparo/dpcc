@@ -132,6 +132,21 @@ bool dallarr(mctx_t *ctx, void **ptr, size_t num_elems, size_t sizeof_each_elem)
     return false;
 }
 
+char *dallfmt(mctx_t *ctx, char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int32_t chars_to_write = vsnprintf(NULL, 0, fmt, ap);
+    char *result = dallnew(ctx, chars_to_write + 2);
+    result[chars_to_write] = 0;
+    result[chars_to_write + 1] = 0;
+
+    va_start(ap, fmt);
+    vsnprintf(result, chars_to_write + 1, fmt, ap);
+    va_end(ap);
+    return result;
+}
+
 bool str_to_i32(char *string, i32 *out)
 {
     size_t len = strlen(string);
@@ -251,10 +266,11 @@ void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
     hdr_string = sfcat(hdr_string, 0, "%s%s", indentation_level != 0 ? "--" : "", node->skind);
 
     fprintf(f,
-        " %-48s { kind: `%s`, md.type: %s, md.array_len: %d, lexeme: \"%s\", tok->loc=[[%d,%d], [%d,%d]] }\n",
+        " %-48s { kind: `%s`, md.type: %s, md.addr: %s, md.array_len: %d, lexeme: \"%s\", tok->loc=[[%d,%d], [%d,%d]] }\n",
         hdr_string,
         node->skind,
         dpcc_type_as_str(node->md.type),
+        node->md.addr,
         node->md.array_len,
         node->tok ? node->tok->lexeme : "",
         node->tok ? node->tok->loc.first_line : 0,

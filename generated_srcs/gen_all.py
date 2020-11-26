@@ -5,7 +5,7 @@ from datetime import datetime
 import itertools
 
 from utils import bin2header
-from ops import ALL_BUNDLES, type_to_dpcc_type
+from ops import ALL_BUNDLES, ALL_OPS, type_to_dpcc_type
 
 INVALID_CODE_PATH = "invalid_code_path();"
 DEFAULT_CASE = INVALID_CODE_PATH
@@ -170,12 +170,7 @@ def debug_print(string):
 
 
 def gen_ops_type_deduction_code(n):
-    all_yytokenstypes = []
-    for bundle in ALL_BUNDLES:
-        for yytokenstype in bundle.yytokentypes:
-            all_yytokenstypes.append(yytokenstype)
-
-    gprint(f'if ({one_of("n->kind", all_yytokenstypes)})')
+    gprint(f'if ({one_of("n->kind", ALL_OPS)})')
     with scope():
         for bundle in ALL_BUNDLES:
             all_yytokenstypes = []
@@ -397,6 +392,33 @@ def generate_src_file():
 
 
 
+    gprint("static char *gen_tmp_var(enum DPCC_TYPE type)")
+    with scope():
+
+        switch("type", {
+            "TYPE_I32": 'return dallfmt(&G_allctx, "__i%d", G_codegen_i32_cnt++);',
+            "TYPE_F32": 'return dallfmt(&G_allctx, "__f%d", G_codegen_f32_cnt++);',
+            "TYPE_BOOL": 'return dallfmt(&G_allctx, "__b%d", G_codegen_bool_cnt++);',
+        })
+
+        gprint('return NULL;')
+
+
+    gprint("static void setup_addrs_and_jmp_tables(ast_node_t *n)")
+    with scope():
+        gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
+        gprint("ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;")
+        gprint("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
+        gprint("ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;")
+
+        gprint('if (!n->md.addr)')
+        with scope():
+            gprint(f'if ({one_of("n->kind", ALL_OPS)})')
+            with scope():
+                gprint('assert(n->md.type != TYPE_NONE);')
+                gprint('assert(n->md.type != TYPE_I32_ARRAY);')
+                gprint('assert(n->md.type != TYPE_F32_ARRAY);')
+                gprint('n->md.addr = gen_tmp_var(n->md.type);')
 
 
     gprint("void check_and_optimize_ast(void)")
@@ -410,8 +432,7 @@ def generate_src_file():
                 gprint('if (n->md.type == TYPE_NONE)')
                 with scope():
                     gprint("type_deduce(n);")
-
-
+                gprint("setup_addrs_and_jmp_tables(n);")
 
 
 def generate_hdr_file():

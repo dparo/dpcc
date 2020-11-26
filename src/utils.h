@@ -77,6 +77,10 @@ bool dallarr(mctx_t *ctx, void **ptr, size_t num_elems, size_t sizeof_each_elem)
 /// Steal memory allocations from typical malloc
 void *dallstl(mctx_t *ctx, void *ptr);
 
+///
+char *dallfmt(mctx_t *ctx, char *fmt, ...)
+    __attribute__((format(printf, 2, 3)));
+
 /// Used for string interning
 char *string_intern(char *yytext);
 

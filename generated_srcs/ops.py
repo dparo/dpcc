@@ -105,3 +105,11 @@ ALL_BUNDLES = [
     LOGICAL_OPERATORS,
     ARRAY_OPERATORS
 ]
+
+
+ALL_OPS = [
+]
+
+for bundle in ALL_BUNDLES:
+    for yytokenstype in bundle.yytokentypes:
+        ALL_OPS.append(yytokenstype)

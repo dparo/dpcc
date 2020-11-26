@@ -14,7 +14,10 @@ ast_node_t G_root_node = { 0 };
 
 symtable_t G_symtable = { 0 };
 
-int32_t G_codegen_addr_inc = 0;
+int32_t G_codegen_i32_cnt;
+int32_t G_codegen_f32_cnt;
+int32_t G_codegen_bool_cnt;
+
 int32_t G_codegen_jmp_inc = 0;
 
 void clear_all_global_vars()
@@ -27,7 +30,10 @@ void clear_all_global_vars()
     yylloc.first_column = 1;
     yylloc.last_column = 0;
 
-    G_codegen_addr_inc = 0;
+    G_codegen_i32_cnt = 0;
+    G_codegen_f32_cnt = 0;
+    G_codegen_bool_cnt = 0;
+
     G_codegen_jmp_inc = 0;
 
     tokens_seq_clear(&G_tok_seq);
