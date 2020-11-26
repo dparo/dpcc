@@ -5,7 +5,7 @@ from datetime import datetime
 import itertools
 
 from utils import bin2header
-from ops import ALL_OPS
+from ops import ALL_BUNDLES, type_to_dpcc_type
 
 INVALID_CODE_PATH = "invalid_code_path();"
 DEFAULT_CASE = INVALID_CODE_PATH
@@ -67,9 +67,9 @@ def gen_logical_or(array):
     result = ""
     for i in range(0, len(array)):
         if (i != len(array) - 1):
-            result += f"{array[i]} || "
+            result += f"({array[i]}) || "
         else:
-            result += f"{array[i]}"
+            result += f"({array[i]})"
     return "(" + result + ")"
 
 
@@ -77,9 +77,9 @@ def gen_logical_and(array):
     result = ""
     for i in range(0, len(array)):
         if (i != len(array) - 1):
-            result += f"{array[i]} && "
+            result += f"({array[i]}) && "
         else:
-            result += f"{array[i]}"
+            result += f"({array[i]})"
     return "(" + result + ")"
 
 def one_of(expr, array):
@@ -152,7 +152,7 @@ def gen_warn(loc, fmt, args = []):
     for i in range(0, len(args)):
         va_args += args[i] + (", " if i != len(args) - 1 else "")
 
-    gprint(f"dpcc_log(DPCC_SEVERITY_WARN, {loc}, {fmt}{optional_comma} {va_args});")
+    gprint(f"dpcc_log(DPCC_SEVERITY_WARNING, {loc}, {fmt}{optional_comma} {va_args});")
 
 def gen_info(loc, fmt, args = []):
     optional_comma = "" if len(args) == 0 else ", "
@@ -170,15 +170,46 @@ def debug_print(string):
 
 
 def gen_ops_type_deduction_code(n):
-    all_ops_tokens = []
-    for bundle_idx in range(0, len(ALL_OPS)):
-        bundle = ALL_OPS[bundle_idx]
-        for op_idx in range(0, len(ALL_OPS[bundle_idx].ops)):
-            all_ops_tokens.append(bundle.ops[op_idx])
+    all_yytokenstypes = []
+    for bundle in ALL_BUNDLES:
+        for yytokenstype in bundle.yytokentypes:
+            all_yytokenstypes.append(yytokenstype)
 
-    gprint(f'if ({one_of("n->kind", all_ops_tokens)})')
+    gprint(f'if ({one_of("n->kind", all_yytokenstypes)})')
     with scope():
-        pass
+        for bundle in ALL_BUNDLES:
+            all_yytokenstypes = []
+            for yytokenstype in bundle.yytokentypes:
+                all_yytokenstypes.append(yytokenstype)
+            gprint(f'if ({one_of("n->kind", all_yytokenstypes)})')
+            with scope():
+                for tct_idx in range(0, len(bundle.types_conversion_table)):
+                    tct = bundle.types_conversion_table[tct_idx]
+                    out_type = type_to_dpcc_type(tct[0])
+                    in_types  = [type_to_dpcc_type(item) for item in tct[1]]
+                    num_in_types = len(in_types)
+
+                    maybe_else = "else " if tct_idx != 0 else ""
+
+                    check_type_list = []
+                    for i in range(0, len(in_types)):
+                        check_type_list.append(f"n->childs[{i}]->md.type == {in_types[i]}")
+
+                    gprint(f'{maybe_else }if ((n->num_childs == {num_in_types}) && {gen_logical_and(check_type_list)})')
+                    with scope():
+                        gprint(f'n->md.type = {out_type};')
+                        pass
+                gprint("else")
+                with scope():
+                    gen_err("&n->tok->loc", '"Types composing this expression cannot be broadcasted."')
+                    if 0:
+                        for i in range(0, len(in_types)):
+                            gen_info(f"&n->childs[{i}]->tok->loc",
+                                    '"Got type `%s` for argument at index %d"',
+                                    [f'dpcc_type_as_str(n->childs[{i}]->md.type)', f"{i}"])
+
+
+
 
 
 def generate_src_file():
@@ -337,7 +368,7 @@ def generate_src_file():
             gprint("else")
             with scope():
                 gprint('deduce_array_type(n);')
-                
+
 
 
         gprint("// Deduce type of expression and operators: This is the most demanding and difficult part")

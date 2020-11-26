@@ -9,8 +9,8 @@ type_to_dpcc_type.d = {
 }
 
 class OpsBundle:
-    def __init__(self, ops, types_conversion_table):
-        self.ops = ops
+    def __init__(self, yytokentypes, types_conversion_table):
+        self.yytokentypes = yytokentypes
         self.types_conversion_table = types_conversion_table
 
 
@@ -98,7 +98,7 @@ ARRAY_OPERATORS = OpsBundle (
 )
 
 
-ALL_OPS = [
+ALL_BUNDLES = [
     INTEGER_OPS,
     MATH_OPS,
     LOGICAL_COMPARISONS,
