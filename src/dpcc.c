@@ -219,17 +219,19 @@ inline bool ast_traversal_pop(ast_traversal_t *t)
     return true;
 }
 
-void ast_traversal_begin(ast_traversal_t *t, ast_node_t *root, bool bottom_up_traverse)
+void ast_traversal_begin(ast_traversal_t *t, ast_node_t *root, bool top_down_traverse, bool bottom_up_traverse)
 {
+    assert(top_down_traverse || bottom_up_traverse);
     t->stack_cnt = 0;
     if (root == NULL) {
         root = &G_root_node;
     }
     ast_traversal_push(t, root, 0);
+    t->top_down_traverse = top_down_traverse;
     t->bottom_up_traverse = bottom_up_traverse;
 }
 
-ast_node_t *ast_traverse_next(ast_traversal_t *t)
+ast_node_t *ast_traverse_next(ast_traversal_t *t, bool *is_top_down_encounter)
 {
     if (t->stack_cnt == 0) {
         return NULL;
@@ -255,6 +257,9 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t)
                 /// Top down traverse, after pushing child to be explored next
                 /// return the child
                 if (!t->bottom_up_traverse) {
+                    if (is_top_down_encounter) {
+                        *is_top_down_encounter = true;
+                    }
                     return t->stack_nodes[t->stack_cnt - 1];
                 }
             } else {
@@ -269,6 +274,9 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t)
                 return NULL;
             }
 
+            if (is_top_down_encounter) {
+                *is_top_down_encounter = false;
+            }
             return nvcs;
         } else {
             if (t->stack_cnt == 0) {

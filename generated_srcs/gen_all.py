@@ -456,10 +456,10 @@ def generate_src_file():
     gprint("void check_and_optimize_ast(void)")
     with scope():
         gprint("ast_traversal_t att = {0};")
-        gprint("ast_traversal_begin(&att, &G_root_node, true);")
+        gprint("ast_traversal_begin(&att, &G_root_node, false, true);")
         with scope():
             gprint("ast_node_t *n = NULL;")
-            gprint("while ((n = ast_traverse_next(&att)) != NULL)")
+            gprint("while ((n = ast_traverse_next(&att, NULL)) != NULL)")
             with scope():
                 gprint('if (n->md.type == TYPE_NONE)')
                 with scope():
@@ -508,12 +508,13 @@ def generate_src_file():
     gprint()
     gprint('void codegen_expr(str_t *str, ast_node_t *root)')
     with scope():
+        gprint('(void) str, (void) root;')
         gprint(f'assert({one_of("root->kind", ALL_OPS)});')
         gprint('ast_traversal_t att = {0};')
-        gprint('ast_traversal_begin(&att, root, true);')
+        gprint('ast_traversal_begin(&att, root, false, true);')
 
         gprint('ast_node_t *n = NULL;')
-        gprint("while ((n = ast_traverse_next(&att)) != NULL)")
+        gprint("while ((n = ast_traverse_next(&att, NULL)) != NULL)")
         with scope():
             gprint('if (n->kind == TOK_ASSIGN)')
             with scope():
@@ -530,11 +531,12 @@ def generate_src_file():
     with scope():
         gprint("str_t str = {0};")
         gprint('ast_traversal_t att = {0};')
-        gprint('ast_traversal_begin(&att, &G_root_node, false);')
+        gprint('ast_traversal_begin(&att, &G_root_node, true, true);')
 
         gprint('sfcat(&G_allctx, &str, "push();\\n");')
         gprint('ast_node_t *n = NULL;')
-        gprint("while ((n = ast_traverse_next(&att)) != NULL)")
+        gprint('bool is_top_down_encounter = false;')
+        gprint("while ((n = ast_traverse_next(&att, &is_top_down_encounter)) != NULL)")
         with scope():
             gprint('if (n->kind == TOK_KW_MAIN && n->childs[0]->kind == TOK_OPEN_BRACE)')
             with scope():
@@ -562,6 +564,11 @@ def generate_src_file():
                 pass
             gprint('else if (n->kind == TOK_OPEN_BRACE)')
             with scope():
+                pass
+            gprint(f'else if ({one_of("n->kind", ALL_OPS)})')
+            with scope():
+                gprint('codegen_expr(&str, n);')
+                gprint('ast_traversal_pop(&att);')
                 pass
             gprint('else')
             with scope():
