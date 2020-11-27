@@ -347,6 +347,7 @@ static void type_deduce(ast_node_t *n)
         }
         // Forward the same type to the keyword let
         n->md.type = c0->md.type;
+        n->md.array_len = c0->md.array_len;
     }
     // Deduce type of variable declarations
     if ((n->kind == TOK_KW_FN) || (n->kind == TOK_KW_LET))
@@ -371,6 +372,7 @@ static void type_deduce(ast_node_t *n)
                 // Assume integer
                 n->md.type = TYPE_I32;
             }
+            n->md.array_len = 1;
         }
         else
         {
@@ -573,6 +575,11 @@ char *codegen(void)
 
     while ((n = ast_traverse_next(&att, &is_top_down_encounter)) != NULL)
     {
+        ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
+        ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
+        ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
+        ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;
+        (void) c0; (void) c1; (void) c2; (void) c3;
         if (n->kind == TOK_KW_MAIN && n->childs[0]->kind == TOK_OPEN_BRACE)
         {
             // Don't need to do anything, can just skip
@@ -591,6 +598,52 @@ char *codegen(void)
         }
         else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_LET)
         {
+            if (is_top_down_encounter)
+            {
+                ast_node_t *self = n->childs[0];
+                ast_node_t *c0 = (self->num_childs >= 1) ? self->childs[0] : NULL;
+                ast_node_t *c1 = (self->num_childs >= 2) ? self->childs[1] : NULL;
+                ast_node_t *c2 = (self->num_childs >= 3) ? self->childs[2] : NULL;
+                ast_node_t *c3 = (self->num_childs >= 4) ? self->childs[3] : NULL;
+                (void) c0; (void) c1; (void) c2; (void) c3;
+                printf("decl_var(%s, \"%s\", %d, ", dpcc_type_as_str(self->md.type), c1->tok->lexeme, c1->md.array_len);
+
+                switch (self->md.type)
+                {
+                    default:
+                    {
+                        invalid_code_path();
+                    }
+                    break;
+                    case TYPE_I32:
+                    {
+                        printf("(int32_t[]) {");
+                    }
+                    break;
+                    case TYPE_I32_ARRAY:
+                    {
+                        printf("(int32_t[]) {");
+                    }
+                    break;
+                    case TYPE_F32:
+                    {
+                        printf("(float[]) {");
+                    }
+                    break;
+                    case TYPE_F32_ARRAY:
+                    {
+                        printf("(float[]) {");
+                    }
+                    break;
+                    case TYPE_BOOL:
+                    {
+                        printf("(bool[]) {");
+                    }
+                    break;
+                }
+
+                printf("});\n");
+            }
         }
         else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_PRINT)
         {

@@ -538,6 +538,11 @@ def generate_src_file():
         gprint('bool is_top_down_encounter = false;')
         gprint("while ((n = ast_traverse_next(&att, &is_top_down_encounter)) != NULL)")
         with scope():
+            gprint('ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;')
+            gprint('ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;')
+            gprint('ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;')
+            gprint('ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;')
+            gprint('(void) c0; (void) c1; (void) c2; (void) c3;')
             gprint('if (n->kind == TOK_KW_MAIN && n->childs[0]->kind == TOK_OPEN_BRACE)')
             with scope():
                 gprint('// Don\'t need to do anything, can just skip')
@@ -555,7 +560,27 @@ def generate_src_file():
                 pass
             gprint('else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_LET)')
             with scope():
-                pass
+                gprint('if (is_top_down_encounter)')
+                with scope():
+                    gprint('ast_node_t *self = n->childs[0];')
+                    gprint('ast_node_t *c0 = (self->num_childs >= 1) ? self->childs[0] : NULL;')
+                    gprint('ast_node_t *c1 = (self->num_childs >= 2) ? self->childs[1] : NULL;')
+                    gprint('ast_node_t *c2 = (self->num_childs >= 3) ? self->childs[2] : NULL;')
+                    gprint('ast_node_t *c3 = (self->num_childs >= 4) ? self->childs[3] : NULL;')
+                    gprint('(void) c0; (void) c1; (void) c2; (void) c3;')
+
+                    gprint('printf("decl_var(%s, \\"%s\\", %d, ", dpcc_type_as_str(self->md.type), c1->tok->lexeme, c1->md.array_len);')
+
+                    switch("self->md.type", {
+                        "TYPE_I32": 'printf("(int32_t[]) {");',
+                        "TYPE_I32_ARRAY": 'printf("(int32_t[]) {");',
+                        "TYPE_F32": 'printf("(float[]) {");',
+                        "TYPE_F32_ARRAY": 'printf("(float[]) {");',
+                        "TYPE_BOOL": 'printf("(bool[]) {");',
+                        })
+
+                    gprint('printf("});\\n");')
+
             gprint('else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_PRINT)')
             with scope():
                 pass
