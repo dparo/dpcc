@@ -58,6 +58,7 @@ char (&ARRAY_LEN_HELPER(T (&array)[N]))[N];
 
 void invalid_code_path(void);
 char *dpcc_type_as_str(enum DPCC_TYPE t);
+char *dpcc_type_as_enum_str(enum DPCC_TYPE t);
 
 /// String format concat
 void sfcat(mctx_t *ctx, str_t *s, char *fmt, ...)

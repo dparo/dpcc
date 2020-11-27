@@ -46,6 +46,34 @@ char *dpcc_type_as_str(enum DPCC_TYPE t)
     return NULL;
 }
 
+char *dpcc_type_as_enum_str(enum DPCC_TYPE t)
+{
+    switch (t) {
+    default: {
+        invalid_code_path();
+    } break;
+    case TYPE_NONE: {
+        return "TYPE_NONE";
+    } break;
+    case TYPE_I32: {
+        return "TYPE_I32";
+    } break;
+    case TYPE_F32: {
+        return "TYPE_F32";
+    } break;
+    case TYPE_BOOL: {
+        return "TYPE_BOOL";
+    } break;
+    case TYPE_I32_ARRAY: {
+        return "TYPE_I32_ARRAY";
+    } break;
+    case TYPE_F32_ARRAY: {
+        return "TYPE_F32_ARRAY";
+    } break;
+    }
+    return NULL;
+}
+
 /// Equivalent to malloc
 void *dallnew(mctx_t *ctx, size_t size)
 {

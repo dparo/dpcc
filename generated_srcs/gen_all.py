@@ -389,7 +389,11 @@ def generate_src_file():
         with scope():
             gprint('int32_t subscript_idx = n->childs[1]->val.as_i32;')
             gprint('int32_t array_len = n->childs[0]->decl->md.array_len;')
-            gprint('if (subscript_idx < 0 || (subscript_idx >= array_len))')
+            gprint('if (n->childs[0]->md.type != TYPE_I32_ARRAY && n->childs[0]->md.type != TYPE_F32_ARRAY)')
+            with scope():
+                gen_err("&n->childs[0]->tok->loc", '"Identifier is not an array"')
+                gen_info("&n->childs[0]->decl->tok->loc", '"Previous declaration was here (type: %s)"', ["dpcc_type_as_str(n->childs[0]->md.type)"])
+            gprint('else if (subscript_idx < 0 || (subscript_idx >= array_len))')
             with scope():
                 gen_err("&n->childs[1]->tok->loc", '"Invalid subscript constant"')
                 gen_info("&n->childs[0]->decl->tok->loc", '"As specified from declaration index should be in [%d, %d)"', ["0", "array_len"])
@@ -426,9 +430,8 @@ def generate_src_file():
         gprint('if (!n->md.addr)')
         with scope():
             gprint('// Generate address for all temporary computations performed by operators')
-            gprint(f'if ({one_of("n->kind", ALL_OPS)})')
+            gprint(f'if (n->md.type != TYPE_NONE && {one_of("n->kind", ALL_OPS)})')
             with scope():
-                gprint('assert(n->md.type != TYPE_NONE);')
                 gprint('assert(n->md.type != TYPE_I32_ARRAY);')
                 gprint('assert(n->md.type != TYPE_F32_ARRAY);')
                 gprint('n->md.addr = gen_tmp_var(n->md.type);')
@@ -569,17 +572,17 @@ def generate_src_file():
                     gprint('ast_node_t *c3 = (self->num_childs >= 4) ? self->childs[3] : NULL;')
                     gprint('(void) c0; (void) c1; (void) c2; (void) c3;')
 
-                    gprint('printf("decl_var(%s, \\"%s\\", %d, ", dpcc_type_as_str(self->md.type), c1->tok->lexeme, c1->md.array_len);')
+                    gprint('sfcat(&G_allctx, &str,"decl_var(%s, \\"%s\\", %d, ", dpcc_type_as_enum_str(self->md.type), c1->tok->lexeme, c1->md.array_len);')
 
                     switch("self->md.type", {
-                        "TYPE_I32": 'printf("(int32_t[]) {");',
-                        "TYPE_I32_ARRAY": 'printf("(int32_t[]) {");',
-                        "TYPE_F32": 'printf("(float[]) {");',
-                        "TYPE_F32_ARRAY": 'printf("(float[]) {");',
-                        "TYPE_BOOL": 'printf("(bool[]) {");',
+                        "TYPE_I32": 'sfcat(&G_allctx, &str, "(int32_t[]) {");',
+                        "TYPE_I32_ARRAY": 'sfcat(&G_allctx, &str, "(int32_t[]) {");',
+                        "TYPE_F32": 'sfcat(&G_allctx, &str, "(float[]) {");',
+                        "TYPE_F32_ARRAY": 'sfcat(&G_allctx, &str, "(float[]) {");',
+                        "TYPE_BOOL": 'sfcat(&G_allctx, &str, "(bool[]) {");',
                         })
 
-                    gprint('printf("});\\n");')
+                    gprint('sfcat(&G_allctx, &str, "});\\n");')
 
             gprint('else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_PRINT)')
             with scope():
@@ -591,10 +594,10 @@ def generate_src_file():
             with scope():
                 gprint('if (is_top_down_encounter)')
                 with scope():
-                    gprint('printf("push();\\n");')
+                    gprint('sfcat(&G_allctx, &str, "push();\\n");')
                 gprint('else')
                 with scope():
-                    gprint('printf("pop();\\n");')
+                    gprint('sfcat(&G_allctx, &str, "pop();\\n");')
 
             gprint(f'else if ({one_of("n->kind", ALL_OPS)})')
             with scope():
@@ -606,7 +609,7 @@ def generate_src_file():
                 gprint('// invalid_code_path();')
 
 
-
+        gprint('sfcat(&G_allctx, &str, "\\n");')
         gprint("return str.cstr;")
 
 

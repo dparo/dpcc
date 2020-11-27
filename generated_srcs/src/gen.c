@@ -394,7 +394,13 @@ static void type_deduce(ast_node_t *n)
     {
         int32_t subscript_idx = n->childs[1]->val.as_i32;
         int32_t array_len = n->childs[0]->decl->md.array_len;
-        if (subscript_idx < 0 || (subscript_idx >= array_len))
+        if (n->childs[0]->md.type != TYPE_I32_ARRAY && n->childs[0]->md.type != TYPE_F32_ARRAY)
+        {
+            dpcc_log(DPCC_SEVERITY_ERROR, &n->childs[0]->tok->loc, "Identifier is not an array" );
+            yynerrs += 1;
+            dpcc_log(DPCC_SEVERITY_INFO, &n->childs[0]->decl->tok->loc, "Previous declaration was here (type: %s)",  dpcc_type_as_str(n->childs[0]->md.type));
+        }
+        else if (subscript_idx < 0 || (subscript_idx >= array_len))
         {
             dpcc_log(DPCC_SEVERITY_ERROR, &n->childs[1]->tok->loc, "Invalid subscript constant" );
             yynerrs += 1;
@@ -447,9 +453,8 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
     if (!n->md.addr)
     {
         // Generate address for all temporary computations performed by operators
-        if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_LT) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_AR_SUBSCR)))
+        if (n->md.type != TYPE_NONE && ((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_LT) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_AR_SUBSCR)))
         {
-            assert(n->md.type != TYPE_NONE);
             assert(n->md.type != TYPE_I32_ARRAY);
             assert(n->md.type != TYPE_F32_ARRAY);
             n->md.addr = gen_tmp_var(n->md.type);
@@ -604,7 +609,7 @@ char *codegen(void)
                 ast_node_t *c2 = (self->num_childs >= 3) ? self->childs[2] : NULL;
                 ast_node_t *c3 = (self->num_childs >= 4) ? self->childs[3] : NULL;
                 (void) c0; (void) c1; (void) c2; (void) c3;
-                printf("decl_var(%s, \"%s\", %d, ", dpcc_type_as_str(self->md.type), c1->tok->lexeme, c1->md.array_len);
+                sfcat(&G_allctx, &str,"decl_var(%s, \"%s\", %d, ", dpcc_type_as_enum_str(self->md.type), c1->tok->lexeme, c1->md.array_len);
 
                 switch (self->md.type)
                 {
@@ -615,32 +620,32 @@ char *codegen(void)
                     break;
                     case TYPE_I32:
                     {
-                        printf("(int32_t[]) {");
+                        sfcat(&G_allctx, &str, "(int32_t[]) {");
                     }
                     break;
                     case TYPE_I32_ARRAY:
                     {
-                        printf("(int32_t[]) {");
+                        sfcat(&G_allctx, &str, "(int32_t[]) {");
                     }
                     break;
                     case TYPE_F32:
                     {
-                        printf("(float[]) {");
+                        sfcat(&G_allctx, &str, "(float[]) {");
                     }
                     break;
                     case TYPE_F32_ARRAY:
                     {
-                        printf("(float[]) {");
+                        sfcat(&G_allctx, &str, "(float[]) {");
                     }
                     break;
                     case TYPE_BOOL:
                     {
-                        printf("(bool[]) {");
+                        sfcat(&G_allctx, &str, "(bool[]) {");
                     }
                     break;
                 }
 
-                printf("});\n");
+                sfcat(&G_allctx, &str, "});\n");
             }
         }
         else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_PRINT)
@@ -653,11 +658,11 @@ char *codegen(void)
         {
             if (is_top_down_encounter)
             {
-                printf("push();\n");
+                sfcat(&G_allctx, &str, "push();\n");
             }
             else
             {
-                printf("pop();\n");
+                sfcat(&G_allctx, &str, "pop();\n");
             }
         }
         else if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_LT) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_AR_SUBSCR)))
@@ -670,5 +675,6 @@ char *codegen(void)
             // invalid_code_path();
         }
     }
+    sfcat(&G_allctx, &str, "\n");
     return str.cstr;
 }
