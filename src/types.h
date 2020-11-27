@@ -118,7 +118,10 @@ typedef struct {
     int32_t stack_cnt;
     ast_node_t **stack_nodes;
     int32_t *stack_childs;
-    bool down_dir;
+
+    /// Return the nodes in a bottom up order if `bottom_up_traverse` is true,
+    /// otherwise nodes are returned with a top down order
+    bool bottom_up_traverse;
 } ast_traversal_t;
 
 typedef struct {

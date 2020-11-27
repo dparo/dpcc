@@ -211,13 +211,13 @@ inline bool ast_traversal_pop(ast_traversal_t *t)
     return true;
 }
 
-void ast_traversal_begin(ast_traversal_t *t, ast_node_t *root, bool down_dir)
+void ast_traversal_begin(ast_traversal_t *t, ast_node_t *root, bool bottom_up_traverse)
 {
     if (root == NULL) {
         root = &G_root_node;
     }
     ast_traversal_push(t, &G_root_node, 0);
-    t->down_dir = down_dir;
+    t->bottom_up_traverse = bottom_up_traverse;
 }
 
 ast_node_t *ast_traverse_next(ast_traversal_t *t)
@@ -242,7 +242,10 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t)
 
                 t->stack_childs[t->stack_cnt - 1] = ci + 1;
                 ast_traversal_push(t, child, 0);
-                if (t->down_dir) {
+
+                /// Top down traverse, after pushing child to be explored next
+                /// return the child
+                if (!t->bottom_up_traverse) {
                     return t->stack_nodes[t->stack_cnt - 1];
                 }
             } else {
@@ -252,7 +255,7 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t)
 
         ast_node_t *nvcs = t->stack_nodes[t->stack_cnt - 1];
         ast_traversal_pop(t);
-        if (!t->down_dir) {
+        if (t->bottom_up_traverse) {
             if (nvcs->kind == TOK_YYEOF) {
                 return NULL;
             }

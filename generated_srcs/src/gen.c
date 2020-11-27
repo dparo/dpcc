@@ -481,7 +481,7 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
 void check_and_optimize_ast(void)
 {
     ast_traversal_t att = {0};
-    ast_traversal_begin(&att, &G_root_node, false);
+    ast_traversal_begin(&att, &G_root_node, true);
     {
         ast_node_t *n = NULL;
 
@@ -540,6 +540,6 @@ char *codegen(void)
 {
     str_t str = {0};
     ast_traversal_t att = {0};
-    ast_traversal_begin(&att, &G_root_node, false);
+    ast_traversal_begin(&att, &G_root_node, true);
     return str.cstr;
 }

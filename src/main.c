@@ -40,7 +40,7 @@ int main(int argc, char **argv)
             return -1;
         }
         ast_traversal_t att = { 0 };
-        ast_traversal_begin(&att, &G_root_node, true);
+        ast_traversal_begin(&att, &G_root_node, false);
         ast_node_t *n = NULL;
         while ((n = ast_traverse_next(&att)) != NULL) {
             print_node(stdout, n, att.stack_cnt - 1);
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
             return -1;
         }
         ast_traversal_t att = { 0 };
-        ast_traversal_begin(&att, &G_root_node, true);
+        ast_traversal_begin(&att, &G_root_node, false);
         ast_node_t *n = NULL;
         while ((n = ast_traverse_next(&att)) != NULL) {
             print_node(stdout, n, att.stack_cnt - 1);
