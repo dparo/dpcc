@@ -1,20 +1,41 @@
-
 let a = 10;
 
-// a = (20 + 40) * 30;
-
 if (a == 10) {
-    let var0;
+    a = 5;
 } else if (a == 20) {
-    let var1;
+    a = 10;
+} else if (a == 30) {
+    a = 15;
+} else {
+    a = 20;
 }
 
-// if (a == 10) {
-//     let var0;
-// } else if (a == 20) {
-//     let var1;
-// } else if (a == 30) {
-//     let var2;
-// } else {
-//     let var3;
-// }
+for (let i = 0; i < 10; i++) {
+    print(i);
+    a = a + 2;
+}
+
+while (a++ < 100) {
+      let b = a * 2;
+      print(b);
+}
+
+
+let c = 1;
+if (a >= 10) {
+   if (a >= 20) {
+         if (a >= 30) {
+               c = 100;
+         } else {
+               c = 400;
+         }
+   } else {
+         if (a <= 15) {
+            c = 500;
+         } else {
+           c = 600;
+         }
+   }
+} else {
+       print(c);
+}

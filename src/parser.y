@@ -390,8 +390,8 @@ expr:          "(" error ")"                                       {  }
         |       expr[lhs] ">"[op] expr[rhs]       %prec GT         { $$ = NEW_NODE($op->tok, GT); push_childs($$, 2, CAST {$lhs, $rhs}); }
         |       expr[lhs] ">="[op] expr[rhs]      %prec GTEQ       { $$ = NEW_NODE($op->tok, GTEQ); push_childs($$, 2, CAST {$lhs, $rhs}); }
         |       expr[lhs] "**"[op] expr[rhs]      %prec POW        { $$ = NEW_NODE($op->tok, POW); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       ID[lhs] "++"[op]                  %prec INC        { $$ = NEW_NODE($op->tok, INC); push_child($$, $lhs); }
-        |       ID[lhs] "--"[op]                  %prec DEC        { $$ = NEW_NODE($op->tok, DEC); push_child($$, $lhs); }
+        |       pID[lhs] "++"[op]                 %prec INC        { $$ = NEW_NODE($op->tok, INC); push_child($$, $lhs); }
+        |       pID[lhs] "--"[op]                 %prec DEC        { $$ = NEW_NODE($op->tok, DEC); push_child($$, $lhs); }
         |       assignment                        %prec ASSIGN     { $$ = $1; }
         |       pI32_LIT                                           { $$ = $1; }
         |       pF32_LIT                                           { $$ = $1; }
