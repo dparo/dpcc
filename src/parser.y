@@ -297,10 +297,12 @@ code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                 
                         $$ = NEW_NODE($op->tok, OPEN_BRACE);
                         // Keep bison LEFT recursive (faster) and reverse the order of the childs,
                         // only when needed
-                        for (int32_t i = 0; i < $ss->num_childs / 2; i++) {
-                            YYSTYPE temp = $ss->childs[0];
-                            $ss->childs[0] = $ss->childs[$ss->num_childs - 1 - i];
-                            $ss->childs[$ss->num_childs - 1 - i] = temp;
+                        if (0) {
+                                for (int32_t i = 0; i < $ss->num_childs / 2; i++) {
+                                    YYSTYPE temp = $ss->childs[0];
+                                    $ss->childs[0] = $ss->childs[$ss->num_childs - 1 - i];
+                                    $ss->childs[$ss->num_childs - 1 - i] = temp;
+                                }
                         }
                         push_childs($$, $ss->num_childs, $ss->childs);
                         symtable_end_block();

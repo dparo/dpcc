@@ -6,6 +6,7 @@ cache
 .log
 out
 report
+org
 
 .vscode
 .lite_workspace.lua

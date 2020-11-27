@@ -453,7 +453,7 @@ def generate_src_file():
     gprint("void check_and_optimize_ast(void)")
     with scope():
         gprint("ast_traversal_t att = {0};")
-        gprint("ast_traversal_begin(&att);")
+        gprint("ast_traversal_begin(&att, &G_root_node);")
         with scope():
             gprint("ast_node_t *n = NULL;")
             gprint("while ((n = ast_traverse_next(&att)) != NULL)")
@@ -506,7 +506,7 @@ def generate_src_file():
     with scope():
         gprint("str_t str = {0};")
         gprint('ast_traversal_t att = {0};')
-        gprint('ast_traversal_begin(&att);')
+        gprint('ast_traversal_begin(&att, &G_root_node);')
 
         gprint("return str.cstr;")
 

@@ -210,8 +210,11 @@ inline bool ast_traversal_pop(ast_traversal_t *t)
     return true;
 }
 
-void ast_traversal_begin(ast_traversal_t *t)
+void ast_traversal_begin(ast_traversal_t *t, ast_node_t *root)
 {
+    if (root == NULL) {
+        root = &G_root_node;
+    }
     ast_traversal_push(t, &G_root_node, 0);
 }
 
