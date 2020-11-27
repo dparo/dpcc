@@ -187,10 +187,18 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
         return false;
     }
 
-    bool success = true;
+    char *generated_code = NULL;
     check_and_optimize_ast();
+
     extern int yynerrs;
-    return success && yynerrs == 0;
+    if (yynerrs == 0) {
+        char *generated_code = codegen();
+        if (generated_code && yynerrs != 0) {
+            fprintf(output_stream, "%s", generated_code);
+        }
+    }
+
+    return yynerrs == 0 && generated_code;
 }
 
 void ast_traversal_push(ast_traversal_t *t, ast_node_t *parent, int32_t current_child)
@@ -213,10 +221,11 @@ inline bool ast_traversal_pop(ast_traversal_t *t)
 
 void ast_traversal_begin(ast_traversal_t *t, ast_node_t *root, bool bottom_up_traverse)
 {
+    t->stack_cnt = 0;
     if (root == NULL) {
         root = &G_root_node;
     }
-    ast_traversal_push(t, &G_root_node, 0);
+    ast_traversal_push(t, root, 0);
     t->bottom_up_traverse = bottom_up_traverse;
 }
 

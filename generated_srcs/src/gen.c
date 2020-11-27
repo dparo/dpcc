@@ -536,10 +536,49 @@ static ast_node_t *codegen_traverse_next(ast_traversal_t *t, bool *downside_trav
     return nvcs;
 }
 
+void codegen_expr(str_t *str, ast_node_t *root)
+{
+    assert(((root->kind == TOK_MOD) || (root->kind == TOK_BNOT) || (root->kind == TOK_BAND) || (root->kind == TOK_BOR) || (root->kind == TOK_BXOR) || (root->kind == TOK_BLSHIFT) || (root->kind == TOK_BRSHIFT) || (root->kind == TOK_ASSIGN) || (root->kind == TOK_ADD) || (root->kind == TOK_SUB) || (root->kind == TOK_MUL) || (root->kind == TOK_DIV) || (root->kind == TOK_POW) || (root->kind == TOK_INC) || (root->kind == TOK_DEC) || (root->kind == TOK_POS) || (root->kind == TOK_NEG) || (root->kind == TOK_EQ) || (root->kind == TOK_NEQ) || (root->kind == TOK_LT) || (root->kind == TOK_GT) || (root->kind == TOK_GTEQ) || (root->kind == TOK_LTEQ) || (root->kind == TOK_LNOT) || (root->kind == TOK_LAND) || (root->kind == TOK_LOR) || (root->kind == TOK_AR_SUBSCR)));
+}
+
 char *codegen(void)
 {
     str_t str = {0};
     ast_traversal_t att = {0};
-    ast_traversal_begin(&att, &G_root_node, true);
+    ast_traversal_begin(&att, &G_root_node, false);
+    sfcat(&G_allctx, &str, "push();\n");
+    ast_node_t *n = NULL;
+
+    while ((n = ast_traverse_next(&att)) != NULL)
+    {
+        if (n->kind == TOK_KW_MAIN && n->childs[0]->kind == TOK_OPEN_BRACE)
+        {
+            // Don't need to do anything, can just skip
+        }
+        else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_IF)
+        {
+        }
+        else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_WHILE)
+        {
+        }
+        else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_DO)
+        {
+        }
+        else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_FOR)
+        {
+        }
+        else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_LET)
+        {
+        }
+        else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_PRINT)
+        {
+        }
+        else if (n->kind == TOK_OPEN_BRACE)
+        {
+        }
+        else if (n->kind == TOK_SEMICOLON)
+        {
+        }
+    }
     return str.cstr;
 }

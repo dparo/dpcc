@@ -501,12 +501,54 @@ def generate_src_file():
 
         gprint('return nvcs;')
 
+
+    gprint()
+    gprint('void codegen_expr(str_t *str, ast_node_t *root)')
+    with scope():
+        gprint(f'assert({one_of("root->kind", ALL_OPS)});')
+        pass
+
+
     gprint()
     gprint('char *codegen(void)')
     with scope():
         gprint("str_t str = {0};")
         gprint('ast_traversal_t att = {0};')
-        gprint('ast_traversal_begin(&att, &G_root_node, true);')
+        gprint('ast_traversal_begin(&att, &G_root_node, false);')
+
+        gprint('sfcat(&G_allctx, &str, "push();\\n");')
+        gprint('ast_node_t *n = NULL;')
+        gprint("while ((n = ast_traverse_next(&att)) != NULL)")
+        with scope():
+            gprint('if (n->kind == TOK_KW_MAIN && n->childs[0]->kind == TOK_OPEN_BRACE)')
+            with scope():
+                gprint('// Don\'t need to do anything, can just skip')
+            gprint('else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_IF)')
+            with scope():
+                pass
+            gprint('else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_WHILE)')
+            with scope():
+                pass
+            gprint('else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_DO)')
+            with scope():
+                pass
+            gprint('else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_FOR)')
+            with scope():
+                pass
+            gprint('else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_LET)')
+            with scope():
+                pass
+            gprint('else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_PRINT)')
+            with scope():
+                pass
+            gprint('else if (n->kind == TOK_OPEN_BRACE)')
+            with scope():
+                pass
+            gprint('else if (n->kind == TOK_SEMICOLON)')
+            with scope():
+                pass
+
+
 
         gprint("return str.cstr;")
 

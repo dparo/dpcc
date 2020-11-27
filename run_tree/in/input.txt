@@ -1,41 +1,43 @@
-let a = 10;
+fn main() {
+     let a = 10;
 
-if (a == 10) {
-    a = 5;
-} else if (a == 20) {
-    a = 10;
-} else if (a == 30) {
-    a = 15;
-} else {
-    a = 20;
-}
+     if (a == 10) {
+         a = 5;
+     } else if (a == 20) {
+         a = 10;
+     } else if (a == 30) {
+         a = 15;
+     } else {
+         a = 20;
+     }
 
-for (let i = 0; i < 10; i++) {
-    print(i);
-    a = a + 2;
-}
+     for (let i = 0; i < 10; i++) {
+         print(i);
+         a = a + 2;
+     }
 
-while (a++ < 100) {
-      let b = a * 2;
-      print(b);
-}
+     while (a++ < 100) {
+           let b = a * 2;
+           print(b);
+     }
 
 
-let c = 1;
-if (a >= 10) {
-   if (a >= 20) {
-         if (a >= 30) {
-               c = 100;
-         } else {
-               c = 400;
-         }
-   } else {
-         if (a <= 15) {
-            c = 500;
-         } else {
-           c = 600;
-         }
-   }
-} else {
-       print(c);
+     let c = 1;
+     if (a >= 10) {
+        if (a >= 20) {
+              if (a >= 30) {
+                    c = 100;
+              } else {
+                    c = 400;
+              }
+        } else {
+              if (a <= 15) {
+                 c = 500;
+              } else {
+                c = 600;
+              }
+        }
+     } else {
+            print(c);
+     }
 }
