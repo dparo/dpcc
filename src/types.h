@@ -118,6 +118,7 @@ typedef struct {
     int32_t stack_cnt;
     ast_node_t **stack_nodes;
     int32_t *stack_childs;
+    bool down_dir;
 } ast_traversal_t;
 
 typedef struct {

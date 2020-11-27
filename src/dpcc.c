@@ -1,6 +1,7 @@
 #include "dpcc.h"
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -210,12 +211,13 @@ inline bool ast_traversal_pop(ast_traversal_t *t)
     return true;
 }
 
-void ast_traversal_begin(ast_traversal_t *t, ast_node_t *root)
+void ast_traversal_begin(ast_traversal_t *t, ast_node_t *root, bool down_dir)
 {
     if (root == NULL) {
         root = &G_root_node;
     }
     ast_traversal_push(t, &G_root_node, 0);
+    t->down_dir = down_dir;
 }
 
 ast_node_t *ast_traverse_next(ast_traversal_t *t)
@@ -224,31 +226,42 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t)
         return NULL;
     }
 
-    while (t->stack_childs[t->stack_cnt - 1] < t->stack_nodes[t->stack_cnt - 1]->num_childs) {
-        int32_t ci = t->stack_childs[t->stack_cnt - 1];
-        ast_node_t *child = NULL;
+    while (true) {
 
-        while ((ci < t->stack_nodes[t->stack_cnt - 1]->num_childs) && ((child = t->stack_nodes[t->stack_cnt - 1]->childs[ci]) == NULL)) {
-            ci++;
+        while (t->stack_childs[t->stack_cnt - 1] < t->stack_nodes[t->stack_cnt - 1]->num_childs) {
+            int32_t ci = t->stack_childs[t->stack_cnt - 1];
+            ast_node_t *child = NULL;
+
+            while ((ci < t->stack_nodes[t->stack_cnt - 1]->num_childs) && ((child = t->stack_nodes[t->stack_cnt - 1]->childs[ci]) == NULL)) {
+                ci++;
+            }
+            if (child) {
+                // Assert that the parent backpointer of the child is indeed
+                // correct.
+                assert(child->parent == t->stack_nodes[t->stack_cnt - 1]);
+
+                t->stack_childs[t->stack_cnt - 1] = ci + 1;
+                ast_traversal_push(t, child, 0);
+                if (t->down_dir) {
+                    return t->stack_nodes[t->stack_cnt - 1];
+                }
+            } else {
+                break;
+            }
         }
-        if (child) {
-            // Assert that the parent backpointer of the child is indeed
-            // correct.
-            assert(child->parent == t->stack_nodes[t->stack_cnt - 1]);
 
-            t->stack_childs[t->stack_cnt - 1] = ci + 1;
-            ast_traversal_push(t, child, 0);
+        ast_node_t *nvcs = t->stack_nodes[t->stack_cnt - 1];
+        ast_traversal_pop(t);
+        if (!t->down_dir) {
+            if (nvcs->kind == TOK_YYEOF) {
+                return NULL;
+            }
+
+            return nvcs;
         } else {
-            break;
+            if (t->stack_cnt == 0) {
+                return NULL;
+            }
         }
     }
-
-    ast_node_t *nvcs = t->stack_nodes[t->stack_cnt - 1];
-    ast_traversal_pop(t);
-
-    if (nvcs->kind == TOK_YYEOF) {
-        return NULL;
-    }
-
-    return nvcs;
 }
