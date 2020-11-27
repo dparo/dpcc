@@ -256,7 +256,7 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t, bool *is_top_down_encounter)
 
                 /// Top down traverse, after pushing child to be explored next
                 /// return the child
-                if (!t->bottom_up_traverse) {
+                if (t->top_down_traverse) {
                     if (is_top_down_encounter) {
                         *is_top_down_encounter = true;
                     }
