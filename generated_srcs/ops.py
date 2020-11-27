@@ -60,6 +60,7 @@ LOGICAL_COMPARISONS = OpsBundle(
 
         "TOK_EQ",
         "TOK_NEQ",
+        "TOK_LT",
         "TOK_GT",
         "TOK_GTEQ",
         "TOK_LTEQ",
