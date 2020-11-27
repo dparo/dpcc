@@ -192,8 +192,8 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
 
     extern int yynerrs;
     if (yynerrs == 0) {
-        char *generated_code = codegen();
-        if (generated_code && yynerrs != 0) {
+        generated_code = codegen();
+        if (generated_code && yynerrs == 0) {
             fprintf(output_stream, "%s", generated_code);
         }
     }

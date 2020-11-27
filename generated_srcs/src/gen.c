@@ -406,6 +406,7 @@ static void type_deduce(ast_node_t *n)
 
 static char *gen_tmp_var(enum DPCC_TYPE type)
 {
+    str_t s = {0};
 
     switch (type)
     {
@@ -416,27 +417,29 @@ static char *gen_tmp_var(enum DPCC_TYPE type)
         break;
         case TYPE_I32:
         {
-            return dallfmt(&G_allctx, "__i%d", G_codegen_i32_cnt++);
+            sfcat(&G_allctx, &s, "__i%d", G_codegen_i32_cnt++);
         }
         break;
         case TYPE_F32:
         {
-            return dallfmt(&G_allctx, "__f%d", G_codegen_f32_cnt++);
+            sfcat(&G_allctx, &s, "__f%d", G_codegen_f32_cnt++);
         }
         break;
         case TYPE_BOOL:
         {
-            return dallfmt(&G_allctx, "__b%d", G_codegen_bool_cnt++);
+            sfcat(&G_allctx, &s, "__b%d", G_codegen_bool_cnt++);
         }
         break;
     }
 
-    return NULL;
+    return s.cstr;
 }
 
 static char *gen_tmp_label()
 {
-    return dallfmt(&G_allctx, "__l%d", G_codegen_jmp_cnt++);
+    str_t s = {0};
+    sfcat(&G_allctx, &s, "__l%d", G_codegen_jmp_cnt++);
+    return s.cstr;
 }
 
 static void setup_addrs_and_jmp_tables(ast_node_t *n)
@@ -539,6 +542,23 @@ static ast_node_t *codegen_traverse_next(ast_traversal_t *t, bool *downside_trav
 void codegen_expr(str_t *str, ast_node_t *root)
 {
     assert(((root->kind == TOK_MOD) || (root->kind == TOK_BNOT) || (root->kind == TOK_BAND) || (root->kind == TOK_BOR) || (root->kind == TOK_BXOR) || (root->kind == TOK_BLSHIFT) || (root->kind == TOK_BRSHIFT) || (root->kind == TOK_ASSIGN) || (root->kind == TOK_ADD) || (root->kind == TOK_SUB) || (root->kind == TOK_MUL) || (root->kind == TOK_DIV) || (root->kind == TOK_POW) || (root->kind == TOK_INC) || (root->kind == TOK_DEC) || (root->kind == TOK_POS) || (root->kind == TOK_NEG) || (root->kind == TOK_EQ) || (root->kind == TOK_NEQ) || (root->kind == TOK_LT) || (root->kind == TOK_GT) || (root->kind == TOK_GTEQ) || (root->kind == TOK_LTEQ) || (root->kind == TOK_LNOT) || (root->kind == TOK_LAND) || (root->kind == TOK_LOR) || (root->kind == TOK_AR_SUBSCR)));
+    ast_traversal_t att = {0};
+    ast_traversal_begin(&att, root, true);
+    ast_node_t *n = NULL;
+
+    while ((n = ast_traverse_next(&att)) != NULL)
+    {
+        if (n->kind == TOK_ASSIGN)
+        {
+            // Extra care here, we need to generate the proper code to assign to user declared identifiers
+        }
+        else if (n->kind == TOK_OPEN_BRACKET)
+        {
+        }
+        else
+        {
+        }
+    }
 }
 
 char *codegen(void)
@@ -573,11 +593,15 @@ char *codegen(void)
         else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_PRINT)
         {
         }
+        else if (n->kind == TOK_SEMICOLON)
+        {
+        }
         else if (n->kind == TOK_OPEN_BRACE)
         {
         }
-        else if (n->kind == TOK_SEMICOLON)
+        else
         {
+            // invalid_code_path();
         }
     }
     return str.cstr;

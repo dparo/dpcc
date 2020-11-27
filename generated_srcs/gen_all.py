@@ -399,18 +399,21 @@ def generate_src_file():
     gprint("static char *gen_tmp_var(enum DPCC_TYPE type)")
     with scope():
 
+        gprint('str_t s = {0};')
         switch("type", {
-            "TYPE_I32": 'return dallfmt(&G_allctx, "__i%d", G_codegen_i32_cnt++);',
-            "TYPE_F32": 'return dallfmt(&G_allctx, "__f%d", G_codegen_f32_cnt++);',
-            "TYPE_BOOL": 'return dallfmt(&G_allctx, "__b%d", G_codegen_bool_cnt++);',
+            "TYPE_I32": 'sfcat(&G_allctx, &s, "__i%d", G_codegen_i32_cnt++);',
+            "TYPE_F32": 'sfcat(&G_allctx, &s, "__f%d", G_codegen_f32_cnt++);',
+            "TYPE_BOOL": 'sfcat(&G_allctx, &s, "__b%d", G_codegen_bool_cnt++);',
         })
 
-        gprint('return NULL;')
+        gprint('return s.cstr;')
 
     gprint()
     gprint('static char *gen_tmp_label()')
     with scope():
-        gprint('return dallfmt(&G_allctx, "__l%d", G_codegen_jmp_cnt++);')
+        gprint('str_t s = {0};')
+        gprint('sfcat(&G_allctx, &s, "__l%d", G_codegen_jmp_cnt++);')
+        gprint('return s.cstr;')
 
     gprint()
     gprint("static void setup_addrs_and_jmp_tables(ast_node_t *n)")
@@ -506,8 +509,21 @@ def generate_src_file():
     gprint('void codegen_expr(str_t *str, ast_node_t *root)')
     with scope():
         gprint(f'assert({one_of("root->kind", ALL_OPS)});')
-        pass
+        gprint('ast_traversal_t att = {0};')
+        gprint('ast_traversal_begin(&att, root, true);')
 
+        gprint('ast_node_t *n = NULL;')
+        gprint("while ((n = ast_traverse_next(&att)) != NULL)")
+        with scope():
+            gprint('if (n->kind == TOK_ASSIGN)')
+            with scope():
+                gprint('// Extra care here, we need to generate the proper code to assign to user declared identifiers')
+            gprint('else if (n->kind == TOK_OPEN_BRACKET)')
+            with scope():
+                pass
+            gprint('else')
+            with scope():
+                pass
 
     gprint()
     gprint('char *codegen(void)')
@@ -541,12 +557,15 @@ def generate_src_file():
             gprint('else if (n->kind == TOK_SEMICOLON && n->childs[0]->kind == TOK_KW_PRINT)')
             with scope():
                 pass
-            gprint('else if (n->kind == TOK_OPEN_BRACE)')
-            with scope():
-                pass
             gprint('else if (n->kind == TOK_SEMICOLON)')
             with scope():
                 pass
+            gprint('else if (n->kind == TOK_OPEN_BRACE)')
+            with scope():
+                pass
+            gprint('else')
+            with scope():
+                gprint('// invalid_code_path();')
 
 
 
