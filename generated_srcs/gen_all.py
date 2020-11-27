@@ -519,7 +519,7 @@ def generate_src_file():
             gprint('if (n->kind == TOK_ASSIGN)')
             with scope():
                 gprint('// Extra care here, we need to generate the proper code to assign to user declared identifiers')
-            gprint('else if (n->kind == TOK_OPEN_BRACKET)')
+            gprint('else if (n->kind == TOK_OPEN_BRACE)')
             with scope():
                 pass
             gprint('else')
@@ -533,7 +533,7 @@ def generate_src_file():
         gprint('ast_traversal_t att = {0};')
         gprint('ast_traversal_begin(&att, &G_root_node, true, true);')
 
-        gprint('sfcat(&G_allctx, &str, "push();\\n");')
+        gprint('sfcat(&G_allctx, &str, "\\n");')
         gprint('ast_node_t *n = NULL;')
         gprint('bool is_top_down_encounter = false;')
         gprint("while ((n = ast_traverse_next(&att, &is_top_down_encounter)) != NULL)")
@@ -589,7 +589,13 @@ def generate_src_file():
                 pass
             gprint('else if (n->kind == TOK_OPEN_BRACE)')
             with scope():
-                pass
+                gprint('if (is_top_down_encounter)')
+                with scope():
+                    gprint('printf("push();\\n");')
+                gprint('else')
+                with scope():
+                    gprint('printf("pop();\\n");')
+
             gprint(f'else if ({one_of("n->kind", ALL_OPS)})')
             with scope():
                 gprint('codegen_expr(&str, n);')

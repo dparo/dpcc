@@ -347,7 +347,6 @@ static void type_deduce(ast_node_t *n)
         }
         // Forward the same type to the keyword let
         n->md.type = c0->md.type;
-        n->md.array_len = c0->md.array_len;
     }
     // Deduce type of variable declarations
     if ((n->kind == TOK_KW_FN) || (n->kind == TOK_KW_LET))
@@ -372,7 +371,6 @@ static void type_deduce(ast_node_t *n)
                 // Assume integer
                 n->md.type = TYPE_I32;
             }
-            n->md.array_len = 1;
         }
         else
         {
@@ -555,7 +553,7 @@ void codegen_expr(str_t *str, ast_node_t *root)
         {
             // Extra care here, we need to generate the proper code to assign to user declared identifiers
         }
-        else if (n->kind == TOK_OPEN_BRACKET)
+        else if (n->kind == TOK_OPEN_BRACE)
         {
         }
         else
@@ -569,7 +567,7 @@ char *codegen(void)
     str_t str = {0};
     ast_traversal_t att = {0};
     ast_traversal_begin(&att, &G_root_node, true, true);
-    sfcat(&G_allctx, &str, "push();\n");
+    sfcat(&G_allctx, &str, "\n");
     ast_node_t *n = NULL;
     bool is_top_down_encounter = false;
 
@@ -653,6 +651,14 @@ char *codegen(void)
         }
         else if (n->kind == TOK_OPEN_BRACE)
         {
+            if (is_top_down_encounter)
+            {
+                printf("push();\n");
+            }
+            else
+            {
+                printf("pop();\n");
+            }
         }
         else if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_LT) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_AR_SUBSCR)))
         {
