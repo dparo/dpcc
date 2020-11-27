@@ -11,7 +11,7 @@ INVALID_CODE_PATH = "invalid_code_path();"
 DEFAULT_CASE = INVALID_CODE_PATH
 
 common_boilerplate = (
-f"""//
+"""//
 // generated from {sys.argv[0]}
 //
 
@@ -32,21 +32,25 @@ f"""//
 
 """
 )
+
+
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
 indent_cnt = 0
+
+
 def gprint(*args, **kwargs):
     if len(args) >= 1:
         lines = args[0].splitlines()
         out = ""
 
-        for i in range(0, len(lines)):
-            should_prepend_newline = lines[i].startswith("do") or lines[i].startswith("while") or lines[i].startswith("switch") or lines[i].startswith("for")
+        for _, l in enumerate(lines):
+            should_prepend_newline = l.startswith("do") or l.startswith("while") or l.startswith("switch") or l.startswith("for")
             if should_prepend_newline:
                 out += "\n"
-            out += "    " * indent_cnt + lines[i] + "\n"
+            out += "    " * indent_cnt + l + "\n"
 
         new_args = list(args)
         new_args[0] = out
@@ -56,14 +60,17 @@ def gprint(*args, **kwargs):
     else:
         print(*args, **kwargs, end='')
 
+
 class scope:
     def __init__(self):
         pass
+
     def __enter__(self):
         global indent_cnt
         gprint("{")
         indent_cnt += 1
-    def __exit__(self, type, value, traceback):
+
+    def __exit__(self, _type, _value, _traceback):
         global indent_cnt
         indent_cnt -= 1
         gprint("}")
@@ -71,8 +78,8 @@ class scope:
 
 def gen_logical_or(array):
     result = ""
-    for i in range(0, len(array)):
-        if (i != len(array) - 1):
+    for i, _ in enumerate(array):
+        if i != len(array) - 1:
             result += f"({array[i]}) || "
         else:
             result += f"({array[i]})"
@@ -81,25 +88,27 @@ def gen_logical_or(array):
 
 def gen_logical_and(array):
     result = ""
-    for i in range(0, len(array)):
-        if (i != len(array) - 1):
+    for i, _ in enumerate(array):
+        if i != len(array) - 1:
             result += f"({array[i]}) && "
         else:
             result += f"({array[i]})"
     return "(" + result + ")"
 
+
 def one_of(expr, array):
     result = ""
-    for i in range(0, len(array)):
-        if (i != len(array) - 1):
+    for i, _ in enumerate(array):
+        if i != len(array) - 1:
             result += f"({expr} == {array[i]}) || "
         else:
             result += f"({expr} == {array[i]})"
     return "(" + result + ")"
 
-def switch(elem, dict, default_case = DEFAULT_CASE):
-    keys = list(dict.keys())
-    values = list(dict.values())
+
+def switch(elem, d, default_case=DEFAULT_CASE):
+    keys = list(d.keys())
+    values = list(d.values())
 
     gprint(f"switch ({elem})")
     with scope():
@@ -110,7 +119,7 @@ def switch(elem, dict, default_case = DEFAULT_CASE):
             with scope():
                 gprint(default_case)
             gprint("break;")
-        for i in range(0, len(keys)):
+        for i, _ in enumerate(keys):
             gprint(f"case {keys[i]}:")
             with scope():
                 gprint(values[i])
@@ -118,18 +127,17 @@ def switch(elem, dict, default_case = DEFAULT_CASE):
     gprint()
 
 
-
 DECL_OPS = [
     "TOK_KW_FN",
     "TOK_KW_LET"
 ]
+
 
 CAST_OPS = [
     "TOK_KW_INT",
     "TOK_KW_FLOAT",
     "TOK_KW_BOOL",
 ]
-
 
 
 def decl_map_fn(out_type, fn_name, in_type, map_dict, default_case=DEFAULT_CASE, default_return_value="0"):
@@ -144,37 +152,46 @@ def decl_map_fn(out_type, fn_name, in_type, map_dict, default_case=DEFAULT_CASE,
 def tuple_to_comma_separated_str(t):
     return ','.join(map(str, itertools.chain.from_iterable(t)))
 
-def gen_err(loc, fmt, args = []):
-    optional_comma = "" if len(args) == 0 else ", "
+
+def gen_err(loc, fmt, args=None):
     va_args = ""
-    for i in range(0, len(args)):
-        va_args += args[i] + (", " if i != len(args) - 1 else "")
+    optional_comma = ""
+    if args is not None:
+        optional_comma = "" if len(args) == 0 else ", "
+        va_args = ""
+        for i, _ in enumerate(args):
+            va_args += args[i] + (", " if i != len(args) - 1 else "")
 
     gprint(f"dpcc_log(DPCC_SEVERITY_ERROR, {loc}, {fmt}{optional_comma} {va_args});")
     gprint("yynerrs += 1;")
 
 
-def gen_warn(loc, fmt, args = []):
-    optional_comma = "" if len(args) == 0 else ", "
+def gen_warn(loc, fmt, args=None):
     va_args = ""
-    for i in range(0, len(args)):
-        va_args += args[i] + (", " if i != len(args) - 1 else "")
+    optional_comma = ""
+    if args is not None:
+        optional_comma = "" if len(args) == 0 else ", "
+        va_args = ""
+        for i, _ in enumerate(args):
+            va_args += args[i] + (", " if i != len(args) - 1 else "")
 
     gprint(f"dpcc_log(DPCC_SEVERITY_WARNING, {loc}, {fmt}{optional_comma} {va_args});")
 
-def gen_info(loc, fmt, args = []):
-    optional_comma = "" if len(args) == 0 else ", "
+
+def gen_info(loc, fmt, args=None):
     va_args = ""
-    for i in range(0, len(args)):
-        va_args += args[i] + (", " if i != len(args) - 1 else "")
+    optional_comma = ""
+    if args is not None:
+        optional_comma = "" if len(args) == 0 else ", "
+        va_args = ""
+        for i, _ in enumerate(args):
+            va_args += args[i] + (", " if i != len(args) - 1 else "")
 
     gprint(f"dpcc_log(DPCC_SEVERITY_INFO, {loc}, {fmt}{optional_comma} {va_args});")
 
 
 def debug_print(string):
     gprint(f'printf("--------------- %s\\n", "{string}");')
-
-
 
 
 def gen_ops_type_deduction_code(n):
@@ -189,30 +206,21 @@ def gen_ops_type_deduction_code(n):
                 for tct_idx in range(0, len(bundle.types_conversion_table)):
                     tct = bundle.types_conversion_table[tct_idx]
                     out_type = type_to_dpcc_type(tct[0])
-                    in_types  = [type_to_dpcc_type(item) for item in tct[1]]
+                    in_types = [type_to_dpcc_type(item) for item in tct[1]]
                     num_in_types = len(in_types)
 
                     maybe_else = "else " if tct_idx != 0 else ""
 
                     check_type_list = []
-                    for i in range(0, len(in_types)):
-                        check_type_list.append(f"n->childs[{i}]->md.type == {in_types[i]}")
+                    for i, _ in enumerate(in_types):
+                        check_type_list.append(f"{n}->childs[{i}]->md.type == {in_types[i]}")
 
-                    gprint(f'{maybe_else }if ((n->num_childs == {num_in_types}) && {gen_logical_and(check_type_list)})')
+                    gprint(f'{maybe_else }if (({n}->num_childs == {num_in_types}) && {gen_logical_and(check_type_list)})')
                     with scope():
-                        gprint(f'n->md.type = {out_type};')
-                        pass
+                        gprint(f'{n}->md.type = {out_type};')
                 gprint("else")
                 with scope():
-                    gen_err("&n->tok->loc", '"Types composing this expression cannot be broadcasted."')
-                    if 0:
-                        for i in range(0, len(in_types)):
-                            gen_info(f"&n->childs[{i}]->tok->loc",
-                                    '"Got type `%s` for argument at index %d"',
-                                    [f'dpcc_type_as_str(n->childs[{i}]->md.type)', f"{i}"])
-
-
-
+                    gen_err(f"&{n}->tok->loc", '"Types composing this expression cannot be broadcasted."')
 
 
 def generate_src_file():
@@ -268,7 +276,6 @@ def generate_src_file():
                     gen_err("&c2->tok->loc", '"Number of elements in initializer list is invalid"')
                     gen_info("&c2->tok->loc", '"Cannot create zero or negative sized array"')
 
-
                 gprint("// Now make sure that each type in the initializer list is correct")
                 gprint("for (int32_t i = 0; i < c2->num_childs; i++)")
                 with scope():
@@ -285,8 +292,6 @@ def generate_src_file():
                     gen_err("&c0->tok->loc", '"Size of the array must be specified"')
                     gen_info("&c0->tok->loc", '"Either specify the size inside the square brackets, or provide an initializer list"')
 
-
-
         gprint("// Forward the same type to the keyword let")
         gprint("n->md.type = c0->md.type;")
         gprint("n->md.array_len = init_list_len;")
@@ -295,7 +300,6 @@ def generate_src_file():
     gprint('static void type_deduce_expr_and_operators(ast_node_t *n)')
     with scope():
         gen_ops_type_deduction_code("n")
-
 
     gprint()
     gprint("static void type_deduce(ast_node_t *n)")
@@ -312,7 +316,6 @@ def generate_src_file():
             "TOK_BOOL_LIT": "n->md.type = TYPE_BOOL;",
             "TOK_ID": "if (n->decl) n->md.type = n->decl->md.type;",
         }, default_case='')
-        pass
 
         gprint("// Assign the correct type to each casting operator")
         gprint(f'if ({one_of("n->kind", CAST_OPS)} && !{one_of("n->parent->kind", DECL_OPS)})')
@@ -349,7 +352,7 @@ def generate_src_file():
         gprint(f'if {one_of("n->kind", DECL_OPS)}')
         with scope():
             gprint('// Deduce type of integral variable declarations')
-            gprint(f'if ((c0 == NULL) || (c0->kind != TOK_OPEN_BRACKET))')
+            gprint('if ((c0 == NULL) || (c0->kind != TOK_OPEN_BRACKET))')
             with scope():
                 gprint("ast_node_t *var_decl_type = c0;")
                 gprint("ast_node_t *child_type = c2;")
@@ -369,7 +372,6 @@ def generate_src_file():
             with scope():
                 gprint('deduce_array_type(n);')
 
-
         gprint('// Deduce the type of each identifier used')
         gprint(f'if (n->kind == TOK_ID && n->parent && !{one_of("n->parent->kind", DECL_OPS)})')
         with scope():
@@ -382,8 +384,6 @@ def generate_src_file():
         with scope():
             gprint('type_deduce_expr_and_operators(n);')
 
-
-
         gprint('// Check sensisble array subscript bounds')
         gprint('if (n->kind == TOK_AR_SUBSCR && n->childs[1]->kind == TOK_I32_LIT && n->childs[1]->md.type == TYPE_I32)')
         with scope():
@@ -394,8 +394,6 @@ def generate_src_file():
                 gen_err("&n->childs[1]->tok->loc", '"Invalid subscript constant"')
                 gen_info("&n->childs[0]->decl->tok->loc", '"As specified from declaration index should be in [%d, %d)"', ["0", "array_len"])
                 gen_info("&n->childs[1]->tok->loc", '"Got `%d` instead"', ["subscript_idx"])
-
-
 
     gprint()
     gprint("static char *gen_tmp_var(enum DPCC_TYPE type)")
@@ -417,10 +415,10 @@ def generate_src_file():
     gprint()
     gprint("static void setup_addrs_and_jmp_tables(ast_node_t *n)")
     with scope():
-        #gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
-        #gprint("ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;")
-        #gprint("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
-        #gprint("ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;")
+        # gprint("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
+        # gprint("ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;")
+        # gprint("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
+        # gprint("ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;")
 
         gprint('if (!n->md.addr)')
         with scope():
@@ -451,7 +449,6 @@ def generate_src_file():
             with scope():
                 gprint('invalid_code_path();')
 
-
     gprint()
     gprint("void check_and_optimize_ast(void)")
     with scope():
@@ -465,7 +462,6 @@ def generate_src_file():
                 with scope():
                     gprint("type_deduce(n);")
                 gprint("setup_addrs_and_jmp_tables(n);")
-
 
     gprint()
     gprint("static ast_node_t *codegen_traverse_next(ast_traversal_t *t, bool *downside_traversal)")
@@ -505,7 +501,6 @@ def generate_src_file():
 
         gprint('return nvcs;')
 
-
     gprint()
     gprint('char *codegen(void)')
     with scope():
@@ -515,10 +510,12 @@ def generate_src_file():
 
         gprint("return str.cstr;")
 
+
 def generate_hdr_file():
     gprint(common_boilerplate)
     gprint("void check_and_optimize_ast(void);")
     gprint("char *codegen(void);")
+
 
 def main():
 
@@ -526,8 +523,8 @@ def main():
         f.write(datetime.today().strftime('%Y-%m-%d-%H:%M:%S'))
 
     gen_list = [
-        { "filepath": "src/gen.c", "fn": generate_src_file },
-        { "filepath": "src/gen.h", "fn": generate_hdr_file },
+        {"filepath": "src/gen.c", "fn": generate_src_file},
+        {"filepath": "src/gen.h", "fn": generate_hdr_file},
     ]
 
     for v in gen_list:
@@ -535,5 +532,6 @@ def main():
         with open(v['filepath'], 'w') as f:
             sys.stdout = f
             (v['fn'])()
+
 
 main()

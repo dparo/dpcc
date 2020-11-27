@@ -1,5 +1,5 @@
 //
-// generated from /home/dparo/develop/dpcc/generated_srcs/gen_all.py
+// generated from {sys.argv[0]}
 //
 
 #include <stdbool.h>
