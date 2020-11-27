@@ -404,7 +404,7 @@ void sfcat(mctx_t *ctx, str_t *s, char *fmt, ...)
     va_start(ap, fmt);
     int32_t chars_to_write = vsnprintf(NULL, 0, fmt, ap);
     s->cstr = dallrsz(ctx, s->cstr, s->len + chars_to_write + 1);
-    s->cstr[s->len + chars_to_write + 1] = 0;
+    s->cstr[s->len + chars_to_write] = 0;
 
     char *bumped = s->cstr + s->len;
     va_start(ap, fmt);
