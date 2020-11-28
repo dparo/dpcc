@@ -194,41 +194,39 @@ def debug_print(string):
     gprint(f'printf("--------------- %s\\n", "{string}");')
 
 
-def gen_ops_type_deduction_code(n):
-    gprint(f'if ({one_of("n->kind", ALL_OPS)})')
+def gen_type_deduce_expr_and_operators(n):
+    gprint()
+    gprint('static void type_deduce_expr_and_operators(ast_node_t *n)')
     with scope():
-        for bundle in ALL_BUNDLES:
-            all_yytokenstypes = []
-            for yytokenstype in bundle.yytokentypes:
-                all_yytokenstypes.append(yytokenstype)
-            gprint(f'if ({one_of("n->kind", all_yytokenstypes)})')
-            with scope():
-                for tct_idx in range(0, len(bundle.types_conversion_table)):
-                    tct = bundle.types_conversion_table[tct_idx]
-                    out_type = type_to_dpcc_type(tct[0])
-                    in_types = [type_to_dpcc_type(item) for item in tct[1]]
-                    num_in_types = len(in_types)
-
-                    maybe_else = "else " if tct_idx != 0 else ""
-
-                    check_type_list = []
-                    for i, _ in enumerate(in_types):
-                        check_type_list.append(f"{n}->childs[{i}]->md.type == {in_types[i]}")
-
-                    gprint(f'{maybe_else }if (({n}->num_childs == {num_in_types}) && {gen_logical_and(check_type_list)})')
-                    with scope():
-                        gprint(f'{n}->md.type = {out_type};')
-                gprint("else")
+        gprint(f'if ({one_of("n->kind", ALL_OPS)})')
+        with scope():
+            for bundle in ALL_BUNDLES:
+                all_yytokenstypes = []
+                for yytokenstype in bundle.yytokentypes:
+                    all_yytokenstypes.append(yytokenstype)
+                gprint(f'if ({one_of("n->kind", all_yytokenstypes)})')
                 with scope():
-                    gen_err(f"&{n}->tok->loc", '"Types composing this expression cannot be broadcasted."')
+                    for tct_idx in range(0, len(bundle.types_conversion_table)):
+                        tct = bundle.types_conversion_table[tct_idx]
+                        out_type = type_to_dpcc_type(tct[0])
+                        in_types = [type_to_dpcc_type(item) for item in tct[1]]
+                        num_in_types = len(in_types)
+
+                        maybe_else = "else " if tct_idx != 0 else ""
+
+                        check_type_list = []
+                        for i, _ in enumerate(in_types):
+                            check_type_list.append(f"{n}->childs[{i}]->md.type == {in_types[i]}")
+
+                        gprint(f'{maybe_else }if (({n}->num_childs == {num_in_types}) && {gen_logical_and(check_type_list)})')
+                        with scope():
+                            gprint(f'{n}->md.type = {out_type};')
+                    gprint("else")
+                    with scope():
+                        gen_err(f"&{n}->tok->loc", '"Types composing this expression cannot be broadcasted."')
 
 
-def generate_src_file():
-    gprint(common_boilerplate)
-
-    gprint('#include "parser.h"')
-    gprint('extern int yynerrs;')
-
+def gen_typemismatch_check():
     gprint()
     gprint("void typemismatch_check(ast_node_t *expected_type, ast_node_t *got_type)")
     with scope():
@@ -240,6 +238,8 @@ def generate_src_file():
                 gen_info("&expected_type->tok->loc", '"Expected `%s`\"', ["dpcc_type_as_str(expected_type->md.type)"])
                 gen_info("&got_type->tok->loc", '"But got `%s`\"', ["dpcc_type_as_str(got_type->md.type)"])
 
+
+def gen_deduce_array_type():
     gprint()
     gprint('static void deduce_array_type(ast_node_t *n)')
     with scope():
@@ -296,11 +296,8 @@ def generate_src_file():
         gprint("n->md.type = c0->md.type;")
         gprint("n->md.array_len = init_list_len;")
 
-    gprint()
-    gprint('static void type_deduce_expr_and_operators(ast_node_t *n)')
-    with scope():
-        gen_ops_type_deduction_code("n")
 
+def gen_type_deduce():
     gprint()
     gprint("static void type_deduce(ast_node_t *n)")
     with scope():
@@ -399,8 +396,10 @@ def generate_src_file():
                 gen_info("&n->childs[0]->decl->tok->loc", '"As specified from declaration index should be in [%d, %d)"', ["0", "array_len"])
                 gen_info("&n->childs[1]->tok->loc", '"Got `%d` instead"', ["subscript_idx"])
 
+
+def gen_get_tmp_var():
     gprint()
-    gprint("static char *gen_tmp_var(enum DPCC_TYPE type)")
+    gprint("static char *get_tmp_var(enum DPCC_TYPE type)")
     with scope():
 
         gprint('str_t s = {0};')
@@ -412,13 +411,16 @@ def generate_src_file():
 
         gprint('return s.cstr;')
 
+def gen_get_tmp_label():
     gprint()
-    gprint('static char *gen_tmp_label()')
+    gprint('static char *get_tmp_label()')
     with scope():
         gprint('str_t s = {0};')
         gprint('sfcat(&G_allctx, &s, "__l%d", G_codegen_jmp_cnt++);')
         gprint('return s.cstr;')
 
+
+def gen_setup_addrs_and_jmp_table():
     gprint()
     gprint("static void setup_addrs_and_jmp_tables(ast_node_t *n)")
     with scope():
@@ -434,27 +436,29 @@ def generate_src_file():
             with scope():
                 gprint('assert(n->md.type != TYPE_I32_ARRAY);')
                 gprint('assert(n->md.type != TYPE_F32_ARRAY);')
-                gprint('n->md.addr = gen_tmp_var(n->md.type);')
+                gprint('n->md.addr = get_tmp_var(n->md.type);')
 
         gprint(f'if ({one_of("n->kind", CONTROL_FLOW_OPS)})')
         with scope():
             gprint('if (n->kind == TOK_KW_WHILE && n->md.jmp_bot == NULL)')
             with scope():
-                gprint('n->md.jmp_bot = gen_tmp_label();')
+                gprint('n->md.jmp_bot = get_tmp_label();')
             gprint('else if (n->kind == TOK_KW_DO && n->md.jmp_top == NULL)')
             with scope():
-                gprint('n->md.jmp_top = gen_tmp_label();')
+                gprint('n->md.jmp_top = get_tmp_label();')
             gprint('else if (n->kind == TOK_KW_FOR && n->md.jmp_top == NULL)')
             with scope():
-                gprint('n->md.jmp_top = gen_tmp_label();')
+                gprint('n->md.jmp_top = get_tmp_label();')
             gprint('else if ((n->kind == TOK_KW_IF) && (n->md.jmp_next == NULL || n->md.jmp_bot == NULL))')
             with scope():
-                gprint('n->md.jmp_next = gen_tmp_label();')
-                gprint('n->md.jmp_bot = gen_tmp_label();')
+                gprint('n->md.jmp_next = get_tmp_label();')
+                gprint('n->md.jmp_bot = get_tmp_label();')
             gprint('else')
             with scope():
                 gprint('invalid_code_path();')
 
+
+def gen_check_and_optimize_ast():
     gprint()
     gprint("void check_and_optimize_ast(void)")
     with scope():
@@ -469,45 +473,8 @@ def generate_src_file():
                     gprint("type_deduce(n);")
                 gprint("setup_addrs_and_jmp_tables(n);")
 
-    gprint()
-    gprint("static ast_node_t *codegen_traverse_next(ast_traversal_t *t, bool *downside_traversal)")
-    with scope():
-        gprint('*downside_traversal = false;')
-        gprint('if (t->stack_cnt == 0)')
-        with scope():
-            gprint('return NULL;')
 
-        gprint('while (t->stack_childs[t->stack_cnt - 1] < t->stack_nodes[t->stack_cnt - 1]->num_childs)')
-        with scope():
-            gprint('int32_t ci = t->stack_childs[t->stack_cnt - 1];')
-            gprint('ast_node_t *child = NULL;')
-
-            gprint('while ((ci < t->stack_nodes[t->stack_cnt - 1]->num_childs) && ((child = t->stack_nodes[t->stack_cnt - 1]->childs[ci]) == NULL))')
-            with scope():
-                gprint('ci++;')
-            gprint('if (child)')
-            with scope():
-                gprint('// Assert that the parent backpointer of the child is indeed correct')
-                gprint('assert(child->parent == t->stack_nodes[t->stack_cnt - 1]);')
-
-                gprint('t->stack_childs[t->stack_cnt - 1] = ci + 1;')
-                gprint('ast_traversal_push(t, child, 0);')
-                gprint('*downside_traversal = true;')
-                gprint('return t->stack_nodes[t->stack_cnt - 1];')
-            gprint('else')
-            with scope():
-                gprint('break;')
-
-        gprint('ast_node_t *nvcs = t->stack_nodes[t->stack_cnt - 1];')
-        gprint('ast_traversal_pop(t);')
-
-        gprint('if (nvcs->kind == TOK_YYEOF)')
-        with scope():
-            gprint('return NULL;')
-
-        gprint('return nvcs;')
-
-
+def gen_codegen_expr():
     gprint()
     gprint('void codegen_expr(str_t *str, ast_node_t *root)')
     with scope():
@@ -529,6 +496,7 @@ def generate_src_file():
             with scope():
                 pass
 
+def gen_codegen():
     gprint()
     gprint('char *codegen(void)')
     with scope():
@@ -611,6 +579,27 @@ def generate_src_file():
 
         gprint('sfcat(&G_allctx, &str, "\\n");')
         gprint("return str.cstr;")
+
+
+def generate_src_file():
+    gprint(common_boilerplate)
+
+    gprint('#include "parser.h"')
+    gprint('extern int yynerrs;')
+
+    gen_typemismatch_check()
+    gen_deduce_array_type()
+    gen_type_deduce_expr_and_operators("n")
+    gen_type_deduce()
+    gen_get_tmp_var()
+    gen_get_tmp_label()
+    gen_setup_addrs_and_jmp_table()
+    gen_check_and_optimize_ast()
+    gen_codegen_expr()
+    gen_codegen()
+
+
+
 
 
 def generate_hdr_file():

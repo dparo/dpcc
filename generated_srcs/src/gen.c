@@ -410,7 +410,7 @@ static void type_deduce(ast_node_t *n)
     }
 }
 
-static char *gen_tmp_var(enum DPCC_TYPE type)
+static char *get_tmp_var(enum DPCC_TYPE type)
 {
     str_t s = {0};
 
@@ -441,7 +441,7 @@ static char *gen_tmp_var(enum DPCC_TYPE type)
     return s.cstr;
 }
 
-static char *gen_tmp_label()
+static char *get_tmp_label()
 {
     str_t s = {0};
     sfcat(&G_allctx, &s, "__l%d", G_codegen_jmp_cnt++);
@@ -457,27 +457,27 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
         {
             assert(n->md.type != TYPE_I32_ARRAY);
             assert(n->md.type != TYPE_F32_ARRAY);
-            n->md.addr = gen_tmp_var(n->md.type);
+            n->md.addr = get_tmp_var(n->md.type);
         }
     }
     if (((n->kind == TOK_KW_IF) || (n->kind == TOK_KW_DO) || (n->kind == TOK_KW_WHILE) || (n->kind == TOK_KW_FOR)))
     {
         if (n->kind == TOK_KW_WHILE && n->md.jmp_bot == NULL)
         {
-            n->md.jmp_bot = gen_tmp_label();
+            n->md.jmp_bot = get_tmp_label();
         }
         else if (n->kind == TOK_KW_DO && n->md.jmp_top == NULL)
         {
-            n->md.jmp_top = gen_tmp_label();
+            n->md.jmp_top = get_tmp_label();
         }
         else if (n->kind == TOK_KW_FOR && n->md.jmp_top == NULL)
         {
-            n->md.jmp_top = gen_tmp_label();
+            n->md.jmp_top = get_tmp_label();
         }
         else if ((n->kind == TOK_KW_IF) && (n->md.jmp_next == NULL || n->md.jmp_bot == NULL))
         {
-            n->md.jmp_next = gen_tmp_label();
-            n->md.jmp_bot = gen_tmp_label();
+            n->md.jmp_next = get_tmp_label();
+            n->md.jmp_bot = get_tmp_label();
         }
         else
         {
@@ -502,46 +502,6 @@ void check_and_optimize_ast(void)
             setup_addrs_and_jmp_tables(n);
         }
     }
-}
-
-static ast_node_t *codegen_traverse_next(ast_traversal_t *t, bool *downside_traversal)
-{
-    *downside_traversal = false;
-    if (t->stack_cnt == 0)
-    {
-        return NULL;
-    }
-
-    while (t->stack_childs[t->stack_cnt - 1] < t->stack_nodes[t->stack_cnt - 1]->num_childs)
-    {
-        int32_t ci = t->stack_childs[t->stack_cnt - 1];
-        ast_node_t *child = NULL;
-
-        while ((ci < t->stack_nodes[t->stack_cnt - 1]->num_childs) && ((child = t->stack_nodes[t->stack_cnt - 1]->childs[ci]) == NULL))
-        {
-            ci++;
-        }
-        if (child)
-        {
-            // Assert that the parent backpointer of the child is indeed correct
-            assert(child->parent == t->stack_nodes[t->stack_cnt - 1]);
-            t->stack_childs[t->stack_cnt - 1] = ci + 1;
-            ast_traversal_push(t, child, 0);
-            *downside_traversal = true;
-            return t->stack_nodes[t->stack_cnt - 1];
-        }
-        else
-        {
-            break;
-        }
-    }
-    ast_node_t *nvcs = t->stack_nodes[t->stack_cnt - 1];
-    ast_traversal_pop(t);
-    if (nvcs->kind == TOK_YYEOF)
-    {
-        return NULL;
-    }
-    return nvcs;
 }
 
 void codegen_expr(str_t *str, ast_node_t *root)
