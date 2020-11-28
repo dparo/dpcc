@@ -397,9 +397,9 @@ def gen_type_deduce():
                 gen_info("&n->childs[1]->tok->loc", '"Got `%d` instead"', ["subscript_idx"])
 
 
-def gen_get_tmp_var():
+def gen_new_tmp_var():
     gprint()
-    gprint("static char *get_tmp_var(enum DPCC_TYPE type)")
+    gprint("static char *new_tmp_var(enum DPCC_TYPE type)")
     with scope():
 
         gprint('str_t s = {0};')
@@ -411,9 +411,9 @@ def gen_get_tmp_var():
 
         gprint('return s.cstr;')
 
-def gen_get_tmp_label():
+def gen_new_tmp_label():
     gprint()
-    gprint('static char *get_tmp_label()')
+    gprint('static char *new_tmp_label()')
     with scope():
         gprint('str_t s = {0};')
         gprint('sfcat(&G_allctx, &s, "__l%d", G_codegen_jmp_cnt++);')
@@ -436,23 +436,23 @@ def gen_setup_addrs_and_jmp_table():
             with scope():
                 gprint('assert(n->md.type != TYPE_I32_ARRAY);')
                 gprint('assert(n->md.type != TYPE_F32_ARRAY);')
-                gprint('n->md.addr = get_tmp_var(n->md.type);')
+                gprint('n->md.addr = new_tmp_var(n->md.type);')
 
         gprint(f'if ({one_of("n->kind", CONTROL_FLOW_OPS)})')
         with scope():
             gprint('if (n->kind == TOK_KW_WHILE && n->md.jmp_bot == NULL)')
             with scope():
-                gprint('n->md.jmp_bot = get_tmp_label();')
+                gprint('n->md.jmp_bot = new_tmp_label();')
             gprint('else if (n->kind == TOK_KW_DO && n->md.jmp_top == NULL)')
             with scope():
-                gprint('n->md.jmp_top = get_tmp_label();')
+                gprint('n->md.jmp_top = new_tmp_label();')
             gprint('else if (n->kind == TOK_KW_FOR && n->md.jmp_top == NULL)')
             with scope():
-                gprint('n->md.jmp_top = get_tmp_label();')
+                gprint('n->md.jmp_top = new_tmp_label();')
             gprint('else if ((n->kind == TOK_KW_IF) && (n->md.jmp_next == NULL || n->md.jmp_bot == NULL))')
             with scope():
-                gprint('n->md.jmp_next = get_tmp_label();')
-                gprint('n->md.jmp_bot = get_tmp_label();')
+                gprint('n->md.jmp_next = new_tmp_label();')
+                gprint('n->md.jmp_bot = new_tmp_label();')
             gprint('else')
             with scope():
                 gprint('invalid_code_path();')
@@ -489,7 +489,7 @@ def gen_codegen_expr():
             gprint('if (n->kind == TOK_ASSIGN)')
             with scope():
                 gprint('// Extra care here, we need to generate the proper code to assign to user declared identifiers')
-            gprint('else if (n->kind == TOK_OPEN_BRACE)')
+            gprint('else if (n->kind == TOK_OPEN_BRACKET)')
             with scope():
                 pass
             gprint('else')
@@ -591,8 +591,8 @@ def generate_src_file():
     gen_deduce_array_type()
     gen_type_deduce_expr_and_operators("n")
     gen_type_deduce()
-    gen_get_tmp_var()
-    gen_get_tmp_label()
+    gen_new_tmp_var()
+    gen_new_tmp_label()
     gen_setup_addrs_and_jmp_table()
     gen_check_and_optimize_ast()
     gen_codegen_expr()

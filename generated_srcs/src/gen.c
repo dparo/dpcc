@@ -410,7 +410,7 @@ static void type_deduce(ast_node_t *n)
     }
 }
 
-static char *get_tmp_var(enum DPCC_TYPE type)
+static char *new_tmp_var(enum DPCC_TYPE type)
 {
     str_t s = {0};
 
@@ -441,7 +441,7 @@ static char *get_tmp_var(enum DPCC_TYPE type)
     return s.cstr;
 }
 
-static char *get_tmp_label()
+static char *new_tmp_label()
 {
     str_t s = {0};
     sfcat(&G_allctx, &s, "__l%d", G_codegen_jmp_cnt++);
@@ -457,27 +457,27 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
         {
             assert(n->md.type != TYPE_I32_ARRAY);
             assert(n->md.type != TYPE_F32_ARRAY);
-            n->md.addr = get_tmp_var(n->md.type);
+            n->md.addr = new_tmp_var(n->md.type);
         }
     }
     if (((n->kind == TOK_KW_IF) || (n->kind == TOK_KW_DO) || (n->kind == TOK_KW_WHILE) || (n->kind == TOK_KW_FOR)))
     {
         if (n->kind == TOK_KW_WHILE && n->md.jmp_bot == NULL)
         {
-            n->md.jmp_bot = get_tmp_label();
+            n->md.jmp_bot = new_tmp_label();
         }
         else if (n->kind == TOK_KW_DO && n->md.jmp_top == NULL)
         {
-            n->md.jmp_top = get_tmp_label();
+            n->md.jmp_top = new_tmp_label();
         }
         else if (n->kind == TOK_KW_FOR && n->md.jmp_top == NULL)
         {
-            n->md.jmp_top = get_tmp_label();
+            n->md.jmp_top = new_tmp_label();
         }
         else if ((n->kind == TOK_KW_IF) && (n->md.jmp_next == NULL || n->md.jmp_bot == NULL))
         {
-            n->md.jmp_next = get_tmp_label();
-            n->md.jmp_bot = get_tmp_label();
+            n->md.jmp_next = new_tmp_label();
+            n->md.jmp_bot = new_tmp_label();
         }
         else
         {
@@ -518,7 +518,7 @@ void codegen_expr(str_t *str, ast_node_t *root)
         {
             // Extra care here, we need to generate the proper code to assign to user declared identifiers
         }
-        else if (n->kind == TOK_OPEN_BRACE)
+        else if (n->kind == TOK_OPEN_BRACKET)
         {
         }
         else
