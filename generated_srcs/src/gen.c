@@ -116,6 +116,11 @@ static void deduce_array_type(ast_node_t *n)
     n->md.array_len = init_list_len;
 }
 
+static inline bool is_expr_node(ast_node_t *n)
+{
+    return (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_LT) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_AR_SUBSCR)));
+}
+
 static void type_deduce_expr_and_operators(ast_node_t *n)
 {
     if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_LT) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_AR_SUBSCR)))
@@ -507,7 +512,7 @@ void check_and_optimize_ast(void)
 void codegen_expr(str_t *str, ast_node_t *root)
 {
     (void) str, (void) root;
-    assert(((root->kind == TOK_MOD) || (root->kind == TOK_BNOT) || (root->kind == TOK_BAND) || (root->kind == TOK_BOR) || (root->kind == TOK_BXOR) || (root->kind == TOK_BLSHIFT) || (root->kind == TOK_BRSHIFT) || (root->kind == TOK_ASSIGN) || (root->kind == TOK_ADD) || (root->kind == TOK_SUB) || (root->kind == TOK_MUL) || (root->kind == TOK_DIV) || (root->kind == TOK_POW) || (root->kind == TOK_INC) || (root->kind == TOK_DEC) || (root->kind == TOK_POS) || (root->kind == TOK_NEG) || (root->kind == TOK_EQ) || (root->kind == TOK_NEQ) || (root->kind == TOK_LT) || (root->kind == TOK_GT) || (root->kind == TOK_GTEQ) || (root->kind == TOK_LTEQ) || (root->kind == TOK_LNOT) || (root->kind == TOK_LAND) || (root->kind == TOK_LOR) || (root->kind == TOK_AR_SUBSCR)));
+    assert(is_expr_node(root));
     ast_traversal_t att = {0};
     ast_traversal_begin(&att, root, false, true);
     ast_node_t *n = NULL;
@@ -625,7 +630,7 @@ char *codegen(void)
                 sfcat(&G_allctx, &str, "pop();\n");
             }
         }
-        else if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_LT) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_AR_SUBSCR)))
+        else if (is_expr_node(n))
         {
             codegen_expr(&str, n);
             ast_traversal_pop(&att);

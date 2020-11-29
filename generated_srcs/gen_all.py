@@ -474,12 +474,19 @@ def gen_check_and_optimize_ast():
                 gprint("setup_addrs_and_jmp_tables(n);")
 
 
+def gen_is_expr_node():
+    gprint()
+    gprint('static inline bool is_expr_node(ast_node_t *n)')
+    with scope():
+        gprint(f'return ({one_of("n->kind", ALL_OPS)});')
+
+
 def gen_codegen_expr():
     gprint()
     gprint('void codegen_expr(str_t *str, ast_node_t *root)')
     with scope():
         gprint('(void) str, (void) root;')
-        gprint(f'assert({one_of("root->kind", ALL_OPS)});')
+        gprint(f'assert(is_expr_node(root));')
         gprint('ast_traversal_t att = {0};')
         gprint('ast_traversal_begin(&att, root, false, true);')
 
@@ -567,7 +574,7 @@ def gen_codegen():
                 with scope():
                     gprint('sfcat(&G_allctx, &str, "pop();\\n");')
 
-            gprint(f'else if ({one_of("n->kind", ALL_OPS)})')
+            gprint(f'else if (is_expr_node(n))')
             with scope():
                 gprint('codegen_expr(&str, n);')
                 gprint('ast_traversal_pop(&att);')
@@ -589,6 +596,8 @@ def generate_src_file():
 
     gen_typemismatch_check()
     gen_deduce_array_type()
+
+    gen_is_expr_node()
     gen_type_deduce_expr_and_operators("n")
     gen_type_deduce()
     gen_new_tmp_var()
