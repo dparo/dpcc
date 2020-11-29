@@ -23,6 +23,9 @@ int main(int argc, char **argv)
 
     printf("Opening file: `%s`\n", filepath);
     FILE *input_stream = open_file_for_reading(filepath);
+    if (input_stream == NULL) {
+        return 1;
+    }
 
     if (0 == strcmp(mode, "lex")) {
         bool lexsuccess = lex(filepath, input_stream);

@@ -257,7 +257,7 @@ list_init:  "{"[op] list_elems[es] "}" { $$ = NEW_NODE($op->tok, OPEN_BRACE); pu
 
 
 list_elems:       list_elems[car] "," list_elem[self]  { $$ = $car; push_child($car, $self); }
-        |         list_elem[self]
+        |         list_elem[self]                      { $$ = NEW_NODE($self->tok, COMMA); push_child($$, $self); }
         ;
 
 list_elem:        expr  { $$ = $1; }

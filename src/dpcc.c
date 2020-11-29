@@ -105,8 +105,7 @@ FILE *open_file_for_reading(char *filepath)
 {
     FILE *result = fopen(filepath, "r");
     if (result == NULL) {
-        fprintf(stderr, "Failed to open file for reading (%s)\n", filepath);
-        abort();
+        fprintf(stderr, "%s: No such file or directory\n", filepath);
     }
 
     return result;
