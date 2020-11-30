@@ -140,6 +140,50 @@ CAST_OPS = [
 ]
 
 
+class Node:
+    def __init__(self, matching_rule, callback):
+        self.matching_rule = matching_rule
+        self.callback = callback
+
+    def gen(self):
+        gprint(f'if ({self.matching_rule})')
+        with scope():
+            self.callback()
+
+
+class Nodes:
+    def __init__(self, nodes, default_case):
+        self.nodes = nodes
+
+    def gen(self):
+        for i, n in enumerate(self.nodes):
+            trailing = '' if i == 0 else "else "
+            gprint(f'{}if ({n.matching_rule})')
+            with scope():
+                self.callback()
+        self.default_case()
+
+
+TYPE_DEDUCE_RULES = Nodes([
+    # Base cases for type deduction
+    Node('n->kind == TOK_CHAR_LIT', lambda: gprint('n->md.type = TYPE_I32;')),
+    Node('n->kind == TOK_I32_LIT', lambda: gprint('n->md.type = TYPE_I32;')),
+    Node('n->kind == TOK_F32_LIT', lambda: gprint('n->md.type = TYPE_F32;')),
+    Node('n->kind == TOK_ID', lambda: gprint('if (n->decl) { n->md.type = n->decl.md.type; }')),
+
+    # Deduce types for casting operators
+    Node(f'{one_of(n->kind, CAST_OPS)}', lambda:
+        switch('n->kind',{
+             'TOK_KW_INT': 'n->md.type = TYPE_I32;'
+             'TOK_KW_FLOAT': 'n->md.type = TYPE_F32;'
+             'TOK_KW_BOOL': 'n->md.type = TYPE_BOOL;'
+         })),
+    Node('c0 && ')
+    ], lambda:
+      gprint('invalid_code_path();')
+)
+
+
 def decl_map_fn(out_type, fn_name, in_type, map_dict, default_case=DEFAULT_CASE, default_return_value="0"):
     gprint('')
     gprint(f"static {out_type} {fn_name}({in_type} x)")
