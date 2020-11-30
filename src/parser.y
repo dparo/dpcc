@@ -250,7 +250,7 @@ decl:      integral_var_decl                                  { $$ = $1; if (!va
         |  array_var_decl                                     { $$ = $1; if (!var_decl($1)) { PARSE_ERROR(); } }
         ;
 
-list_init:  "{"[op] list_elems[es] "}" { $$ = NEW_NODE($op->tok, OPEN_BRACE); push_child($$, $es); push_childs($$, $es->num_childs, $es->childs); $es->num_childs = 0; }
+list_init:  "{"[op] list_elems[es] "}" { $$ = NEW_NODE($op->tok, OPEN_BRACE); push_childs($$, $es->num_childs, $es->childs); $es->num_childs = 0; }
         |   "{"[op]  "}"               { $$ = NEW_NODE($op->tok, OPEN_BRACE);  }
         |   error           { }
         ;
