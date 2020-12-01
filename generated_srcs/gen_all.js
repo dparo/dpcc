@@ -28,46 +28,46 @@ class Gen {
 
     static Action = class {
         constructor(v) {
-            this.v = v
+            this.v = v;
         }
 
         do() {
             if (typeof this.v === "function") {
                 this.v();
             } else if (typeof(this.v) === "string") {
-                Gen.print(this.v)
+                Gen.print(this.v);
             } else {
-                throw TypeError("Wrong type expected (either string or callable)")
+                throw TypeError("Wrong type expected (either string or callable)");
             }
         }
 
     }
 
     static scope(callback) {
-        this.print("{")
+        Gen.print("{");
         this.G_indentCnt += 1;
         callback();
         this.G_indentCnt -= 1;
-        this.print("}")
+        Gen.print("}");
     }
 
     static print(...args) {
         if (args.length == 0) {
-            console.log("")
+            console.log("");
         } else {
-            let out = ""
+            let out = "";
             for (let v of args) {
-                let lines = v.split('\n')
+                let lines = v.split('\n');
                 for (let l of lines) {
                     let prependNewLine = l.startsWith("do") || l.startsWith("while") || l.startsWith("switch") || l.startsWith("for");
                     if (prependNewLine) {
-                        out += "\n"
+                        out += "\n";
                     }
-                    out += "    ".repeat(this.G_indentCnt) + l + "\n"
+                    out += "    ".repeat(this.G_indentCnt) + l + "\n";
                 }
             }
 
-            Gen.writeStream.write(out)
+            Gen.writeStream.write(out);
         }
     }
 
@@ -99,12 +99,12 @@ class Gen {
         let result = "";
         for (let i in conds) {
             if (i < conds.length - 1) {
-                result += `(${expr} == ${conds[i]}) || `
+                result += `(${expr} == ${conds[i]}) || `;
             } else {
-                result += `(${expr} == ${conds[i]})`
+                result += `(${expr} == ${conds[i]})`;
             }
         }
-        return '(' + result + ')'
+        return '(' + result + ')';
     }
 
 
@@ -115,47 +115,47 @@ class Gen {
                 continue;
             }
 
-            let trailing = i == 0 ? '' : 'else '
-            this.print(`${trailing}if (${k})`)
-            this.scope(() => {
-                (new this.Action(v)).do()
-            })
+            let trailing = i == 0 ? '' : 'else ';
+            Gen.print(`${trailing}if (${k})`);
+            Gen.scope(() => {
+                (new this.Action(v)).do();
+            });
             i++;
         }
 
         if ("" in d) {
             if (d[""] != '') {
-                this.print("else")
-                this.scope(() => {
-                    (new this.Action(d[""])).do()
-                })
+                Gen.print("else");
+                Gen.scope(() => {
+                    (new this.Action(d[""])).do();
+                });
             }
         } else {
-            this.print("else")
-            this.scope(() => {
-                this.print(this.DEFAULT_CASE)
-            })
+            Gen.print("else");
+            Gen.scope(() => {
+                Gen.print(Gen.DEFAULT_CASE);
+            });
         }
-        this.print()
+        Gen.print();
     }
 
 
     static switch(elem, d) {
-        let default_case = this.DEFAULT_CASE;
+        let default_case = Gen.DEFAULT_CASE;
         if ("" in d) {
             default_case = d[""];
         }
 
-        this.print(`switch (${elem})`)
-        this.scope(() => {
+        Gen.print(`switch (${elem})`);
+        Gen.scope(() => {
             if (default_case == "") {
-                this.print("default: { /* EMPTY */ } break;");
+                Gen.print("default: { /* EMPTY */ } break;");
             } else {
-                this.print("default:")
-                this.scope(() => {
+                Gen.print("default:");
+                Gen.scope(() => {
                     (new this.Action(default_case)).do();
                 });
-                this.print("break;");
+                Gen.print("break;");
             }
 
             for (let [k, v] of Object.entries(d)) {
@@ -163,13 +163,13 @@ class Gen {
                     continue;
                 }
 
-                this.print(`case ${k}:`)
-                this.scope(() => {
+                Gen.print(`case ${k}:`);
+                Gen.scope(() => {
                     (new this.Action(v)).do();
                 });
             }
 
-        })
+        });
     }
 }
 
@@ -329,11 +329,12 @@ class DPCC {
 
 
 function generate_src_file() {
-    Gen.print(DPCC.COMMON_BOILERPLATE)
+    Gen.print(DPCC.COMMON_BOILERPLATE);
 }
 
 
 function generate_hdr_file() {
+    Gen.print(DPCC.COMMON_BOILERPLATE);
 
 }
 
@@ -342,18 +343,18 @@ function main() {
     DPCC.init();
 
     let fd = FS.openSync("last_gen.txt", "w");
-    FS.writeSync(fd, new Date().toISOString())
+    FS.writeSync(fd, new Date().toISOString());
     FS.closeSync(fd);
 
 
     let genList = [
         {"filepath": "js_gen/gen.c", "fn": generate_src_file},
         {"filepath": "js_gen/gen.h", "fn": generate_hdr_file},
-    ]
+    ];
 
     for (let [k, v] of Object.entries(genList)) {
         try {
-            FS.mkdirSync(PATH.dirname(v.filepath), {recursive: true})
+            FS.mkdirSync(PATH.dirname(v.filepath), {recursive: true});
             Gen.writeStream = new FS.createWriteStream(v.filepath);
             v.fn();
         } finally {
