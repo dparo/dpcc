@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import os
 import sys
 from datetime import datetime
@@ -107,11 +108,10 @@ def one_of(expr, array):
 
 
 def gif(d):
-    cnt = 0
-    for k, v in enumerate(d):
-        if k == '':
+    for i, (k, v) in enumerate(d.items()):
+        if v == '':
             continue
-        trailing = 'else ' if cnt == 0 else ''
+        trailing = 'else ' if i == 0 else ''
         gprint(f'{trailing}if ({k})')
         with scope():
             if type(v) is str:
@@ -120,22 +120,23 @@ def gif(d):
                 v()
             else:
                 raise TypeError("Wrong type expected (either string or callbable)")
-        cnt += 1
 
-        if "" in d:
-            gprint("else")
-            with scope():
-                if type(d[""]) is str:
-                    if d[""] != "":
-                        gprint(d[""])
-                elif callable(d[""]):
-                    d[""]()
+    if "" in d:
+        gprint("else")
+        with scope():
+            if type(d[""]) is str:
+                if d[""] != "":
+                    gprint(d[""])
                 else:
-                    raise TypeError("Wrong type expected (either string or callbable)")
-        else:
-            gprint("else")
-            with scope():
-                gprint(DEFAULT_CASE)
+                    gprint("/* EMPTY */")
+            elif callable(d[""]):
+                d[""]()
+            else:
+                raise TypeError("Wrong type expected (either string or callbable)")
+    else:
+        gprint("else")
+        with scope():
+            gprint(DEFAULT_CASE)
     gprint()
 
 
@@ -152,14 +153,15 @@ def gswitch(elem, d):
         else:
             gprint("default:")
             with scope():
-                if type(d[""]) is str:
-                    gprint(d[""])
-                elif callable(d[""]):
-                    d[""]()
+                if type(default_case) is str:
+                    gprint(default_case)
+                elif callable(default_case):
+                    default_case()
                 else:
                     raise TypeError("Wrong type expected (either string or callbable)")
             gprint("break;")
-        for k, v in enumerate(d):
+
+        for _, (k, v) in enumerate(d.items()):
             if k == "":
                 continue
             gprint(f"case {k}:")
@@ -218,10 +220,20 @@ class TypeDeduceRules:
     def gen(self):
         for i, n in enumerate(self.nodes):
             trailing = '' if i == 0 else "else "
-            gprint(f'{}if ({n.matching_rule})')
+            gprint(f'{trailing}if ({n.matching_rule})')
             with scope():
                 self.callback()
-        self.default_case()
+
+        if self.default_case is None or (type(self.default_case) is str and self.default_case == ""):
+            pass
+        elif type(self.default_case) is str and self.default_case != "":
+            gprint("else")
+            with scope():
+                gprint(self.default_case)
+        elif callable(self.default_case):
+            gprint("else")
+            with scope():
+                self.default_case()
 
 
 TYPE_DEDUCE_RULES = TypeDeduceRules([
@@ -232,7 +244,7 @@ TYPE_DEDUCE_RULES = TypeDeduceRules([
     TypeDeduceRule('n->kind == TOK_ID', lambda: gprint('if (n->decl) { n->md.type = n->decl.md.type; }')),
 
     # Deduce types for casting operators
-    TypeDeduceRule(f'{one_of(n->kind, CAST_OPS)}', lambda: (
+    TypeDeduceRule(f'{one_of("n->kind", CAST_OPS)}', lambda: (
         gswitch('n->kind', {
             'TOK_KW_INT': 'n->md.type = TYPE_I32;',
             'TOK_KW_FLOAT': 'n->md.type = TYPE_F32;',
@@ -260,13 +272,12 @@ TYPE_DEDUCE_RULES = TypeDeduceRules([
     )),
 
     # Assign type to var decl by deducing it from the RHS
-    TypeDeduceRule(f'({one_of("n->kind", DECL_OPS)})'), lambda: (
+    TypeDeduceRule(f'({one_of("n->kind", DECL_OPS)})', lambda: (
 
     )),
 
-    ], lambda: gprint('invalid_code_path();')
+], lambda: gprint('invalid_code_path();')
 )
-
 
 
 def tuple_to_comma_separated_str(t):
@@ -427,12 +438,13 @@ def gen_type_deduce():
 
         gprint("// Base cases for type deduction")
         gswitch("n->kind", {
+            '': '',
             "TOK_CHAR_LIT": "n->md.type = TYPE_I32;",
             "TOK_I32_LIT": "n->md.type = TYPE_I32;",
             "TOK_F32_LIT": "n->md.type = TYPE_F32;",
             "TOK_BOOL_LIT": "n->md.type = TYPE_BOOL;",
             "TOK_ID": "if (n->decl) n->md.type = n->decl->md.type;",
-        }, default_case='')
+        })
 
         gprint("// Assign the correct type to each casting operator")
         gprint(f'if ({one_of("n->kind", CAST_OPS)} && !{one_of("n->parent->kind", DECL_OPS)})')
