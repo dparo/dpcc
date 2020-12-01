@@ -106,25 +106,85 @@ def one_of(expr, array):
     return "(" + result + ")"
 
 
-def switch(elem, d, default_case=DEFAULT_CASE):
-    keys = list(d.keys())
-    values = list(d.values())
+def gif(d):
+    cnt = 0
+    for k, v in enumerate(d):
+        if k == '':
+            continue
+        trailing = 'else ' if cnt == 0 else ''
+        gprint(f'{trailing}if ({k})')
+        with scope():
+            if type(v) is str:
+                gprint(v)
+            elif callable(v):
+                v()
+            else:
+                raise TypeError("Wrong type expected (either string or callbable)")
+        cnt += 1
 
+        if "" in d:
+            gprint("else")
+            with scope():
+                if type(d[""]) is str:
+                    if d[""] != "":
+                        gprint(d[""])
+                elif callable(d[""]):
+                    d[""]()
+                else:
+                    raise TypeError("Wrong type expected (either string or callbable)")
+        else:
+            gprint("else")
+            with scope():
+                gprint(DEFAULT_CASE)
+    gprint()
+
+
+def gswitch(elem, d):
+    default_case = DEFAULT_CASE
+
+    if "" in d:
+        default_case = d[""]
     gprint(f"switch ({elem})")
+
     with scope():
         if default_case == "":
             gprint("default: { /* EMPTY */ } break;")
         else:
             gprint("default:")
             with scope():
-                gprint(default_case)
+                if type(d[""]) is str:
+                    gprint(d[""])
+                elif callable(d[""]):
+                    d[""]()
+                else:
+                    raise TypeError("Wrong type expected (either string or callbable)")
             gprint("break;")
-        for i, _ in enumerate(keys):
-            gprint(f"case {keys[i]}:")
+        for k, v in enumerate(d):
+            if k == "":
+                continue
+            gprint(f"case {k}:")
             with scope():
-                gprint(values[i])
+                if type(v) is str:
+                    gprint(v)
+                elif callable(v):
+                    v()
+                else:
+                    raise TypeError("Wrong type expected (either string or callbable)")
             gprint("break;")
     gprint()
+
+
+def gmap(out_type, fn_name, in_type, map_dict):
+
+    for k, _ in map_dict:
+        map_dict[k] = f'return (out_type) ({map_dict[k]});'
+    gprint('')
+    gprint(f"static {out_type} {fn_name}({in_type} x)")
+    with scope():
+        gswitch("x", map_dict)
+        if "" in map_dict:
+            gprint(f'return ({out_type}) {map_dict[""]};')
+
 
 
 DECL_OPS = [
@@ -140,7 +200,7 @@ CAST_OPS = [
 ]
 
 
-class Node:
+class TypeDeduceRule:
     def __init__(self, matching_rule, callback):
         self.matching_rule = matching_rule
         self.callback = callback
@@ -151,7 +211,7 @@ class Node:
             self.callback()
 
 
-class Nodes:
+class TypeDeduceRules:
     def __init__(self, nodes, default_case):
         self.nodes = nodes
 
@@ -164,16 +224,16 @@ class Nodes:
         self.default_case()
 
 
-TYPE_DEDUCE_RULES = Nodes([
+TYPE_DEDUCE_RULES = TypeDeduceRules([
     # Base cases for type deduction
-    Node('n->kind == TOK_CHAR_LIT', lambda: gprint('n->md.type = TYPE_I32;')),
-    Node('n->kind == TOK_I32_LIT', lambda: gprint('n->md.type = TYPE_I32;')),
-    Node('n->kind == TOK_F32_LIT', lambda: gprint('n->md.type = TYPE_F32;')),
-    Node('n->kind == TOK_ID', lambda: gprint('if (n->decl) { n->md.type = n->decl.md.type; }')),
+    TypeDeduceRule('n->kind == TOK_CHAR_LIT', lambda: gprint('n->md.type = TYPE_I32;')),
+    TypeDeduceRule('n->kind == TOK_I32_LIT', lambda: gprint('n->md.type = TYPE_I32;')),
+    TypeDeduceRule('n->kind == TOK_F32_LIT', lambda: gprint('n->md.type = TYPE_F32;')),
+    TypeDeduceRule('n->kind == TOK_ID', lambda: gprint('if (n->decl) { n->md.type = n->decl.md.type; }')),
 
     # Deduce types for casting operators
-    Node(f'{one_of(n->kind, CAST_OPS)}', lambda: (
-        switch('n->kind', {
+    TypeDeduceRule(f'{one_of(n->kind, CAST_OPS)}', lambda: (
+        gswitch('n->kind', {
             'TOK_KW_INT': 'n->md.type = TYPE_I32;',
             'TOK_KW_FLOAT': 'n->md.type = TYPE_F32;',
             'TOK_KW_BOOL': 'n->md.type = TYPE_BOOL;',
@@ -181,8 +241,8 @@ TYPE_DEDUCE_RULES = Nodes([
     )),
 
     # Assign correct type for user listed integral var decl
-    Node(f'c0 && c0->kind != TOK_OPEN_BRACKET && ({one_of("n->kind", DECL_OPS)})', lambda: (
-        switch('c0->kind', {
+    TypeDeduceRule(f'c0 && c0->kind != TOK_OPEN_BRACKET && ({one_of("n->kind", DECL_OPS)})', lambda: (
+        gswitch('c0->kind', {
             'TOK_KW_INT': 'c0->md.type = TYPE_I32',
             'TOK_KW_FLOAT': 'c0->md.type = TYPE_F32',
             'TOK_KW_BOOL': 'c0->md.type = TYPE_BOOL',
@@ -191,8 +251,8 @@ TYPE_DEDUCE_RULES = Nodes([
     )),
 
     # Assign corecct type for user listed array var decl
-    Node(f'c0 && c0->kind == TOK_OPEN_BRACKET && ({one_of("n->kind", DECL_OPS)})', lambda: (
-        switch('c0->kind', {
+    TypeDeduceRule(f'c0 && c0->kind == TOK_OPEN_BRACKET && ({one_of("n->kind", DECL_OPS)})', lambda: (
+        gswitch('c0->kind', {
             'TOK_KW_INT': 'c0->md.type = TYPE_I32_ARRAY',
             'TOK_KW_FLOAT': 'c0->md.type = TYPE_F32_ARRAY',
         }),
@@ -200,21 +260,13 @@ TYPE_DEDUCE_RULES = Nodes([
     )),
 
     # Assign type to var decl by deducing it from the RHS
-    Node(f'({one_of("n->kind", DECL_OPS)})'), lambda: (
+    TypeDeduceRule(f'({one_of("n->kind", DECL_OPS)})'), lambda: (
 
     )),
 
     ], lambda: gprint('invalid_code_path();')
 )
 
-
-def decl_map_fn(out_type, fn_name, in_type, map_dict, default_case=DEFAULT_CASE, default_return_value="0"):
-    gprint('')
-    gprint(f"static {out_type} {fn_name}({in_type} x)")
-    with scope():
-        switch("x", map_dict, default_case)
-        if default_return_value is not None and len(default_return_value) > 0:
-            gprint(f"return ({out_type}) {default_return_value};")
 
 
 def tuple_to_comma_separated_str(t):
@@ -329,7 +381,7 @@ def gen_deduce_array_type():
             with scope():
                 gprint("// Initializer list is provided")
                 gprint("enum DPCC_TYPE expected_type;")
-                switch("c0->md.type", {
+                gswitch("c0->md.type", {
                     "TYPE_I32_ARRAY": "expected_type = TYPE_I32;",
                     "TYPE_F32_ARRAY": "expected_type = TYPE_F32;",
                 })
@@ -374,7 +426,7 @@ def gen_type_deduce():
         gprint("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
 
         gprint("// Base cases for type deduction")
-        switch("n->kind", {
+        gswitch("n->kind", {
             "TOK_CHAR_LIT": "n->md.type = TYPE_I32;",
             "TOK_I32_LIT": "n->md.type = TYPE_I32;",
             "TOK_F32_LIT": "n->md.type = TYPE_F32;",
@@ -385,7 +437,7 @@ def gen_type_deduce():
         gprint("// Assign the correct type to each casting operator")
         gprint(f'if ({one_of("n->kind", CAST_OPS)} && !{one_of("n->parent->kind", DECL_OPS)})')
         with scope():
-            switch("n->kind", {
+            gswitch("n->kind", {
                 "TOK_KW_INT": "n->md.type = TYPE_I32;",
                 "TOK_KW_FLOAT": "n->md.type = TYPE_F32;",
                 "TOK_KW_BOOL": "n->md.type = TYPE_BOOL;",
@@ -398,7 +450,7 @@ def gen_type_deduce():
             gprint('if (c0->md.type == TYPE_NONE && c0->kind != TOK_OPEN_BRACKET)')
             with scope():
                 gprint("// Handle integral types")
-                switch('c0->kind', {
+                gswitch('c0->kind', {
                     'TOK_KW_INT': 'c0->md.type = TYPE_I32;',
                     'TOK_KW_FLOAT': 'c0->md.type = TYPE_F32;',
                     'TOK_KW_BOOL': 'c0->md.type = TYPE_BOOL;',
@@ -406,7 +458,7 @@ def gen_type_deduce():
             gprint("else if (c0->md.type == TYPE_NONE && c0->kind == TOK_OPEN_BRACKET)")
             with scope():
                 gprint("// Handle array types")
-                switch("c0->childs[0]->kind", {
+                gswitch("c0->childs[0]->kind", {
                     "TOK_KW_INT": "c0->md.type = TYPE_I32_ARRAY;",
                     "TOK_KW_FLOAT": "c0->md.type = TYPE_F32_ARRAY;",
                 })
@@ -471,7 +523,7 @@ def gen_new_tmp_var():
     with scope():
 
         gprint('str_t s = {0};')
-        switch("type", {
+        gswitch("type", {
             "TYPE_I32": 'sfcat(&G_allctx, &s, "__i%d", G_codegen_i32_cnt++);',
             "TYPE_F32": 'sfcat(&G_allctx, &s, "__f%d", G_codegen_f32_cnt++);',
             "TYPE_BOOL": 'sfcat(&G_allctx, &s, "__b%d", G_codegen_bool_cnt++);',
@@ -617,7 +669,7 @@ def gen_codegen():
 
                     gprint('sfcat(&G_allctx, &str,"decl_var(%s, \\"%s\\", %d, ", dpcc_type_as_enum_str(self->md.type), c1->tok->lexeme, c1->md.array_len);')
 
-                    switch("self->md.type", {
+                    gswitch("self->md.type", {
                         "TYPE_I32": 'sfcat(&G_allctx, &str, "(int32_t[]) {");',
                         "TYPE_I32_ARRAY": 'sfcat(&G_allctx, &str, "(int32_t[]) {");',
                         "TYPE_F32": 'sfcat(&G_allctx, &str, "(float[]) {");',
