@@ -202,82 +202,85 @@ CAST_OPS = [
 
 
 class TypeDeduceRule:
-    def __init__(self, matching_rule: str, callback: callable):
-        self.matching_rule = matching_rule
-        self.callback = callback
-
-    def gen(self):
-        gprint(f'if ({self.matching_rule})')
-        with scope():
-            self.callback()
-
+    def __init__(self, rule: str, block: callable):
+        self.rule = rule
+        self.block = block
 
 class TypeDeduceRules:
-    def __init__(self, nodes: list, default_case: str):
-        self.nodes = nodes
+    def __init__(self, rules: list, default_case: str):
+        self.rules = rules
         self.default_case = default_case
 
     def gen(self):
-        for i, n in enumerate(self.nodes):
-            trailing = '' if i == 0 else "else "
-            gprint(f'{trailing}if ({n.matching_rule})')
-            with scope():
-                n.callback()
-
-        if self.default_case is None or (isinstance(self.default_case, str) and self.default_case == ""):
-            pass
-        elif isinstance(self.default_case, str) and self.default_case != "":
-            gprint("else")
-            with scope():
-                gprint(self.default_case)
-        elif callable(self.default_case):
-            gprint("else")
-            with scope():
-                self.default_case()
+        d = {}
+        for i, r in enumerate(self.rules):
+            d[r.rule] = r.block
+        gif(d)
 
 
-TYPE_DEDUCE_RULES = TypeDeduceRules([
+def array_decl_type_deduce():
+    gprint('n->md.array_len = 6969;')
+
+TYPE_DEDUCE_RULES = {
+    # If none of below: not possible. Invalid code path
+    '': lambda: gprint('invalid_code_path();'),
+
     # Base cases for type deduction
-    TypeDeduceRule('n->kind == TOK_CHAR_LIT', lambda: gprint('n->md.type = TYPE_I32;')),
-    TypeDeduceRule('n->kind == TOK_I32_LIT', lambda: gprint('n->md.type = TYPE_I32;')),
-    TypeDeduceRule('n->kind == TOK_F32_LIT', lambda: gprint('n->md.type = TYPE_F32;')),
-    TypeDeduceRule('n->kind == TOK_ID', lambda: gprint('if (n->decl) { n->md.type = n->decl.md.type; }')),
+    'n->kind == TOK_CHAR_LIT': lambda: gprint('n->md.type = TYPE_I32;'),
+    'n->kind == TOK_I32_LIT': lambda: gprint('n->md.type = TYPE_I32;'),
+    'n->kind == TOK_F32_LIT': lambda: gprint('n->md.type = TYPE_F32;'),
+    'n->kind == TOK_ID': lambda: gprint('if (n->decl) { n->md.type = n->decl.md.type; }'),
 
     # Deduce types for casting operators
-    TypeDeduceRule(f'{one_of("n->kind", CAST_OPS)}', lambda: (
+    f'{one_of("n->kind", CAST_OPS)}': lambda: (
         gswitch('n->kind', {
             'TOK_KW_INT': 'n->md.type = TYPE_I32;',
             'TOK_KW_FLOAT': 'n->md.type = TYPE_F32;',
             'TOK_KW_BOOL': 'n->md.type = TYPE_BOOL;',
-        })
-    )),
+        }),
+    ),
 
     # Assign correct type for user listed integral var decl
-    TypeDeduceRule(f'c0 && c0->kind != TOK_OPEN_BRACKET && ({one_of("n->kind", DECL_OPS)})', lambda: (
+    f'c0 && c0->kind != TOK_OPEN_BRACKET && ({one_of("n->kind", DECL_OPS)})': lambda: (
         gswitch('c0->kind', {
             'TOK_KW_INT': 'c0->md.type = TYPE_I32',
             'TOK_KW_FLOAT': 'c0->md.type = TYPE_F32',
             'TOK_KW_BOOL': 'c0->md.type = TYPE_BOOL',
         }),
-        gprint('n->md.type = c0->md.type;')
-    )),
+        gprint('n->md.type = c0->md.type;'),
+        gprint('n->md.array_len = 1;'),
+        gprint('if (c2)'),
+        with scope():
+            gprint('// If the user has provided a RHS for the variable declaration, we must check for typemismatches'),
+            gprint('typemismatch_check(c0, c2);'),
+    ),
 
-    # Assign corecct type for user listed array var decl
-    TypeDeduceRule(f'c0 && c0->kind == TOK_OPEN_BRACKET && ({one_of("n->kind", DECL_OPS)})', lambda: (
+    # Assign correct type for user listed array var decl
+    f'c0 && c0->kind == TOK_OPEN_BRACKET && ({one_of("n->kind", DECL_OPS)})': lambda: (
         gswitch('c0->kind', {
             'TOK_KW_INT': 'c0->md.type = TYPE_I32_ARRAY',
             'TOK_KW_FLOAT': 'c0->md.type = TYPE_F32_ARRAY',
         }),
-        gprint('n->md.type = c0->md.type;')
-    )),
+        gprint('n->md.type = c0->md.type;'),
+        array_decl_type_deduce(),
+    ),
 
-    # Assign type to var decl by deducing it from the RHS
-    TypeDeduceRule(f'({one_of("n->kind", DECL_OPS)})', lambda: (
+    # No user provided type, must deduce it.
+    f'{one_of("n->kind", DECL_OPS)}': lambda: (
+        gprint("assert(n->num_childs == 3 && c2 != NULL);"),
+        gif({
+            'c2->kind == OPEN_BRACKET': lambda: gen_err("&c2->tok->loc", "Type deduction for array initializer list is ambiguous")
+            'c2->md.type == TYPE_NONE': lambda: gen_err("&c2->tok->loc", "Cannot deduce type from the given RHS value")
+            '': "n->md.type = c2->md.type"
+        })
+    ),
 
-    )),
 
-], lambda: gprint('invalid_code_path();')
-)
+
+    f'{one_of("n->kind", ALL_OPS)}', lambda: (
+        gen_type_deduce_expr_and_operators()
+    ),
+}
 
 
 def tuple_to_comma_separated_str(t):
