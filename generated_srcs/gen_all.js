@@ -1,7 +1,9 @@
 "use strict";
+
 const FS = require("fs")
 const PROC = require("process");
 const OS = require("os")
+const PATH = require("path")
 
 
 const utils = {
@@ -19,6 +21,8 @@ const utils = {
 class Gen {
     static G_indentCnt = 0;
     static DEFAULT_CASE = 'invalid_code_path();';
+
+    static writeStream = process.stdout;
 
     static Action = class {
         constructor(v) {
@@ -60,7 +64,8 @@ class Gen {
                     out += "    ".repeat(this.G_indentCnt) + l + "\n"
                 }
             }
-            process.stdout.write(out)
+
+            Gen.writeStream.write(out)
         }
     }
 
@@ -136,7 +141,7 @@ class Gen {
     static switch(elem, d) {
         let default_case = this.DEFAULT_CASE;
         if ("" in d) {
-            default_case = d[""]
+            default_case = d[""];
         }
 
         this.print(`switch (${elem})`)
@@ -146,9 +151,9 @@ class Gen {
             } else {
                 this.print("default:")
                 this.scope(() => {
-                    (new this.Action(default_case)).do()
-                })
-                this.print("break;")
+                    (new this.Action(default_case)).do();
+                });
+                this.print("break;");
             }
 
             for (let [k, v] of Object.entries(d)) {
@@ -158,8 +163,8 @@ class Gen {
 
                 this.print(`case ${k}:`)
                 this.scope(() => {
-                    (new this.Action(v)).do()
-                })
+                    (new this.Action(v)).do();
+                });
             }
 
         })
@@ -174,6 +179,27 @@ class DPCC {
         }
     }
 
+    static COMMON_BOILERPLATE = (
+`//
+// Generated from ${PROC.argv[1]}
+//
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <assert.h>
+
+
+#include "types.h"
+#include "globals.h"
+#include "utils.h"
+#include "log.h"
+#include "dpcc.h"
+
+`
+    )
 
     static init() {
         DPCC.BUNDLES.ALL = [
@@ -182,11 +208,11 @@ class DPCC {
             DPCC.BUNDLES.LOGICAL_COMPARISONS,
             DPCC.BUNDLES.LOGICAL_OPERATORS,
             DPCC.BUNDLES.ARRAY_OPERATORS
-        ]
+        ];
 
         for (let bundle of DPCC.BUNDLES.ALL) {
             for (let yytokenstype of bundle.yytokentypes) {
-                DPCC.OPS.push(yytokenstype)
+                DPCC.OPS.push(yytokenstype);
             }
         }
 
@@ -294,10 +320,44 @@ class DPCC {
         ],
 
     }
+}
 
+
+
+
+
+function generate_src_file() {
+    Gen.print(DPCC.COMMON_BOILERPLATE)
+}
+
+
+function generate_hdr_file() {
 
 }
-DPCC.init()
 
 
+function main() {
+    DPCC.init();
 
+    let fd = FS.openSync("last_gen.txt", "w");
+    FS.writeSync(fd, new Date().toISOString())
+    FS.closeSync(fd);
+
+
+    let genList = [
+        {"filepath": "prova/gen.c", "fn": generate_src_file},
+        {"filepath": "prova/gen.h", "fn": generate_hdr_file},
+    ]
+
+    for (let [k, v] of Object.entries(genList)) {
+        try {
+            FS.mkdirSync(PATH.dirname(v.filepath), {recursive: true})
+            Gen.writeStream = new FS.createWriteStream(v.filepath);
+            v.fn();
+        } finally {
+
+        }
+    }
+}
+
+main();
