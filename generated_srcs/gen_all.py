@@ -119,7 +119,7 @@ def gif(d: dict):
             elif callable(v):
                 v()
             else:
-                raise TypeError("Wrong type expected (either string or callbable)")
+                raise TypeError("Wrong type expected (either string or callable)")
 
     if "" in d:
         gprint("else")
@@ -132,7 +132,7 @@ def gif(d: dict):
             elif callable(d[""]):
                 d[""]()
             else:
-                raise TypeError("Wrong type expected (either string or callbable)")
+                raise TypeError("Wrong type expected (either string or callable)")
     else:
         gprint("else")
         with scope():
@@ -158,7 +158,7 @@ def gswitch(elem: str, d: dict):
                 elif callable(default_case):
                     default_case()
                 else:
-                    raise TypeError("Wrong type expected (either string or callbable)")
+                    raise TypeError("Wrong type expected (either string or callable)")
             gprint("break;")
 
         for _, (k, v) in enumerate(d.items()):
@@ -171,7 +171,7 @@ def gswitch(elem: str, d: dict):
                 elif callable(v):
                     v()
                 else:
-                    raise TypeError("Wrong type expected (either string or callbable)")
+                    raise TypeError("Wrong type expected (either string or callable)")
             gprint("break;")
     gprint()
 
