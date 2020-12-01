@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 "use strict";
 
 const FS = require("fs")
@@ -345,8 +347,8 @@ function main() {
 
 
     let genList = [
-        {"filepath": "prova/gen.c", "fn": generate_src_file},
-        {"filepath": "prova/gen.h", "fn": generate_hdr_file},
+        {"filepath": "js_gen/gen.c", "fn": generate_src_file},
+        {"filepath": "js_gen/gen.h", "fn": generate_hdr_file},
     ]
 
     for (let [k, v] of Object.entries(genList)) {
