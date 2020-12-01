@@ -3,6 +3,19 @@ const FS = require("fs")
 const PROC = require("process");
 const OS = require("os")
 
+
+const utils = {
+    type_to_dpcc_type: function(s) {
+        return {
+            "int": "TYPE_I32",
+            "float": "TYPE_F32",
+            "bool": "TYPE_BOOL",
+            "int[]": "TYPE_I32_ARRAY",
+            "float[]": "TYPE_F32_ARRAY",
+        }[s]
+    }
+}
+
 class Gen {
     static G_indentCnt = 0;
     static DEFAULT_CASE = 'invalid_code_path();';
@@ -152,4 +165,139 @@ class Gen {
         })
     }
 }
+
+class DPCC {
+    static OpsBundle = class {
+        constructor(yytokentypes, types_conversion_table) {
+            this.yytokentypes = yytokentypes;
+            this.types_conversion_table = types_conversion_table;
+        }
+    }
+
+
+    static init() {
+        DPCC.BUNDLES.ALL = [
+            DPCC.BUNDLES.INTEGER_OPS,
+            DPCC.BUNDLES.MATH_OPS,
+            DPCC.BUNDLES.LOGICAL_COMPARISONS,
+            DPCC.BUNDLES.LOGICAL_OPERATORS,
+            DPCC.BUNDLES.ARRAY_OPERATORS
+        ]
+
+        for (let bundle of DPCC.BUNDLES.ALL) {
+            for (let yytokenstype of bundle.yytokentypes) {
+                DPCC.OPS.push(yytokenstype)
+            }
+        }
+
+    }
+
+    static OPS = [
+        // Initialized later
+    ]
+    static BUNDLES = {
+
+        DECL_OPS: [
+            "TOK_KW_FN",
+            "TOK_KW_LET",
+        ],
+
+        CAST_OPS: [
+            "TOK_KW_INT",
+            "TOK_KW_FLOAT",
+            "TOK_KW_BOOL",
+        ],
+
+        INTEGER_OPS: new DPCC.OpsBundle(
+            [
+                "TOK_MOD",
+                "TOK_BNOT",
+                "TOK_BAND",
+                "TOK_BOR",
+                "TOK_BXOR",
+                "TOK_BLSHIFT",
+                "TOK_BRSHIFT",
+            ],
+            [
+                ["int", ["int", "int"]]
+            ]
+        ),
+
+        MATH_OPS: new DPCC.OpsBundle(
+            [
+                "TOK_ASSIGN",
+                "TOK_ADD",
+                "TOK_SUB",
+                "TOK_MUL",
+                "TOK_DIV",
+                "TOK_POW",
+                "TOK_INC",
+                "TOK_DEC",
+                "TOK_POS",
+                "TOK_NEG",
+            ],
+            [
+                ["int", ["int", "int"]],
+                ["float", ["float", "int"]],
+                ["float", ["int", "float"]],
+                ["float", ["float", "float"]],
+
+                ["int", ["int"]],
+                ["float", ["float"]],
+            ]
+        ),
+
+        LOGICAL_COMPARISONS: new DPCC.OpsBundle(
+            [
+
+                "TOK_EQ",
+                "TOK_NEQ",
+                "TOK_LT",
+                "TOK_GT",
+                "TOK_GTEQ",
+                "TOK_LTEQ",
+            ],
+            [
+                ["bool", ["int", "int"]],
+                ["bool", ["float", "int"]],
+                ["bool", ["int", "float"]],
+                ["bool", ["float", "float"]],
+
+            ]
+        ),
+
+        LOGICAL_OPERATORS: new DPCC.OpsBundle(
+            [
+                "TOK_LNOT",
+                "TOK_LAND",
+                "TOK_LOR",
+            ],
+            [
+                ["bool", ["bool", "bool"]],
+                ["bool", ["bool"]],
+            ]
+        ),
+
+
+        ARRAY_OPERATORS: new DPCC.OpsBundle (
+            [
+                "TOK_AR_SUBSCR",
+            ],
+            [
+                ["int", ["int[]", "int"]],
+                ["float", ["float[]", "int"]]
+            ],
+        ),
+
+        ALL: [
+            // Initialized later
+        ],
+
+    }
+
+
+}
+DPCC.init()
+
+
 
