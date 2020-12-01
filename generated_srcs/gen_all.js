@@ -16,9 +16,9 @@ const utils = {
             "bool": "TYPE_BOOL",
             "int[]": "TYPE_I32_ARRAY",
             "float[]": "TYPE_F32_ARRAY",
-        }[s]
+        }[s];
     }
-}
+};
 
 class Gen {
     static G_indentCnt = 0;
@@ -352,13 +352,17 @@ function main() {
         {"filepath": "js_gen/gen.h", "fn": generate_hdr_file},
     ];
 
-    for (let [k, v] of Object.entries(genList)) {
+    for (let [_, v] of Object.entries(genList)) {
+        let ws = null;
         try {
             FS.mkdirSync(PATH.dirname(v.filepath), {recursive: true});
-            Gen.writeStream = new FS.createWriteStream(v.filepath);
+            ws = new FS.createWriteStream(v.filepath);
+            Gen.writeStream = ws;
             v.fn();
         } finally {
-
+            if (ws != null) {
+                ws.end();
+            }
         }
     }
 }
