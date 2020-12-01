@@ -77,7 +77,7 @@ class scope:
         gprint("}")
 
 
-def gen_logical_or(array):
+def gen_logical_or(array: list):
     result = ""
     for i, _ in enumerate(array):
         if i != len(array) - 1:
@@ -87,7 +87,7 @@ def gen_logical_or(array):
     return "(" + result + ")"
 
 
-def gen_logical_and(array):
+def gen_logical_and(array: list):
     result = ""
     for i, _ in enumerate(array):
         if i != len(array) - 1:
@@ -97,7 +97,7 @@ def gen_logical_and(array):
     return "(" + result + ")"
 
 
-def one_of(expr, array):
+def one_of(expr: str, array: list):
     result = ""
     for i, _ in enumerate(array):
         if i != len(array) - 1:
@@ -107,14 +107,14 @@ def one_of(expr, array):
     return "(" + result + ")"
 
 
-def gif(d):
+def gif(d: dict):
     for i, (k, v) in enumerate(d.items()):
         if v == '':
             continue
         trailing = 'else ' if i == 0 else ''
         gprint(f'{trailing}if ({k})')
         with scope():
-            if type(v) is str:
+            if isinstance(v, str):
                 gprint(v)
             elif callable(v):
                 v()
@@ -124,7 +124,7 @@ def gif(d):
     if "" in d:
         gprint("else")
         with scope():
-            if type(d[""]) is str:
+            if isinstance(d[""], str):
                 if d[""] != "":
                     gprint(d[""])
                 else:
@@ -140,7 +140,7 @@ def gif(d):
     gprint()
 
 
-def gswitch(elem, d):
+def gswitch(elem: str, d: dict):
     default_case = DEFAULT_CASE
 
     if "" in d:
@@ -153,7 +153,7 @@ def gswitch(elem, d):
         else:
             gprint("default:")
             with scope():
-                if type(default_case) is str:
+                if isinstance(default_case, str):
                     gprint(default_case)
                 elif callable(default_case):
                     default_case()
@@ -166,7 +166,7 @@ def gswitch(elem, d):
                 continue
             gprint(f"case {k}:")
             with scope():
-                if type(v) is str:
+                if isinstance(v, str):
                     gprint(v)
                 elif callable(v):
                     v()
@@ -188,7 +188,6 @@ def gmap(out_type, fn_name, in_type, map_dict):
             gprint(f'return ({out_type}) {map_dict[""]};')
 
 
-
 DECL_OPS = [
     "TOK_KW_FN",
     "TOK_KW_LET"
@@ -203,7 +202,7 @@ CAST_OPS = [
 
 
 class TypeDeduceRule:
-    def __init__(self, matching_rule, callback):
+    def __init__(self, matching_rule: str, callback: callable):
         self.matching_rule = matching_rule
         self.callback = callback
 
@@ -214,19 +213,20 @@ class TypeDeduceRule:
 
 
 class TypeDeduceRules:
-    def __init__(self, nodes, default_case):
+    def __init__(self, nodes: list, default_case: str):
         self.nodes = nodes
+        self.default_case = default_case
 
     def gen(self):
         for i, n in enumerate(self.nodes):
             trailing = '' if i == 0 else "else "
             gprint(f'{trailing}if ({n.matching_rule})')
             with scope():
-                self.callback()
+                n.callback()
 
-        if self.default_case is None or (type(self.default_case) is str and self.default_case == ""):
+        if self.default_case is None or (isinstance(self.default_case, str) and self.default_case == ""):
             pass
-        elif type(self.default_case) is str and self.default_case != "":
+        elif isinstance(self.default_case, str) and self.default_case != "":
             gprint("else")
             with scope():
                 gprint(self.default_case)
