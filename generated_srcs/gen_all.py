@@ -172,15 +172,39 @@ TYPE_DEDUCE_RULES = Nodes([
     Node('n->kind == TOK_ID', lambda: gprint('if (n->decl) { n->md.type = n->decl.md.type; }')),
 
     # Deduce types for casting operators
-    Node(f'{one_of(n->kind, CAST_OPS)}', lambda:
-        switch('n->kind',{
-             'TOK_KW_INT': 'n->md.type = TYPE_I32;'
-             'TOK_KW_FLOAT': 'n->md.type = TYPE_F32;'
-             'TOK_KW_BOOL': 'n->md.type = TYPE_BOOL;'
-         })),
-    Node('c0 && ')
-    ], lambda:
-      gprint('invalid_code_path();')
+    Node(f'{one_of(n->kind, CAST_OPS)}', lambda: (
+        switch('n->kind', {
+            'TOK_KW_INT': 'n->md.type = TYPE_I32;',
+            'TOK_KW_FLOAT': 'n->md.type = TYPE_F32;',
+            'TOK_KW_BOOL': 'n->md.type = TYPE_BOOL;',
+        })
+    )),
+
+    # Assign correct type for user listed integral var decl
+    Node(f'c0 && c0->kind != TOK_OPEN_BRACKET && ({one_of("n->kind", DECL_OPS)})', lambda: (
+        switch('c0->kind', {
+            'TOK_KW_INT': 'c0->md.type = TYPE_I32',
+            'TOK_KW_FLOAT': 'c0->md.type = TYPE_F32',
+            'TOK_KW_BOOL': 'c0->md.type = TYPE_BOOL',
+        }),
+        gprint('n->md.type = c0->md.type;')
+    )),
+
+    # Assign corecct type for user listed array var decl
+    Node(f'c0 && c0->kind == TOK_OPEN_BRACKET && ({one_of("n->kind", DECL_OPS)})', lambda: (
+        switch('c0->kind', {
+            'TOK_KW_INT': 'c0->md.type = TYPE_I32_ARRAY',
+            'TOK_KW_FLOAT': 'c0->md.type = TYPE_F32_ARRAY',
+        }),
+        gprint('n->md.type = c0->md.type;')
+    )),
+
+    # Assign type to var decl by deducing it from the RHS
+    Node(f'({one_of("n->kind", DECL_OPS)})'), lambda: (
+
+    )),
+
+    ], lambda: gprint('invalid_code_path();')
 )
 
 
