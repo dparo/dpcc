@@ -200,16 +200,24 @@ namespace Gen {
         Gen.print()
     }
 
-    export function map(elem: string, output: string, d: Record<string, string | (() => string)>) {
-        let default_case = new Action(d[""] || DEFAULT_CASE);
+    export function map(elem: string, output: string, d: Record<string, string>) {
+        let default_case = d[""] || DEFAULT_CASE;
 
         Gen.print(`switch (${elem})`);
         Gen.scope(() => {
-            Gen.print("default: ")
-            Gen.scope(() => {
-                Gen.print(`${output} = ${default_case.do()}`)
-            })
-            Gen.print("break;");
+            if ("" in d) {
+                Gen.print("default: ")
+                Gen.scope(() => {
+                    Gen.print(`${output} = ${default_case}`)
+                })
+                Gen.print("break;");
+            } else {
+                Gen.print("default: ")
+                Gen.scope(() => {
+                    Gen.print(`invalid_code_path();`)
+                })
+                Gen.print("break;");
+            }
 
             for (let [k, v] of Object.entries(d)) {
                 if (k == "") {
@@ -218,8 +226,9 @@ namespace Gen {
 
                 Gen.print(`case ${k}:`);
                 Gen.scope(() => {
-                    Gen.print(`${output} = ${(new Action(v)).do()}`)
+                    Gen.print(`${output} = ${v};`)
                 });
+                Gen.print("break; ")
             }
 
         });
@@ -490,8 +499,8 @@ namespace DPCC_Gen {
         })
     }
 
-    export function type_deduce_expr_and_operators() {
-        Gen.fn('static void type_deduce_expr_and_operators(ast_node_t *n)', () => {
+    export function typecheck_expr_and_operators() {
+        Gen.fn('static void typecheck_expr_and_operators(ast_node_t *n)', () => {
             Gen.print(`if (${Gen.one_of("n->kind", DPCC.OPS.ALL)})`)
             Gen.scope(() => {
                 for (let expr of DPCC.EXPRS.ALL) {
@@ -565,10 +574,12 @@ namespace DPCC_Gen {
         })
     }
 
-    export function deduce_array_type() {
-        Gen.fn("static void deduce_array_type(ast_node_t *n)", () => {
+    export function typecheck_array() {
+        Gen.fn("static void typecheck_array(ast_node_t *n)", () => {
             Gen.print("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
+            Gen.print("ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;")
             Gen.print("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
+
             Gen.print("// Deduce type of array variable declarations")
             Gen.print("assert((c0->childs[1] == NULL) || (c0->childs[1]->kind == TOK_I32_LIT && c0->childs[1]->md.type == TYPE_I32));")
 
@@ -578,8 +589,8 @@ namespace DPCC_Gen {
 
             Gen.ifd({
                 'c0->childs[1] && array_type_len <= 0': () => {
-                    err("&c0->childs[1]", "The number of elements in an array must be a positive integer")
-                    info("&c0->childs[1]", "Got `%d`", 'array_type_len')
+                    err("c0->childs[1]", "The number of elements in an array must be a positive integer")
+                    info("c0->childs[1]", "Got `%d`", 'array_type_len')
                 },
 
                 // Initializer list is provided
@@ -601,52 +612,137 @@ namespace DPCC_Gen {
 
                 '': '',
             })
-
-            //
-            Gen.print("// Forward the same type to the keyword let")
-            Gen.print("n->md.type = c0->md.type;")
-            Gen.print("n->md.array_len = init_list_len;")
-
         })
     }
 
 
-    export function type_deduce() {
-        Gen.fn('static void type_deduce(ast_node_t *n)', () => {
+    export function typecheck() {
+        Gen.fn('static void typecheck(ast_node_t *n)', () => {
             Gen.print("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
+            Gen.print("ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;")
             Gen.print("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
 
             Gen.print(`bool is_casting_operator = ${Gen.one_of("n->kind", DPCC.OPS.CAST)} && ! ${Gen.one_of("n->parent->kind", DPCC.OPS.DECL)};`)
-            Gen.print(`bool var_decl_with_user_listed_type = c0 && (${Gen.one_of("n->kind", DPCC.OPS.DECL)});`)
-            Gen.print(`bool integral_var_decl_missing_type = c0->md.type == TYPE_NONE && c0->kind != TOK_OPEN_BRACKET;`)
-            Gen.print(`bool array_var_decl_missing_type = c0->md.type == TYPE_NONE && c0->kind == TOK_OPEN_BRACKET;`)
-
+            Gen.print(`bool var_decl = (${Gen.one_of("n->kind", DPCC.OPS.DECL)});`)
+            Gen.print(`bool var_decl_with_user_listed_type = var_decl && c0;`)
+            Gen.print(`bool var_decl_no_user_listed_type = var_decl && !c0;`)
+            Gen.print(`bool integral_var_decl = var_decl && c0->kind != TOK_OPEN_BRACKET;`)
+            Gen.print('bool var_decl_with_rhs = var_decl && c2;')
+            Gen.print(`bool array_var_decl = var_decl && c0 && c0->kind == TOK_OPEN_BRACKET;`)
+            Gen.print(`bool array_var_decl_num_elems_provided = array_var_decl && c1;`)
+            Gen.print(`bool is_typable_identifier = n->kind == TOK_ID && n->parent && !${Gen.one_of("n->parent->kind", DPCC.OPS.DECL)};`)
+            Gen.print(`bool is_array_subscript = n->kind == TOK_AR_SUBSCR && n->childs[1]->kind == TOK_I32_LIT && n->childs[1]->md.type == TYPE_I32;`)
 
             Gen.ifd({
+                // If not matched do not do anything
+                '': '',
                 // Base cases for type deduction
                 "n->kind == TOK_CHAR_LIT": "n->md.type = TYPE_I32;",
                 "n->kind == TOK_I32_LIT": "n->md.type = TYPE_I32;",
                 "n->kind == TOK_F32_LIT": "n->md.type = TYPE_F32;",
                 "n->kind == TOK_BOOL_LIT": "n->md.type = TYPE_BOOL;",
                 "n->kind == TOK_ID": "if (n->decl) n->md.type = n->decl->md.type;",
-                // Casting operators
-                'is_casting_operator': () => Gen.switchd("n->kind", {
-                    "TOK_KW_INT": "n->md.type = TYPE_I32;",
-                    "TOK_KW_FLOAT": "n->md.type = TYPE_F32;",
-                    "TOK_KW_BOOL": "n->md.type = TYPE_BOOL;",
-                }),
 
-                'var_decl_with_user_listed_type': () => Gen.ifd({
-                    'integral_var_decl_missing_type': () => Gen.map("c0->kind", "c0->md.type", {
-                        'TOK_KW_INT': 'TYPE_I32;',
-                        'TOK_KW_FLOAT': 'TYPE_F32;',
-                        'TOK_KW_BOOL': 'TYPE_BOOL;',
+                // For every other ast node process only if its type is not yet set
+                'n->md.type == TYPE_NONE': () => Gen.ifd({
+                    // Casting operators
+                    'is_casting_operator': () => Gen.switchd("n->kind", {
+                        "TOK_KW_INT": "n->md.type = TYPE_I32;",
+                        "TOK_KW_FLOAT": "n->md.type = TYPE_F32;",
+                        "TOK_KW_BOOL": "n->md.type = TYPE_BOOL;",
                     }),
-                    'array_var_decl_missing_type': () => {
 
+                    'var_decl': () => {
+
+                        // Extract init_val_len from the initializer list
+                        // - Integral types are assumed to be an array of lenght 1,
+                        //   which does not support subscript operator
+
+                        Gen.print('ast_node_t *type = c0 ? c0 : NULL;')
+                        Gen.print('ast_node_t *rhs = c2 ? c2 : NULL;')
+                        Gen.print('int32_t init_val_len = 1;')
+                        Gen.ifd({
+                            'array_var_decl && c2 && c2->kind == TOK_OPEN_BRACE': 'init_val_len = c2->num_childs;',
+                            'array_var_decl && !c2': () => err("n", "Expected valid initializer list for array var decls"),
+                            '': ''
+                        })
+
+                        Gen.ifd({
+                            'array_var_decl': () => {
+                                Gen.ifd({
+                                    '': 'invalid_code_path();',
+
+                                    'var_decl_with_user_listed_type': () => {
+                                        Gen.map("c0->childs[0]->kind", "c0->md.type", {
+                                            'TOK_KW_INT': 'TYPE_I32_ARRAY;',
+                                            'TOK_KW_FLOAT': 'TYPE_F32_ARRAY;',
+                                        })
+                                        Gen.print('typecheck_array(n);')
+                                    },
+                                    'var_decl_no_user_listed_type': () => {
+                                        err("n", "Expected valid initializer list for array var decls")
+                                    },
+                                })
+                            },
+                            'integral_var_decl': () => {
+                                Gen.ifd({
+                                    '': 'invalid_code_path();',
+
+                                    // Integral var decl with user listed type
+                                    'var_decl_with_user_listed_type': () => Gen.map("c0->kind", "c0->md.type", {
+                                        'TOK_KW_INT': 'TYPE_I32',
+                                        'TOK_KW_FLOAT': 'TYPE_F32',
+                                        'TOK_KW_BOOL': 'TYPE_BOOL',
+                                    }),
+                                    // User listed type and right hand side: Type check
+                                    'var_decl_with_user_listed_type && var_decl_with_rhs': () => {
+                                        Gen.print('typemismatch_check(type, rhs);')
+                                    },
+                                    // Type deduce from RHS
+                                    'var_decl_no_user_listed_type && var_decl_with_rhs': () => {
+                                        Gen.print('n->md.type = rhs->md.type;')
+                                    },
+                                    'var_decl_no_user_listed_type && !var_decl_with_rhs': () => {
+                                        // Assume integer
+                                        Gen.print('n->md.type = TYPE_I32;')
+                                    },
+                                })
+                            },
+                        })
+
+                        // For every var decl forward the computed from the child
+                        Gen.print('n->md.type = c0->md.type;')
+                        Gen.print('n->md.array_len = init_val_len;')
+                    },
+
+                    'is_typable_identifier': () => {
+                        Gen.print('assert(n->decl != NULL);')
+                        Gen.print('assert(n->decl->md.type != TYPE_NONE);')
+                        Gen.print('n->md.type = n->decl->md.type;')
+                    },
+
+                    'is_array_subscript': () => {
+                        Gen.print('int32_t subscript_idx = n->childs[1]->val.as_i32;')
+                        Gen.print('int32_t array_len = n->childs[0]->decl->md.array_len;')
+                        Gen.ifd({
+                            '': '',
+                            'n->childs[0]->md.type != TYPE_I32_ARRAY && n->childs[0]->md.type != TYPE_F32_ARRAY': () => {
+                                err("n->childs[0]", "Identifier is not an array")
+                                info("n->childs[0]->decl", "Previous declaration was here (type: %s)", "dpcc_type_as_str(n->childs[0]->md.type)")
+                            },
+                            'subscript_idx < 0 || (subscript_idx >= array_len)': () => {
+                                err("n->childs[1]", "Invalid subscript constant")
+                                info("n->childs[0]->decl", "As specified from declaration index should be in [%d, %d)", "0", "array_len")
+                                info("n->childs[1]", "Got `%d` instead", "subscript_idx")
+                            }
+
+                        })
+                    },
+                    '': () => {
+                        Gen.print('type_deduce_expr_and_operators(n);')
                     }
-
                 })
+
 
             })
         })
@@ -687,7 +783,7 @@ namespace DPCC_Gen {
             Gen.print("ast_node_t *n = NULL;")
             Gen.whiled("(n = ast_traverse_next(&att, NULL)) != NULL", () => {
                 Gen.ifd({
-                    'n->md.type == TYPE_NONE': 'type_deduce(n);',
+                    'n->md.type == TYPE_NONE': 'typecheck(n);',
                     '': 'setup_addrs_and_jmp_tables(n);'
                 })
             })
@@ -750,9 +846,10 @@ function generate_src_file() {
     DPCC_Gen.new_tmp_label()
     DPCC_Gen.typemismatch_check()
     DPCC_Gen.check_array_initializer_list()
-    DPCC_Gen.type_deduce_expr_and_operators()
+    DPCC_Gen.typecheck_expr_and_operators()
 
-    DPCC_Gen.type_deduce();
+    DPCC_Gen.typecheck_array()
+    DPCC_Gen.typecheck();
     DPCC_Gen.setup_addrs_and_jmp_tables()
 
     DPCC_Gen.first_ast_pass()
