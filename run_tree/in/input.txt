@@ -1,7 +1,11 @@
-let a: float[] = { 10.0, 20.0, 1.0};
-let b = a[0];
+let b = 10;
 
-print(a[2]);
+print(b);
 
+let array: int[] = {10, 20, 30};
 
-let c = a[1];
+let c = b;
+
+{
+        let d = b * 2;
+}

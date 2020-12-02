@@ -426,6 +426,12 @@ namespace DPCC {
     }
 }
 
+function printf(fmt: string, ...args: string[]) {
+    fmt = "\"" + fmt + "\"";
+    let optional_comma = args.length >= 1 ? ", " : "";
+    Gen.print(`printf(${fmt}${optional_comma}${args.join()});`)
+}
+
 
 function log(severity: string, node: string, fmt: string, ...args: string[]) {
     fmt = "\"" + fmt + "\"";
@@ -433,6 +439,9 @@ function log(severity: string, node: string, fmt: string, ...args: string[]) {
 
     Gen.print(`dpcc_log(${severity}, &((${node})->tok->loc), ${fmt}${optional_comma}${args.join()});`)
 }
+
+
+
 
 function err(node: string, fmt: string, ...args: string[]) {
     log('DPCC_SEVERITY_ERROR', node, fmt, ...args);
@@ -460,6 +469,12 @@ namespace DPCC_Gen {
         let optional_comma = args.length >= 1 ? ", " : "";
         Gen.print(`sfcat(&G_allctx, &S_str, ${fmt}${optional_comma}${args.join()});`)
     }
+
+
+    export function get_addr_var() {
+
+    }
+
     export function new_tmp_var() {
         Gen.fn('static char *new_tmp_var(enum DPCC_TYPE type)', () => {
             Gen.print('str_t s = {0};')
@@ -762,7 +777,7 @@ namespace DPCC_Gen {
                                     info("n->childs[0]->decl", "Previous declaration was here (type: %s)", "dpcc_type_as_str(n->childs[0]->md.type)")
                                 },
                                 'subscript_idx < 0 || (subscript_idx >= array_len)': () => {
-                                    err("n->childs[1]", "Invalid subscript constant")
+                                    warn("n->childs[1]", "Invalid subscript constant")
                                     info("n->childs[0]->decl", "As specified from declaration index should be in [%d, %d)", "0", "array_len")
                                     info("n->childs[1]", "Got `%d` instead", "subscript_idx")
                                 }
@@ -799,6 +814,9 @@ namespace DPCC_Gen {
                     Gen.print('assert(n->md.type != TYPE_I32_ARRAY);')
                     Gen.print('assert(n->md.type != TYPE_F32_ARRAY);')
                     Gen.print('n->md.addr = new_tmp_var(n->md.type);')
+                },
+                '!n->md.addr && (n->md.type != TYPE_NONE && n->kind == TOK_ID)': () => {
+
                 },
                 // Labels for while
                 'n->kind == TOK_KW_WHILE && n->md.jmp_bot == NULL': 'n->md.jmp_bot = new_tmp_label();',
@@ -842,8 +860,50 @@ namespace DPCC_Gen {
             Gen.print('ast_node_t *n = NULL;')
             Gen.print('bool is_top_down_encounter = false;')
 
-            Gen.whiled("(n = ast_traverse_next(&att, &is_top_down_encounter)) != NULL", () => {
+            Gen.print('for (int32_t i = 0; i < G_codegen_i32_cnt; i++)')
+            Gen.scope(() => {
+                cat("int32_t _vi%d;\\n", "i");
+            })
 
+            Gen.print('for (int32_t i = 0; i < G_codegen_f32_cnt; i++)')
+            Gen.scope(() => {
+                cat("float _vf%d;\\n", "i");
+            })
+
+            Gen.print('for (int32_t i = 0; i < G_codegen_bool_cnt; i++)')
+            Gen.scope(() => {
+                cat("bool _vb%d;\\n", "i");
+            })
+
+
+            Gen.whiled("(n = ast_traverse_next(&att, &is_top_down_encounter)) != NULL", () => {
+                Gen.print('ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;')
+                Gen.print('ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;')
+                Gen.print('ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;')
+                Gen.print('ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;')
+
+
+                Gen.ifd({
+                    '': '',
+
+                    // KW_LET:
+                    'is_top_down_encounter && n->kind == TOK_KW_LET': () => {
+
+                        Gen.print('ast_traversal_pop(&att);')
+                    },
+                    // Begin and end block
+                    'n->kind == TOK_OPEN_BRACE': () => {
+                        Gen.ifd({
+                            'is_top_down_encounter': () => { cat("push();\\n") },
+                            '':                      () => { cat("pop();\\n") },
+                        })
+                    },
+
+                    // Print
+                    'n->kind == TOK_KW_PRINT': () => {
+
+                    },
+                })
             })
 
 
