@@ -8,6 +8,10 @@ out
 report
 org
 
+dist
+node_modules
+package-lock.json
+
 .vscode
 .lite_workspace.lua
 

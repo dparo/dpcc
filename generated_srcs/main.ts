@@ -1,57 +1,61 @@
 #!/usr/bin/env node
 
-"use strict";
 
-const FS = require("fs")
-const PROC = require("process");
-const OS = require("os")
-const PATH = require("path")
+import * as FS from "fs";
+import * as PROC from "process";
+import * as OS from "os";
+import * as PATH from "path";
 
 
 const utils = {
-    type_to_dpcc_type: function(s) {
-        return {
+    type_to_dpcc_type: function(s: string): string {
+        let map: Record<string, string> = {
             "int": "TYPE_I32",
             "float": "TYPE_F32",
             "bool": "TYPE_BOOL",
             "int[]": "TYPE_I32_ARRAY",
             "float[]": "TYPE_F32_ARRAY",
-        }[s];
+        };
+        return map[s] || "";
     }
 };
 
-class Gen {
-    static G_indentCnt = 0;
-    static DEFAULT_CASE = 'invalid_code_path();';
+namespace Gen {
+    let G_indentCnt = 0;
+    let DEFAULT_CASE = 'invalid_code_path();';
+    class Action {
+        v: string | null | (() => any);
 
-    static writeStream = process.stdout;
-
-    static Action = class {
-        constructor(v) {
+        constructor(v: string|null|(() => any)) {
             this.v = v;
         }
 
         do() {
+            if (this.v === null) {
+                return;
+            }
+
             if (typeof this.v === "function") {
                 this.v();
             } else if (typeof(this.v) === "string") {
-                Gen.print(this.v);
+                print(this.v);
             } else {
                 throw TypeError("Wrong type expected (either string or callable)");
             }
         }
-
     }
 
-    static scope(callback) {
+
+    export let writeStream: FS.WriteStream|null = null;
+    export function scope(callback: () => any) {
         Gen.print("{");
-        this.G_indentCnt += 1;
+        G_indentCnt += 1;
         callback();
-        this.G_indentCnt -= 1;
+        G_indentCnt -= 1;
         Gen.print("}");
     }
 
-    static print(...args) {
+    export function print(...args: string[]) {
         if (args.length == 0) {
             console.log("");
         } else {
@@ -63,17 +67,20 @@ class Gen {
                     if (prependNewLine) {
                         out += "\n";
                     }
-                    out += "    ".repeat(this.G_indentCnt) + l + "\n";
+                    out += "    ".repeat(G_indentCnt) + l + "\n";
                 }
             }
-
-            Gen.writeStream.write(out);
+            if (writeStream == null) {
+                PROC.stdout.write(out);
+            } else {
+                Gen.writeStream?.write(out);
+            }
         }
     }
 
-    static log_or(...conds) {
+    export function log_or(...conds: string[]) {
         let result = "";
-        for (let i in conds) {
+        for (let i = 0; i < conds.length; i++) {
             if (i < conds.length - 1) {
                 result += `(${conds[i]}) || `;
             } else {
@@ -83,9 +90,9 @@ class Gen {
         return '(' + result + ')';
     }
 
-    static log_and(...conds) {
+    export function log_and(...conds: string[]) {
         let result = "";
-        for (let i in conds) {
+        for (let i = 0; i < conds.length; i++) {
             if (i < conds.length - 1) {
                 result += `(${conds[i]}) && `;
             } else {
@@ -95,9 +102,9 @@ class Gen {
         return '(' + result + ')';
     }
 
-    static one_of(expr, conds) {
+    export function one_of(expr: string, conds: string[]) {
         let result = "";
-        for (let i in conds) {
+        for (let i = 0; i < conds.length; i++) {
             if (i < conds.length - 1) {
                 result += `(${expr} == ${conds[i]}) || `;
             } else {
@@ -108,7 +115,7 @@ class Gen {
     }
 
 
-    static if(d) {
+    export function ife(d: Record<string, string|(() => any)>) {
         let i = 0;
         for (let [k, v] of Object.entries(d)) {
             if (v == '') {
@@ -118,7 +125,7 @@ class Gen {
             let trailing = i == 0 ? '' : 'else ';
             Gen.print(`${trailing}if (${k})`);
             Gen.scope(() => {
-                (new this.Action(v)).do();
+                (new Action(v)).do();
             });
             i++;
         }
@@ -127,36 +134,29 @@ class Gen {
             if (d[""] != '') {
                 Gen.print("else");
                 Gen.scope(() => {
-                    (new this.Action(d[""])).do();
+                    (new Action(d[""] || "")).do();
                 });
             }
         } else {
             Gen.print("else");
             Gen.scope(() => {
-                Gen.print(Gen.DEFAULT_CASE);
+                Gen.print(DEFAULT_CASE);
             });
         }
         Gen.print();
     }
 
 
-    static switch(elem, d) {
-        let default_case = Gen.DEFAULT_CASE;
-        if ("" in d) {
-            default_case = d[""];
-        }
+    export function switchd(elem: string, d: Record<string, string|(()=> any)>) {
+        let default_case = new Action(d[""] || DEFAULT_CASE);
 
         Gen.print(`switch (${elem})`);
         Gen.scope(() => {
-            if (default_case == "") {
-                Gen.print("default: { /* EMPTY */ } break;");
-            } else {
-                Gen.print("default:");
-                Gen.scope(() => {
-                    (new this.Action(default_case)).do();
-                });
-                Gen.print("break;");
-            }
+            Gen.print("default: ")
+            Gen.scope(() => {
+                default_case.do()
+            })
+            Gen.print("break;");
 
             for (let [k, v] of Object.entries(d)) {
                 if (k == "") {
@@ -165,7 +165,7 @@ class Gen {
 
                 Gen.print(`case ${k}:`);
                 Gen.scope(() => {
-                    (new this.Action(v)).do();
+                    (new Action(v)).do();
                 });
             }
 
@@ -173,15 +173,20 @@ class Gen {
     }
 }
 
-class DPCC {
-    static OpsBundle = class {
-        constructor(yytokentypes, types_conversion_table) {
+namespace DPCC {
+
+    class Expr {
+        yytokentypes: string[];
+        types_conversion_table: (string | string[])[][];
+
+        constructor(yytokentypes: string[], types_conversion_table: (string | string[])[][]) {
             this.yytokentypes = yytokentypes;
             this.types_conversion_table = types_conversion_table;
         }
     }
 
-    static COMMON_BOILERPLATE = (
+
+    export const COMMON_BOILERPLATE = (
 `//
 // Generated from ${PROC.argv[1]}
 //
@@ -203,40 +208,25 @@ class DPCC {
 `
     )
 
-    static init() {
-        DPCC.BUNDLES.ALL = [
-            DPCC.BUNDLES.INTEGER_OPS,
-            DPCC.BUNDLES.MATH_OPS,
-            DPCC.BUNDLES.LOGICAL_COMPARISONS,
-            DPCC.BUNDLES.LOGICAL_OPERATORS,
-            DPCC.BUNDLES.ARRAY_OPERATORS
-        ];
-
-        for (let bundle of DPCC.BUNDLES.ALL) {
-            for (let yytokenstype of bundle.yytokentypes) {
-                DPCC.OPS.push(yytokenstype);
-            }
-        }
-
-    }
-
-    static OPS = [
-        // Initialized later
-    ]
-    static BUNDLES = {
-
-        DECL_OPS: [
+    export namespace OPS {
+        export const DECL = [
             "TOK_KW_FN",
             "TOK_KW_LET",
-        ],
+        ];
 
-        CAST_OPS: [
+        export const CAST = [
             "TOK_KW_INT",
             "TOK_KW_FLOAT",
             "TOK_KW_BOOL",
-        ],
+        ];
 
-        INTEGER_OPS: new DPCC.OpsBundle(
+        export let ALL: string[] = [
+            // Initialized later
+        ]
+    }
+
+    export namespace EXPRS {
+        export const INTEGER_EXPR = new Expr(
             [
                 "TOK_MOD",
                 "TOK_BNOT",
@@ -249,9 +239,10 @@ class DPCC {
             [
                 ["int", ["int", "int"]]
             ]
-        ),
+        );
 
-        MATH_OPS: new DPCC.OpsBundle(
+
+        export const MATH_EXPR = new Expr (
             [
                 "TOK_ASSIGN",
                 "TOK_ADD",
@@ -273,9 +264,9 @@ class DPCC {
                 ["int", ["int"]],
                 ["float", ["float"]],
             ]
-        ),
+        );
 
-        LOGICAL_COMPARISONS: new DPCC.OpsBundle(
+        export const LOG_COMPS_EXPR = new Expr (
             [
 
                 "TOK_EQ",
@@ -292,9 +283,9 @@ class DPCC {
                 ["bool", ["float", "float"]],
 
             ]
-        ),
+        );
 
-        LOGICAL_OPERATORS: new DPCC.OpsBundle(
+        export const LOG_EXPR = new Expr(
             [
                 "TOK_LNOT",
                 "TOK_LAND",
@@ -304,10 +295,10 @@ class DPCC {
                 ["bool", ["bool", "bool"]],
                 ["bool", ["bool"]],
             ]
-        ),
+        );
 
 
-        ARRAY_OPERATORS: new DPCC.OpsBundle (
+        export const ARRAY_EXPR = new Expr (
             [
                 "TOK_AR_SUBSCR",
             ],
@@ -315,20 +306,36 @@ class DPCC {
                 ["int", ["int[]", "int"]],
                 ["float", ["float[]", "int"]]
             ],
-        ),
+        );
 
-        ALL: [
-            // Initialized later
-        ],
+        export const ALL = [
+            INTEGER_EXPR,
+            MATH_EXPR,
+            LOG_COMPS_EXPR,
+            LOG_EXPR,
+            ARRAY_EXPR,
+        ];
 
     }
+
+    export function init() {
+        for (let bundle of EXPRS.ALL) {
+            for (let yytokenstype of bundle.yytokentypes) {
+                OPS.ALL.push(yytokenstype);
+            }
+        }
+
+    }
+
 }
 
 
 
 
-
 function generate_src_file() {
+    Gen.print(DPCC.COMMON_BOILERPLATE);
+    Gen.print(DPCC.COMMON_BOILERPLATE);
+    Gen.print(DPCC.COMMON_BOILERPLATE);
     Gen.print(DPCC.COMMON_BOILERPLATE);
 }
 
@@ -353,12 +360,13 @@ function main() {
     ];
 
     for (let [_, v] of Object.entries(genList)) {
-        let ws = null;
+        let ws: FS.WriteStream|null = null;
+
         try {
             FS.mkdirSync(PATH.dirname(v.filepath), {recursive: true});
-            ws = new FS.createWriteStream(v.filepath);
+            ws = FS.createWriteStream(v.filepath);
             Gen.writeStream = ws;
-            v.fn();
+            v.fn()
         } finally {
             if (ws != null) {
                 ws.end();

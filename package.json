@@ -1,0 +1,21 @@
+{
+    "version": "0.1.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/dparo/dpcc"
+    },
+    "author": "Davide Paro",
+    "license": "MIT",
+    "scripts": {
+        "build": "tsc",
+        "run": "cd generated_srcs && ts-node --transpile-only main.ts",
+        "lint": "tsc --noEmit && eslint \"**/*.{js,ts}\" --quiet --fix"
+    },
+    "dependencies": {
+        "typescript": ">=4.1",
+        "ts-node": ">=9.0.0",
+        "@types/node": ">=12.7.8"
+    },
+    "devDependencies": {
+    }
+}
