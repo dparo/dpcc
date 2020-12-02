@@ -193,6 +193,7 @@ namespace Gen {
                 Gen.scope(() => {
                     (new Action(v)).do();
                 });
+                Gen.print("break;");
             }
         });
 
@@ -612,6 +613,42 @@ namespace DPCC_Gen {
 
     export function type_deduce() {
         Gen.fn('static void type_deduce(ast_node_t *n)', () => {
+            Gen.print("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
+            Gen.print("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
+
+            Gen.print(`bool is_casting_operator = ${Gen.one_of("n->kind", DPCC.OPS.CAST)} && ! ${Gen.one_of("n->parent->kind", DPCC.OPS.DECL)};`)
+            Gen.print(`bool var_decl_with_user_listed_type = c0 && (${Gen.one_of("n->kind", DPCC.OPS.DECL)});`)
+            Gen.print(`bool integral_var_decl_missing_type = c0->md.type == TYPE_NONE && c0->kind != TOK_OPEN_BRACKET;`)
+            Gen.print(`bool array_var_decl_missing_type = c0->md.type == TYPE_NONE && c0->kind == TOK_OPEN_BRACKET;`)
+
+
+            Gen.ifd({
+                // Base cases for type deduction
+                "n->kind == TOK_CHAR_LIT": "n->md.type = TYPE_I32;",
+                "n->kind == TOK_I32_LIT": "n->md.type = TYPE_I32;",
+                "n->kind == TOK_F32_LIT": "n->md.type = TYPE_F32;",
+                "n->kind == TOK_BOOL_LIT": "n->md.type = TYPE_BOOL;",
+                "n->kind == TOK_ID": "if (n->decl) n->md.type = n->decl->md.type;",
+                // Casting operators
+                'is_casting_operator': () => Gen.switchd("n->kind", {
+                    "TOK_KW_INT": "n->md.type = TYPE_I32;",
+                    "TOK_KW_FLOAT": "n->md.type = TYPE_F32;",
+                    "TOK_KW_BOOL": "n->md.type = TYPE_BOOL;",
+                }),
+
+                'var_decl_with_user_listed_type': () => Gen.ifd({
+                    'integral_var_decl_missing_type': () => Gen.map("c0->kind", "c0->md.type", {
+                        'TOK_KW_INT': 'TYPE_I32;',
+                        'TOK_KW_FLOAT': 'TYPE_F32;',
+                        'TOK_KW_BOOL': 'TYPE_BOOL;',
+                    }),
+                    'array_var_decl_missing_type': () => {
+
+                    }
+
+                })
+
+            })
         })
     }
 
@@ -619,8 +656,8 @@ namespace DPCC_Gen {
         Gen.fn('static void setup_addrs_and_jmp_tables(ast_node_t *n)', () => {
             Gen.ifd({
                 // Generate addr tmp_var name for each expr node
-                '!n->md.addr && (n->md.type != TYPE_NONE && is_expr_node(n)': () => {
-                    Gen.print('assert(n->decl->md.type == n.md.type);')
+                '!n->md.addr && (n->md.type != TYPE_NONE && is_expr_node(n))': () => {
+                    Gen.print('assert(n->decl->md.type == n->md.type);')
                     Gen.print('assert(n->md.type != TYPE_I32_ARRAY);')
                     Gen.print('assert(n->md.type != TYPE_F32_ARRAY);')
                     Gen.print('n->md.addr = new_tmp_var(n->md.type);')
