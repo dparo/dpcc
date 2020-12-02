@@ -140,7 +140,7 @@ namespace Gen {
     }
 
 
-    export function ife(d: Record<string, string|(() => any)>) {
+    export function ifd(d: Record<string, string|(() => any)>) {
         let i = 0;
         for (let [k, v] of Object.entries(d)) {
             if (k == '') {
@@ -289,6 +289,7 @@ namespace DPCC {
         ];
     }
 
+
     export namespace OPS {
         export const DECL = [
             "TOK_KW_FN",
@@ -300,6 +301,13 @@ namespace DPCC {
             "TOK_KW_FLOAT",
             "TOK_KW_BOOL",
         ];
+
+        export const CONTROL_FLOW = [
+            "TOK_KW_IF",
+            "TOK_KW_DO",
+            "TOK_KW_WHILE",
+            "TOK_KW_FOR",
+        ]
 
         export let ALL: string[] = [
             // Initialized later
@@ -460,7 +468,6 @@ namespace DPCC_Gen {
         })
     }
 
-
     export function is_expr_node() {
         Gen.fn('static inline bool is_expr_node(ast_node_t *n)', () => {
             let token_types: string[] = [];
@@ -471,7 +478,7 @@ namespace DPCC_Gen {
 
     export function typemismatch_check() {
         Gen.fn('static inline void typemismatch_check(ast_node_t *expected_type, ast_node_t *got_type)', () => {
-            Gen.ife({
+            Gen.ifd({
                 '': '',
                 '(expected_type != NULL && got_type != NULL) && (expected_type->md.type != got_type->md.type)': () => {
                     err("expected_type", "Type Mismatch");
@@ -529,7 +536,7 @@ namespace DPCC_Gen {
             Gen.print("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
             Gen.print("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
 
-            Gen.ife({
+            Gen.ifd({
                 '(c0->childs[1] && init_list_len != array_type_len)': () => {
                     err("c2", "Number of elements in initializer list do not match")
                     info("c0->childs[1]", "Expected number of elements: `%d`", 'array_type_len')
@@ -545,7 +552,7 @@ namespace DPCC_Gen {
             // Now make sure that each type in the initializer list is correct
             Gen.print("for (int32_t i = 0; i < c2->num_childs; i++)")
             Gen.scope(() => {
-                Gen.ife({
+                Gen.ifd({
                     '(c2->childs[i] && c2->childs[i]->md.type != expected_type)': () => {
                         err("c2->childs[i]", "Type mismatch in array initializer list")
                         info("c0->childs[0]", "Expected `%s`", "dpcc_type_as_str(c0->childs[0]->md.type)")
@@ -568,7 +575,7 @@ namespace DPCC_Gen {
             Gen.print("int32_t init_list_len = c2 != NULL ? c2->num_childs : 0;")
 
 
-            Gen.ife({
+            Gen.ifd({
                 'c0->childs[1] && array_type_len <= 0': () => {
                     err("&c0->childs[1]", "The number of elements in an array must be a positive integer")
                     info("&c0->childs[1]", "Got `%d`", 'array_type_len')
@@ -603,10 +610,50 @@ namespace DPCC_Gen {
     }
 
 
+    export function type_deduce() {
+        Gen.fn('static void type_deduce(ast_node_t *n)', () => {
+        })
+    }
+
+    export function setup_addrs_and_jmp_tables() {
+        Gen.fn('static void setup_addrs_and_jmp_tables(ast_node_t *n)', () => {
+            Gen.ifd({
+                // Generate addr tmp_var name for each expr node
+                '!n->md.addr && (n->md.type != TYPE_NONE && is_expr_node(n)': () => {
+                    Gen.print('assert(n->decl->md.type == n.md.type);')
+                    Gen.print('assert(n->md.type != TYPE_I32_ARRAY);')
+                    Gen.print('assert(n->md.type != TYPE_F32_ARRAY);')
+                    Gen.print('n->md.addr = new_tmp_var(n->md.type);')
+                },
+                // Labels for while
+                'n->kind == TOK_KW_WHILE && n->md.jmp_bot == NULL': 'n->md.jmp_bot = new_tmp_label();',
+                // Labels for do / while
+                'n->kind == TOK_KW_DO && n->md.jmp_top == NULL': 'n->md.jmp_top = new_tmp_label();',
+                // Labels for for
+                'n->kind == TOK_KW_FOR && n->md.jmp_top == NULL': 'n->md.jmp_top = new_tmp_label();',
+                // Labels for if
+                '(n->kind == TOK_KW_IF) && (n->md.jmp_next == NULL || n->md.jmp_bot == NULL)': () => {
+                    Gen.print('n->md.jmp_next = new_tmp_label();')
+                    Gen.print('n->md.jmp_bot = new_tmp_label();')
+                },
+
+            })
+
+        })
+    }
+
     // Setup, type checking, type deduction, and genError reporting
     export function first_ast_pass() {
         Gen.fn('static void first_ast_pass(void)', () => {
-
+            Gen.print("ast_traversal_t att = {0};")
+            Gen.print("ast_traversal_begin(&att, &G_root_node, false, true);")
+            Gen.print("ast_node_t *n = NULL;")
+            Gen.whiled("(n = ast_traverse_next(&att, NULL)) != NULL", () => {
+                Gen.ifd({
+                    'n->md.type == TYPE_NONE': 'type_deduce(n);',
+                    '': 'setup_addrs_and_jmp_tables(n);'
+                })
+            })
         })
     }
 
@@ -627,7 +674,7 @@ namespace DPCC_Gen {
             })
 
 
-            Gen.ife({
+            Gen.ifd({
                 'yynerrs == 0': 'return S_str.cstr;',
                 '': 'return NULL;'
             })
@@ -638,7 +685,7 @@ namespace DPCC_Gen {
     export function codegen() {
         Gen.fn('char *codegen(void)', () => {
             Gen.print('first_ast_pass();')
-            Gen.ife({
+            Gen.ifd({
                 'yynerrs == 0': 'return second_ast_pass();',
                 '': '',
             })
@@ -667,10 +714,13 @@ function generate_src_file() {
     DPCC_Gen.typemismatch_check()
     DPCC_Gen.check_array_initializer_list()
     DPCC_Gen.type_deduce_expr_and_operators()
+
+    DPCC_Gen.type_deduce();
+    DPCC_Gen.setup_addrs_and_jmp_tables()
+
     DPCC_Gen.first_ast_pass()
     DPCC_Gen.second_ast_pass()
     DPCC_Gen.codegen()
-
 }
 
 
