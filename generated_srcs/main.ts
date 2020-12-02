@@ -178,7 +178,7 @@ namespace Gen {
 
         Gen.print(`switch (${elem})`);
         Gen.scope(() => {
-            Gen.print("default: ")
+            Gen.print("default:")
             Gen.scope(() => {
                 default_case.do()
             })
@@ -206,13 +206,13 @@ namespace Gen {
         Gen.print(`switch (${elem})`);
         Gen.scope(() => {
             if ("" in d) {
-                Gen.print("default: ")
+                Gen.print("default:")
                 Gen.scope(() => {
                     Gen.print(`${output} = ${default_case}`)
                 })
                 Gen.print("break;");
             } else {
-                Gen.print("default: ")
+                Gen.print("default:")
                 Gen.scope(() => {
                     Gen.print(`invalid_code_path();`)
                 })
@@ -228,7 +228,7 @@ namespace Gen {
                 Gen.scope(() => {
                     Gen.print(`${output} = ${v};`)
                 });
-                Gen.print("break; ")
+                Gen.print("break;")
             }
 
         });
@@ -464,9 +464,9 @@ namespace DPCC_Gen {
         Gen.fn('static char *new_tmp_var(enum DPCC_TYPE type)', () => {
             Gen.print('str_t s = {0};')
             Gen.switchd('type', {
-                "TYPE_I32": 'sfcat(&G_allctx, &s, "__i%d", G_codegen_i32_cnt++);',
-                "TYPE_F32": 'sfcat(&G_allctx, &s, "__f%d", G_codegen_f32_cnt++);',
-                "TYPE_BOOL": 'sfcat(&G_allctx, &s, "__b%d", G_codegen_bool_cnt++);',
+                "TYPE_I32": 'sfcat(&G_allctx, &s, "_vi%d", G_codegen_i32_cnt++);',
+                "TYPE_F32": 'sfcat(&G_allctx, &s, "_vf%d", G_codegen_f32_cnt++);',
+                "TYPE_BOOL": 'sfcat(&G_allctx, &s, "_vb%d", G_codegen_bool_cnt++);',
             })
             Gen.print('return s.cstr;')
         })
@@ -475,7 +475,7 @@ namespace DPCC_Gen {
     export function new_tmp_label() {
         Gen.fn('static char *new_tmp_label()', () => {
             Gen.print('str_t s = {0};')
-            Gen.print('sfcat(&G_allctx, &s, "__l%d", G_codegen_jmp_cnt++);')
+            Gen.print('sfcat(&G_allctx, &s, "_lbl%d", G_codegen_jmp_cnt++);')
             Gen.print('return s.cstr;')
         })
     }
@@ -792,9 +792,10 @@ namespace DPCC_Gen {
     export function setup_addrs_and_jmp_tables() {
         Gen.fn('static void setup_addrs_and_jmp_tables(ast_node_t *n)', () => {
             Gen.ifd({
+                '': '',
                 // Generate addr tmp_var name for each expr node
                 '!n->md.addr && (n->md.type != TYPE_NONE && is_expr_node(n))': () => {
-                    Gen.print('assert(n->decl->md.type == n->md.type);')
+                    Gen.print('if (n->kind == TOK_ID) { assert(n->decl->md.type == n->md.type); }')
                     Gen.print('assert(n->md.type != TYPE_I32_ARRAY);')
                     Gen.print('assert(n->md.type != TYPE_F32_ARRAY);')
                     Gen.print('n->md.addr = new_tmp_var(n->md.type);')
@@ -823,10 +824,8 @@ namespace DPCC_Gen {
             Gen.print("ast_traversal_begin(&att, &G_root_node, false, true);")
             Gen.print("ast_node_t *n = NULL;")
             Gen.whiled("(n = ast_traverse_next(&att, NULL)) != NULL", () => {
-                Gen.ifd({
-                    'n->md.type == TYPE_NONE': 'typecheck(n);',
-                    '': 'setup_addrs_and_jmp_tables(n);'
-                })
+                Gen.print('typecheck(n);')
+                Gen.print('setup_addrs_and_jmp_tables(n);')
             })
         })
     }

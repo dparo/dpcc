@@ -135,8 +135,8 @@ static inline bool var_decl(ast_node_t *var_decl_node)
     assert(var_decl_node->tok->kind == TOK_KW_LET);
     assert(var_decl_node->num_childs == 3);
     char *lexeme = var_decl_node->childs[1]->tok->lexeme;
-    if (lexeme[0] == '_' && lexeme[1] == '_') {
-        dpcc_log(DPCC_SEVERITY_ERROR, &var_decl_node->tok->loc, "Identifiers beginning with `__` are reserved for compiler use.");
+    if (lexeme[0] == '_') {
+        dpcc_log(DPCC_SEVERITY_ERROR, &var_decl_node->tok->loc, "Identifiers beginning with `_` are reserved for compiler use.");
         return false;
     }
     ast_node_t *already_declared = symtable_push_sym(var_decl_node);
