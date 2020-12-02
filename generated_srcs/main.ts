@@ -448,6 +448,8 @@ function info(node: string, fmt: string, ...args: string[]) {
 }
 
 
+
+
 namespace DPCC_Gen {
 
     export function vars() {
@@ -626,7 +628,7 @@ namespace DPCC_Gen {
             Gen.print(`bool var_decl = (${Gen.one_of("n->kind", DPCC.OPS.DECL)});`)
             Gen.print(`bool var_decl_with_user_listed_type = var_decl && c0;`)
             Gen.print(`bool var_decl_no_user_listed_type = var_decl && !c0;`)
-            Gen.print(`bool integral_var_decl = var_decl && c0->kind != TOK_OPEN_BRACKET;`)
+            Gen.print(`bool integral_var_decl = var_decl && (!c0 || c0->kind != TOK_OPEN_BRACKET);`)
             Gen.print('bool var_decl_with_rhs = var_decl && c2;')
             Gen.print(`bool array_var_decl = var_decl && c0 && c0->kind == TOK_OPEN_BRACKET;`)
             Gen.print(`bool array_var_decl_num_elems_provided = array_var_decl && c1;`)
@@ -687,7 +689,10 @@ namespace DPCC_Gen {
                             'integral_var_decl': () => {
                                 Gen.ifd({
                                     '': 'invalid_code_path();',
-
+                                    'var_decl_no_user_listed_type && !var_decl_with_rhs': () => {
+                                        // Assume integer
+                                        Gen.print('n->md.type = TYPE_I32;')
+                                    },
                                     // Integral var decl with user listed type
                                     'var_decl_with_user_listed_type': () => Gen.map("c0->kind", "c0->md.type", {
                                         'TOK_KW_INT': 'TYPE_I32',
@@ -702,16 +707,11 @@ namespace DPCC_Gen {
                                     'var_decl_no_user_listed_type && var_decl_with_rhs': () => {
                                         Gen.print('n->md.type = rhs->md.type;')
                                     },
-                                    'var_decl_no_user_listed_type && !var_decl_with_rhs': () => {
-                                        // Assume integer
-                                        Gen.print('n->md.type = TYPE_I32;')
-                                    },
                                 })
                             },
                         })
 
                         // For every var decl forward the computed from the child
-                        Gen.print('n->md.type = c0->md.type;')
                         Gen.print('n->md.array_len = init_val_len;')
                     },
 
@@ -739,7 +739,7 @@ namespace DPCC_Gen {
                         })
                     },
                     '': () => {
-                        Gen.print('type_deduce_expr_and_operators(n);')
+                        Gen.print('typecheck_expr_and_operators(n);')
                     }
                 })
 
