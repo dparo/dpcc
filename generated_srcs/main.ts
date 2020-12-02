@@ -676,7 +676,7 @@ namespace DPCC_Gen {
                                     '': 'invalid_code_path();',
 
                                     'var_decl_with_user_listed_type': () => {
-                                        Gen.map("c0->childs[0]->kind", "c0->md.type", {
+                                        Gen.map("c0->childs[0]->kind", "n->md.type", {
                                             'TOK_KW_INT': 'TYPE_I32_ARRAY;',
                                             'TOK_KW_FLOAT': 'TYPE_F32_ARRAY;',
                                         })
@@ -695,14 +695,16 @@ namespace DPCC_Gen {
                                         Gen.print('n->md.type = TYPE_I32;')
                                     },
                                     // Integral var decl with user listed type
-                                    'var_decl_with_user_listed_type': () => Gen.map("c0->kind", "c0->md.type", {
+                                    'var_decl_with_user_listed_type': () => Gen.map("c0->kind", "n->md.type", {
                                         'TOK_KW_INT': 'TYPE_I32',
                                         'TOK_KW_FLOAT': 'TYPE_F32',
                                         'TOK_KW_BOOL': 'TYPE_BOOL',
                                     }),
                                     // User listed type and right hand side: Type check
                                     'var_decl_with_user_listed_type && var_decl_with_rhs': () => {
+                                        Gen.print('assert(rhs->md.type != TYPE_NONE);')
                                         Gen.print('typemismatch_check(type, rhs);')
+                                        Gen.print('n->md.type = rhs->md.type;')
                                     },
                                     // Type deduce from RHS
                                     'var_decl_no_user_listed_type && var_decl_with_rhs': () => {
