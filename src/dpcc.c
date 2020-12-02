@@ -186,18 +186,15 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
         return false;
     }
 
-    char *generated_code = NULL;
-    check_and_optimize_ast();
+    char *generated_code = codegen();
 
     extern int yynerrs;
-    if (yynerrs == 0) {
-        generated_code = codegen();
-        if (generated_code && yynerrs == 0) {
-            fprintf(output_stream, "%s", generated_code);
-        }
+    if (yynerrs == 0 && generated_code != NULL) {
+        fprintf(output_stream, "%s", generated_code);
+        return true;
+    } else {
+        return false;
     }
-
-    return yynerrs == 0 && generated_code;
 }
 
 void ast_traversal_push(ast_traversal_t *t, ast_node_t *parent, int32_t current_child)

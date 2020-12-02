@@ -54,6 +54,14 @@ namespace Gen {
 
 
     export let writeStream: FS.WriteStream|null = null;
+    function write(s: string) {
+        if (writeStream != null) {
+            writeStream.write(s);
+        } else {
+            PROC.stdout.write(s);
+        }
+    }
+
     export function scope(callback: () => any) {
         Gen.print("{");
         G_indentCnt += 1;
@@ -62,26 +70,36 @@ namespace Gen {
         Gen.print("}");
     }
 
+
+    export function fn(decl:string, body: () => any) {
+        Gen.print()
+        Gen.print(decl)
+        Gen.scope(body)
+        Gen.print()
+    }
+
+    export function whiled(expr: string, body: () => any) {
+        Gen.print(`while (${expr})`)
+        Gen.scope(body)
+        Gen.print()
+    }
+
     export function print(...args: string[]) {
-        if (args.length == 0) {
-            console.log("");
+        if (args.length == 0 || (args.length == 1 && args[0] == "")) {
+            write("\n");
         } else {
             let out = "";
             for (let v of args) {
                 let lines = v.split('\n');
                 for (let l of lines) {
-                    let prependNewLine = l.startsWith("do") || l.startsWith("while") || l.startsWith("switch") || l.startsWith("for");
+                    let prependNewLine = l.startsWith("if") || l.startsWith("do") || l.startsWith("while") || l.startsWith("switch") || l.startsWith("for");
                     if (prependNewLine) {
                         out += "\n";
                     }
                     out += "    ".repeat(G_indentCnt) + l + "\n";
                 }
             }
-            if (writeStream == null) {
-                PROC.stdout.write(out);
-            } else {
-                Gen.writeStream?.write(out);
-            }
+            write(out);
         }
     }
 
@@ -125,7 +143,7 @@ namespace Gen {
     export function ife(d: Record<string, string|(() => any)>) {
         let i = 0;
         for (let [k, v] of Object.entries(d)) {
-            if (v == '') {
+            if (k == '') {
                 continue;
             }
 
@@ -150,7 +168,8 @@ namespace Gen {
                 Gen.print(DEFAULT_CASE);
             });
         }
-        Gen.print();
+
+        Gen.print()
     }
 
 
@@ -175,8 +194,35 @@ namespace Gen {
                     (new Action(v)).do();
                 });
             }
+        });
+
+        Gen.print()
+    }
+
+    export function map(elem: string, output: string, d: Record<string, string | (() => string)>) {
+        let default_case = new Action(d[""] || DEFAULT_CASE);
+
+        Gen.print(`switch (${elem})`);
+        Gen.scope(() => {
+            Gen.print("default: ")
+            Gen.scope(() => {
+                Gen.print(`${output} = ${default_case.do()}`)
+            })
+            Gen.print("break;");
+
+            for (let [k, v] of Object.entries(d)) {
+                if (k == "") {
+                    continue;
+                }
+
+                Gen.print(`case ${k}:`);
+                Gen.scope(() => {
+                    Gen.print(`${output} = ${(new Action(v)).do()}`)
+                });
+            }
 
         });
+        Gen.print()
     }
 }
 
@@ -225,6 +271,24 @@ namespace DPCC {
 `
     )
 
+    export namespace TYPES {
+        export const INTEGRAL = [
+            "TYPE_I32",
+            "TYPE_F32",
+            "TYPE_BOOL",
+        ];
+
+        export const ARRAY = [
+            "TYPE_I32_ARRAY",
+            "TYPE_F32_ARRAY",
+        ];
+
+        export const ALL = [
+            ...INTEGRAL,
+            ...ARRAY,
+        ];
+    }
+
     export namespace OPS {
         export const DECL = [
             "TOK_KW_FN",
@@ -239,7 +303,7 @@ namespace DPCC {
 
         export let ALL: string[] = [
             // Initialized later
-        ]
+        ];
     }
 
     export namespace EXPRS {
@@ -347,77 +411,273 @@ namespace DPCC {
 
 function log(severity: string, node: string, fmt: string, ...args: string[]) {
     fmt = "\"" + fmt + "\"";
-    let optional_comma = args.length >= 1;
+    let optional_comma = args.length >= 1 ? ", " : "";
 
-    Gen.print(`dpcc_log(${severity}, &((${node})->tok->loc${optional_comma}${args.join()});`)
+    Gen.print(`dpcc_log(${severity}, &((${node})->tok->loc), ${fmt}${optional_comma}${args.join()});`)
 }
 
 function err(node: string, fmt: string, ...args: string[]) {
     log('DPCC_SEVERITY_ERROR', node, fmt, ...args);
-    Gen.print('yynerrs ++ 1;')
+    Gen.print('yynerrs += 1;')
 }
 
 function warn(node: string, fmt: string, ...args: string[]) {
     log('DPCC_SEVERITY_WARNING', node, fmt, ...args);
-    Gen.print('yynerrs ++ 1;')
+}
+
+function info(node: string, fmt: string, ...args: string[]) {
+    log('DPCC_SEVERITY_INFO', node, fmt, ...args);
 }
 
 
-function type_deduce_expr_and_operators(n: string) {
-    Gen.print()
-    Gen.print('static void type_deduce_expr_and_operators(ast_node_t *n)')
-    Gen.scope(() => {
-        Gen.print(`if (${Gen.one_of("n->kind", DPCC.OPS.ALL)})`)
-        Gen.scope(() => {
-            for (let expr of DPCC.EXPRS.ALL) {
-                let all_yytokenstypes = []
-                for (let yytokenstype of expr.yytokentypes) {
-                    all_yytokenstypes.push(yytokenstype)
-                }
-                Gen.print(`if (${Gen.one_of(`${n}->kind`, all_yytokenstypes)})`)
-                Gen.scope( () => {
-                    for (let tct_idx = 0; tct_idx < expr.types_conversion_table.length; tct_idx++) {
-                        let tct = expr.types_conversion_table[tct_idx]
+namespace DPCC_Gen {
 
-                        let out_type: string   = Utils.as_dpcc_type(tct.outType)
-                        let in_types: string[] = tct.inTypes.map((item) => Utils.as_dpcc_type(item))
-                        let num_in_types = in_types.length
-
-                        let maybe_else = tct_idx == 0 ? "" : "else "
-
-                        let check_type_list: string[] = []
-                        for (let i = 0; i < in_types.length; i++) {
-                            check_type_list.push(`${n}->childs[${i}]->md.type == ${in_types[i]}`)
-                        }
-
-                        Gen.print(`${maybe_else}if ((${n}->num_childs == ${num_in_types}) && ${Gen.log_and(...check_type_list)})`)
-                        Gen.scope(() => {
-                            Gen.print(`${n}->md.type = ${out_type};`)
-                        })
-                    }
-                    Gen.print("else")
-                    Gen.scope(() => {
-                        err(`${n}`, "Types composing this expression cannot be broadcasted");
-                    })
-                })
-            }
+    export function vars() {
+        Gen.print('static str_t S_str = {0};');
+    }
+    export function cat(fmt: string, ...args: string[]) {
+        fmt = "\"" + fmt + "\"";
+        let optional_comma = args.length >= 1 ? ", " : "";
+        Gen.print(`sfcat(&G_allctx, &S_str, ${fmt}${optional_comma}${args.join()});`)
+    }
+    export function new_tmp_var() {
+        Gen.fn('static char *new_tmp_var(enum DPCC_TYPE type)', () => {
+            Gen.print('str_t s = {0};')
+            Gen.switchd('type', {
+                "TYPE_I32": 'sfcat(&G_allctx, &s, "__i%d", G_codegen_i32_cnt++);',
+                "TYPE_F32": 'sfcat(&G_allctx, &s, "__f%d", G_codegen_f32_cnt++);',
+                "TYPE_BOOL": 'sfcat(&G_allctx, &s, "__b%d", G_codegen_bool_cnt++);',
+            })
+            Gen.print('return s.cstr;')
         })
-    })
+    }
+
+    export function new_tmp_label() {
+        Gen.fn('static char *new_tmp_label()', () => {
+            Gen.print('str_t s = {0};')
+            Gen.print('sfcat(&G_allctx, &s, "__l%d", G_codegen_jmp_cnt++);')
+            Gen.print('return s.cstr;')
+        })
+    }
+
+
+    export function is_expr_node() {
+        Gen.fn('static inline bool is_expr_node(ast_node_t *n)', () => {
+            let token_types: string[] = [];
+            DPCC.EXPRS.ALL.map((expr) => expr.yytokentypes.map((s) => token_types.push(s)))
+            Gen.print(`return (${Gen.one_of("n->kind", token_types)});`);
+        })
+    }
+
+    export function typemismatch_check() {
+        Gen.fn('static inline void typemismatch_check(ast_node_t *expected_type, ast_node_t *got_type)', () => {
+            Gen.ife({
+                '': '',
+                '(expected_type != NULL && got_type != NULL) && (expected_type->md.type != got_type->md.type)': () => {
+                    err("expected_type", "Type Mismatch");
+                    info("expected_type", "Expected `%s`", "dpcc_type_as_str(expected_type->md.type)");
+                    info("got_type", "But got `%s`", "dpcc_type_as_str(got_type->md.type)")
+                }
+            })
+        })
+    }
+
+    export function type_deduce_expr_and_operators() {
+        Gen.fn('static void type_deduce_expr_and_operators(ast_node_t *n)', () => {
+            Gen.print(`if (${Gen.one_of("n->kind", DPCC.OPS.ALL)})`)
+            Gen.scope(() => {
+                for (let expr of DPCC.EXPRS.ALL) {
+                    let all_yytokenstypes = []
+                    for (let yytokenstype of expr.yytokentypes) {
+                        all_yytokenstypes.push(yytokenstype)
+                    }
+                    Gen.print(`if (${Gen.one_of(`n->kind`, all_yytokenstypes)})`)
+                    Gen.scope( () => {
+                        for (let tct_idx = 0; tct_idx < expr.types_conversion_table.length; tct_idx++) {
+                            let tct = expr.types_conversion_table[tct_idx]!
+
+                            let out_type = Utils.as_dpcc_type(tct.outType)
+                            let in_types = tct.inTypes.map((item) => Utils.as_dpcc_type(item))
+                            let num_in_types = in_types.length
+
+                            let maybe_else = tct_idx == 0 ? "" : "else "
+
+                            let check_type_list: string[] = []
+                            for (let i = 0; i < in_types.length; i++) {
+                                check_type_list.push(`n->childs[${i}]->md.type == ${in_types[i]}`)
+                            }
+
+                            Gen.print(`${maybe_else}if ((n->num_childs == ${num_in_types}) && ${Gen.log_and(...check_type_list)})`)
+                            Gen.scope(() => {
+                                Gen.print(`n->md.type = ${out_type};`)
+                            })
+                        }
+                        Gen.print("else")
+                        Gen.scope(() => {
+                            err(`n`, "Types composing this expression cannot be broadcasted");
+                        })
+                    })
+                }
+            })
+        })
+
+    }
+
+
+    export function check_array_initializer_list() {
+        Gen.fn('static void check_initializer_list(ast_node_t *n, enum DPCC_TYPE expected_type, int32_t array_type_len, int32_t init_list_len)', () => {
+            Gen.print("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
+            Gen.print("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
+
+            Gen.ife({
+                '(c0->childs[1] && init_list_len != array_type_len)': () => {
+                    err("c2", "Number of elements in initializer list do not match")
+                    info("c0->childs[1]", "Expected number of elements: `%d`", 'array_type_len')
+                    info("c2", "Number of elements got: `%d`", 'init_list_len')
+                },
+                '(c2 && init_list_len <= 0)': () => {
+                    err("c2", "Number of elements in initializer list is invalid")
+                    info("c2", "Cannot create zero or negative sized array")
+                },
+                '': ''
+            })
+
+            // Now make sure that each type in the initializer list is correct
+            Gen.print("for (int32_t i = 0; i < c2->num_childs; i++)")
+            Gen.scope(() => {
+                Gen.ife({
+                    '(c2->childs[i] && c2->childs[i]->md.type != expected_type)': () => {
+                        err("c2->childs[i]", "Type mismatch in array initializer list")
+                        info("c0->childs[0]", "Expected `%s`", "dpcc_type_as_str(c0->childs[0]->md.type)")
+                        info("c2->childs[i]", "Got `%s`", "dpcc_type_as_str(c2->childs[i]->md.type)")
+                    },
+                    '': ''
+                })
+            })
+        })
+    }
+
+    export function deduce_array_type() {
+        Gen.fn("static void deduce_array_type(ast_node_t *n)", () => {
+            Gen.print("ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;")
+            Gen.print("ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;")
+            Gen.print("// Deduce type of array variable declarations")
+            Gen.print("assert((c0->childs[1] == NULL) || (c0->childs[1]->kind == TOK_I32_LIT && c0->childs[1]->md.type == TYPE_I32));")
+
+            Gen.print("int32_t array_type_len = c0->childs[1] ? c0->childs[1]->val.as_i32 : 0;")
+            Gen.print("int32_t init_list_len = c2 != NULL ? c2->num_childs : 0;")
+
+
+            Gen.ife({
+                'c0->childs[1] && array_type_len <= 0': () => {
+                    err("&c0->childs[1]", "The number of elements in an array must be a positive integer")
+                    info("&c0->childs[1]", "Got `%d`", 'array_type_len')
+                },
+
+                // Initializer list is provided
+                'c2': () => {
+                    Gen.print("enum DPCC_TYPE expected_type = TYPE_NONE;")
+                    Gen.map('c0->md.type', 'expected_type', {
+                        'TYPE_I32_ARRAY': "TYPE_I32",
+                        'TYPE_F32_ARRAY': "TYPE_F32",
+                    })
+
+                    Gen.print("check_initializer_list(n, expected_type, array_type_len, init_list_len);");
+                },
+
+                // We don't have an initializer list, so make sure that at least the type array is sized
+                '(c0 == NULL || c0->childs[1] == NULL || c0->childs[1]->kind != TOK_I32_LIT || c0->childs[1]->md.type != TYPE_I32)': () => {
+                    err("c0", "Size of the array must be specified")
+                    info("c0", "Either specify the size inside the square brackets, or provide an initializer list")
+                },
+
+                '': '',
+            })
+
+            //
+            Gen.print("// Forward the same type to the keyword let")
+            Gen.print("n->md.type = c0->md.type;")
+            Gen.print("n->md.array_len = init_list_len;")
+
+        })
+    }
+
+
+    // Setup, type checking, type deduction, and genError reporting
+    export function first_ast_pass() {
+        Gen.fn('static void first_ast_pass(void)', () => {
+
+        })
+    }
+
+    // Actually produces the output code
+    export function second_ast_pass() {
+        Gen.fn('static char *second_ast_pass(void)', () => {
+            Gen.print('memset(&S_str, 0, sizeof(S_str));')
+            cat("\\n");
+            Gen.print()
+
+            Gen.print('ast_traversal_t att = {0};')
+            Gen.print('ast_traversal_begin(&att, &G_root_node, true, true);')
+            Gen.print('ast_node_t *n = NULL;')
+            Gen.print('bool is_top_down_encounter = false;')
+
+            Gen.whiled("(n = ast_traverse_next(&att, &is_top_down_encounter)) != NULL", () => {
+
+            })
+
+
+            Gen.ife({
+                'yynerrs == 0': 'return S_str.cstr;',
+                '': 'return NULL;'
+            })
+        })
+    }
+
+
+    export function codegen() {
+        Gen.fn('char *codegen(void)', () => {
+            Gen.print('first_ast_pass();')
+            Gen.ife({
+                'yynerrs == 0': 'return second_ast_pass();',
+                '': '',
+            })
+            Gen.print('return NULL;')
+        })
+    }
 
 }
+
+
 
 function generate_src_file() {
     Gen.print(DPCC.COMMON_BOILERPLATE);
-    type_deduce_expr_and_operators("n")
+
+    Gen.print('#include "gen.h"')
+    Gen.print('#include "parser.h"')
+
+    Gen.print('\n\n')
+    Gen.print('extern int yynerrs;')
+    DPCC_Gen.vars()
+    Gen.print('\n\n')
+
+    DPCC_Gen.is_expr_node()
+    DPCC_Gen.new_tmp_var()
+    DPCC_Gen.new_tmp_label()
+    DPCC_Gen.typemismatch_check()
+    DPCC_Gen.check_array_initializer_list()
+    DPCC_Gen.type_deduce_expr_and_operators()
+    DPCC_Gen.first_ast_pass()
+    DPCC_Gen.second_ast_pass()
+    DPCC_Gen.codegen()
+
 }
 
 
 function generate_hdr_file() {
     Gen.print(DPCC.COMMON_BOILERPLATE);
-    Gen.print("void check_and_optimize_ast(void);")
     Gen.print("char *codegen(void);")
 }
-
 
 function main() {
     DPCC.init();
@@ -428,8 +688,8 @@ function main() {
 
 
     let genList = [
-        {"filepath": "js_gen/gen.c", "fn": generate_src_file},
-        {"filepath": "js_gen/gen.h", "fn": generate_hdr_file},
+        {"filepath": "src/gen.c", "fn": generate_src_file},
+        {"filepath": "src/gen.h", "fn": generate_hdr_file},
     ];
 
     for (let [_, v] of Object.entries(genList)) {

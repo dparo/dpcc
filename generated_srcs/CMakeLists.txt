@@ -1,5 +1,6 @@
 set(GENERATED_SOURCES_LIST
   "${CMAKE_SOURCE_DIR}/generated_srcs/src/gen.c"
+  "${CMAKE_SOURCE_DIR}/generated_srcs/src/gen.h"
   )
 
 # add_custom_target(gen.py
@@ -11,8 +12,8 @@ set(GENERATED_SOURCES_LIST
 
 
 add_custom_target(gen.js
-  node "${CMAKE_SOURCE_DIR}/generated_srcs/gen_all.js"
-  DEPENDS "${CMAKE_SOURCE_DIR}/generated_srcs/gen_all.js" "${CMAKE_SOURCE_DIR}/generated_srcs/utils.py" "${CMAKE_SOURCE_DIR}/generated_srcs/ops.py"
+  node "${CMAKE_SOURCE_DIR}/generated_srcs/dist/main.js"
+  DEPENDS "${CMAKE_SOURCE_DIR}/generated_srcs/dist/main.js"
   BYPRODUCTS "${CMAKE_SOURCE_DIR}/generated_srcs/last_gen.txt"
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/generated_srcs"
   )
