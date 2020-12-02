@@ -5,10 +5,11 @@ import * as FS from "fs";
 import * as PROC from "process";
 import * as OS from "os";
 import * as PATH from "path";
+import { stringify } from "querystring";
 
 
-const utils = {
-    type_to_dpcc_type: function(s: string): string {
+namespace Utils {
+    export function as_dpcc_type(s: string): string {
         let map: Record<string, string> = {
             "int": "TYPE_I32",
             "float": "TYPE_F32",
@@ -18,6 +19,12 @@ const utils = {
         };
         return map[s] || "";
     }
+
+
+    export function array_as_comma_separated_string(a: string[]): string {
+        return a.join();
+    }
+
 };
 
 namespace Gen {
@@ -177,11 +184,21 @@ namespace DPCC {
 
     class Expr {
         yytokentypes: string[];
-        types_conversion_table: (string | string[])[][];
+        types_conversion_table: ExprTypeRule[];
 
-        constructor(yytokentypes: string[], types_conversion_table: (string | string[])[][]) {
+        constructor(yytokentypes: string[], types_conversion_table: ExprTypeRule[]) {
             this.yytokentypes = yytokentypes;
             this.types_conversion_table = types_conversion_table;
+        }
+    }
+
+    class ExprTypeRule {
+        outType: string;
+        inTypes: string[];
+
+        constructor (outType: string, inTypes: string[]) {
+            this.outType = outType;
+            this.inTypes = inTypes
         }
     }
 
@@ -237,7 +254,7 @@ namespace DPCC {
                 "TOK_BRSHIFT",
             ],
             [
-                ["int", ["int", "int"]]
+                new ExprTypeRule("int", ["int", "int"])
             ]
         );
 
@@ -256,13 +273,13 @@ namespace DPCC {
                 "TOK_NEG",
             ],
             [
-                ["int", ["int", "int"]],
-                ["float", ["float", "int"]],
-                ["float", ["int", "float"]],
-                ["float", ["float", "float"]],
+                new ExprTypeRule("int", ["int", "int"]),
+                new ExprTypeRule("float", ["float", "int"]),
+                new ExprTypeRule("float", ["int", "float"]),
+                new ExprTypeRule("float", ["float", "float"]),
 
-                ["int", ["int"]],
-                ["float", ["float"]],
+                new ExprTypeRule("int", ["int"]),
+                new ExprTypeRule("float", ["float"]),
             ]
         );
 
@@ -277,11 +294,10 @@ namespace DPCC {
                 "TOK_LTEQ",
             ],
             [
-                ["bool", ["int", "int"]],
-                ["bool", ["float", "int"]],
-                ["bool", ["int", "float"]],
-                ["bool", ["float", "float"]],
-
+                new ExprTypeRule("bool", ["int", "int"]),
+                new ExprTypeRule("bool", ["float", "int"]),
+                new ExprTypeRule("bool", ["int", "float"]),
+                new ExprTypeRule("bool", ["float", "float"]),
             ]
         );
 
@@ -292,8 +308,8 @@ namespace DPCC {
                 "TOK_LOR",
             ],
             [
-                ["bool", ["bool", "bool"]],
-                ["bool", ["bool"]],
+                new ExprTypeRule("bool", ["bool", "bool"]),
+                new ExprTypeRule("bool", ["bool"]),
             ]
         );
 
@@ -303,8 +319,8 @@ namespace DPCC {
                 "TOK_AR_SUBSCR",
             ],
             [
-                ["int", ["int[]", "int"]],
-                ["float", ["float[]", "int"]]
+                new ExprTypeRule("int", ["int[]", "int"]),
+                new ExprTypeRule("float", ["float[]", "int"]),
             ],
         );
 
@@ -319,30 +335,87 @@ namespace DPCC {
     }
 
     export function init() {
-        for (let bundle of EXPRS.ALL) {
-            for (let yytokenstype of bundle.yytokentypes) {
+        for (let expr of EXPRS.ALL) {
+            for (let yytokenstype of expr.yytokentypes) {
                 OPS.ALL.push(yytokenstype);
             }
         }
 
     }
-
 }
 
 
+function log(severity: string, node: string, fmt: string, ...args: string[]) {
+    fmt = "\"" + fmt + "\"";
+    let optional_comma = args.length >= 1;
 
+    Gen.print(`dpcc_log(${severity}, &((${node})->tok->loc${optional_comma}${args.join()});`)
+}
+
+function err(node: string, fmt: string, ...args: string[]) {
+    log('DPCC_SEVERITY_ERROR', node, fmt, ...args);
+    Gen.print('yynerrs ++ 1;')
+}
+
+function warn(node: string, fmt: string, ...args: string[]) {
+    log('DPCC_SEVERITY_WARNING', node, fmt, ...args);
+    Gen.print('yynerrs ++ 1;')
+}
+
+
+function type_deduce_expr_and_operators(n: string) {
+    Gen.print()
+    Gen.print('static void type_deduce_expr_and_operators(ast_node_t *n)')
+    Gen.scope(() => {
+        Gen.print(`if (${Gen.one_of("n->kind", DPCC.OPS.ALL)})`)
+        Gen.scope(() => {
+            for (let expr of DPCC.EXPRS.ALL) {
+                let all_yytokenstypes = []
+                for (let yytokenstype of expr.yytokentypes) {
+                    all_yytokenstypes.push(yytokenstype)
+                }
+                Gen.print(`if (${Gen.one_of(`${n}->kind`, all_yytokenstypes)})`)
+                Gen.scope( () => {
+                    for (let tct_idx = 0; tct_idx < expr.types_conversion_table.length; tct_idx++) {
+                        let tct = expr.types_conversion_table[tct_idx]
+
+                        let out_type: string   = Utils.as_dpcc_type(tct.outType)
+                        let in_types: string[] = tct.inTypes.map((item) => Utils.as_dpcc_type(item))
+                        let num_in_types = in_types.length
+
+                        let maybe_else = tct_idx == 0 ? "" : "else "
+
+                        let check_type_list: string[] = []
+                        for (let i = 0; i < in_types.length; i++) {
+                            check_type_list.push(`${n}->childs[${i}]->md.type == ${in_types[i]}`)
+                        }
+
+                        Gen.print(`${maybe_else}if ((${n}->num_childs == ${num_in_types}) && ${Gen.log_and(...check_type_list)})`)
+                        Gen.scope(() => {
+                            Gen.print(`${n}->md.type = ${out_type};`)
+                        })
+                    }
+                    Gen.print("else")
+                    Gen.scope(() => {
+                        err(`${n}`, "Types composing this expression cannot be broadcasted");
+                    })
+                })
+            }
+        })
+    })
+
+}
 
 function generate_src_file() {
     Gen.print(DPCC.COMMON_BOILERPLATE);
-    Gen.print(DPCC.COMMON_BOILERPLATE);
-    Gen.print(DPCC.COMMON_BOILERPLATE);
-    Gen.print(DPCC.COMMON_BOILERPLATE);
+    type_deduce_expr_and_operators("n")
 }
 
 
 function generate_hdr_file() {
     Gen.print(DPCC.COMMON_BOILERPLATE);
-
+    Gen.print("void check_and_optimize_ast(void);")
+    Gen.print("char *codegen(void);")
 }
 
 

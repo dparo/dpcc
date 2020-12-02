@@ -1,5 +1,5 @@
 //
-// Generated from /home/dparo/develop/dpcc/generated_srcs/gen_all.js
+// Generated from /home/dparo/develop/dpcc/generated_srcs/dist/main.js
 //
 #include <stdbool.h>
 #include <stddef.h>
@@ -17,3 +17,5 @@
 #include "dpcc.h"
 
 
+void check_and_optimize_ast(void);
+char *codegen(void);
