@@ -634,6 +634,7 @@ namespace DPCC_Gen {
             Gen.print(`bool array_var_decl_num_elems_provided = array_var_decl && c1;`)
             Gen.print(`bool is_typable_identifier = n->kind == TOK_ID && n->parent && !${Gen.one_of("n->parent->kind", DPCC.OPS.DECL)};`)
             Gen.print(`bool is_array_subscript = n->kind == TOK_AR_SUBSCR && n->childs[1]->kind == TOK_I32_LIT && n->childs[1]->md.type == TYPE_I32;`)
+            Gen.print(`bool is_print = n->kind == TOK_KW_PRINT;`)
 
             Gen.ifd({
                 // If not matched do not do anything
@@ -736,6 +737,16 @@ namespace DPCC_Gen {
                                 info("n->childs[1]", "Got `%d` instead", "subscript_idx")
                             }
 
+                        })
+                    },
+                    'is_print': () => {
+                        Gen.print('assert(c0 && c0->md.type);')
+                        Gen.print(`if (!${Gen.one_of("c0->md.type", DPCC.TYPES.INTEGRAL)})`)
+                        Gen.scope(() => {
+                            err("c0", "The provided element type (%s) is not printable", "c0->tok->lexeme")
+                            let printable = DPCC.TYPES.INTEGRAL.map((s) => `dpcc_type_as_str(${s})`)
+                            let fmt = 'Valid printable types are: ' + "%s ".repeat(printable.length)
+                            info("c0", fmt, Utils.array_as_comma_separated_string(printable));
                         })
                     },
                     '': () => {
