@@ -369,9 +369,36 @@ static void emit_indexing(ast_node_t *n)
         rhs->md.sym);
 }
 
-static void _var_set(ast_node_t *n)
+static void emit_array_subscript(ast_node_t *n)
+{
+    assert(n->kind == TOK_AR_SUBSCR);
+    assert(n->num_childs == 2);
+    assert(n->childs[0]);
+    assert(n->childs[0]->md.type);
+    assert(n->childs[0]->md.sym);
+
+    ast_node_t *lhs = n->childs[0];
+    ast_node_t *rhs = n->childs[1];
+
+    assert(lhs->md.type != TYPE_NONE);
+    assert(rhs->md.type != TYPE_NONE);
+
+    char *index = rhs->md.sym;
+
+    EMIT("%s = _var_get(\"%s\", %s, %s);\n",
+        n->md.sym,
+        lhs->tok->lexeme,
+        get_type_label(n->md.type),
+        index);
+}
+
+static void emit_assign(ast_node_t *n)
 {
     assert(n->kind == TOK_ASSIGN);
+    assert(n->num_childs == 2);
+    assert(n->childs[0] && n->childs[1]);
+    assert(n->md.type);
+    assert(n->md.sym);
 
     ast_node_t *lhs = n->childs[0];
     ast_node_t *rhs = n->childs[1];
@@ -405,62 +432,29 @@ static void _var_set(ast_node_t *n)
     }
 }
 
-static void emit_array_subscript(ast_node_t *n)
-{
-    assert(n->kind == TOK_AR_SUBSCR);
-    assert(n->num_childs == 2);
-    assert(n->childs[0]);
-    assert(n->childs[0]->md.type);
-    assert(n->childs[0]->md.sym);
-
-    ast_node_t *lhs = n->childs[0];
-    ast_node_t *rhs = n->childs[1];
-
-    assert(lhs->md.type != TYPE_NONE);
-    assert(rhs->md.type != TYPE_NONE);
-
-    char *index = rhs->md.sym;
-
-    EMIT("%s = _var_get(\"%s\", %s, %s);\n",
-        n->md.sym,
-        lhs->tok->lexeme,
-        get_type_label(n->md.type),
-        index);
-}
-
-static void emit_assign(ast_node_t *n)
-{
-    assert(n->kind == TOK_ASSIGN);
-    assert(n->num_childs == 2);
-    assert(n->childs[0] && n->childs[1]);
-    assert(n->md.type);
-    assert(n->md.sym);
-
-    _var_set(n);
-}
-
 static void emit_pre_inc_dec(ast_node_t *n)
 {
     assert(n->kind == TOK_INC || n->kind == TOK_DEC);
-    assert(n->num_childs == 2);
-    assert(n->childs[0] && n->childs[1]);
+    assert(n->num_childs == 1);
+    assert(n->childs[0]);
     assert(n->md.type);
     assert(n->md.sym);
 
     ast_node_t *lhs = n->childs[0];
-    ast_node_t *rhs = n->childs[1];
 
     assert(lhs->md.type != TYPE_NONE);
-    assert(rhs->md.type != TYPE_NONE);
     assert(lhs->decl);
 
     EMIT("%s = %s;\n", n->md.sym, n->childs[0]->md.sym);
     if (n->kind == TOK_INC) {
-        EMIT("_vspcIncDec = %s + 1;\n", rhs->md.sym);
+        EMIT("_vspcIncDec = %s + 1;\n", lhs->md.sym);
     } else {
-        EMIT("_vspcIncDec = %s - 1;\n", rhs->md.sym);
+        EMIT("_vspcIncDec = %s - 1;\n", lhs->md.sym);
     }
-    _var_set(n);
+    EMIT("%s = _var_set(\"%s\", %s, 1, _vspcIncDec);\n",
+        n->md.sym,
+        lhs->tok->lexeme,
+        get_type_label(lhs->md.type));
 }
 
 static void emit_expr(ast_node_t *n)
@@ -628,12 +622,11 @@ static void emit(ast_node_t *n, bool is_top_down_encounter)
 
     if (is_top_down_encounter) {
         // TOP DOWN ENCOUNTERS
-        if (is_var_decl && c0->parent->kind == TOK_SEMICOLON) {
-            emit_var_decl(c0);
-        }
     } else {
         // BOTTOM UP ENCOUNTERS
-        if (is_print) {
+        if (is_var_decl && c0->parent->kind == TOK_SEMICOLON) {
+            emit_var_decl(c0);
+        } else if (is_print) {
             emit_print(c0);
         } else if (n->md.sym && n->parent->kind != TOK_KW_LET) {
             emit_expr(n);
@@ -667,17 +660,21 @@ static void second_ast_pass(void)
     EMIT("int32_t _vspcIncDec;\n");
     EMIT("\n");
 
+    EMIT("// 3AC Var decls\n");
+
     for (int32_t i = 0; i < G_codegen_i32_cnt; i++) {
-        EMIT("int32_t _vi%d;\n", i);
+        EMIT("int32_t _vi%d = 0;\n", i);
     }
 
     for (int32_t i = 0; i < G_codegen_f32_cnt; i++) {
-        sfcat(&G_allctx, &S_str, "float _vf%d;\n", i);
+        EMIT("float   _vf%d = 0.0;\n", i);
     }
 
     for (int32_t i = 0; i < G_codegen_bool_cnt; i++) {
-        sfcat(&G_allctx, &S_str, "bool _vb%d;\n", i);
+        EMIT("bool    _vb%d = false;\n", i);
     }
+
+    EMIT("\n");
 
     while ((n = ast_traverse_next(&att, &is_top_down_encounter)) != NULL) {
         ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
@@ -690,9 +687,9 @@ static void second_ast_pass(void)
         if (n->kind == TOK_OPEN_BRACE && (!n->parent || n->parent->kind != TOK_KW_LET)) {
 
             if (is_top_down_encounter) {
-                sfcat(&G_allctx, &S_str, "\n_scope_begin();\n");
+                EMIT("\n_scope_begin();\n");
             } else {
-                sfcat(&G_allctx, &S_str, "_scope_end();\n");
+                EMIT("_scope_end();\n");
             }
 
         } else {

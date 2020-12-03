@@ -1,3 +1,4 @@
+let a: float = 10.0;
 let b = 10;
 
 b = 20 * 4 + 2 ** 3;
@@ -9,4 +10,4 @@ print(c);
 
 let buf: int[10];
 
-buf[6] = 10;
+let d = b + a++;

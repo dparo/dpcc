@@ -51,13 +51,7 @@ int main(int argc, char **argv)
     } else if ((0 == strcmp(mode, "compile")) || (0 == strcmp(mode, "cc"))) {
         bool compile_success = compile(filepath, input_stream, stdout);
         if (!compile_success) {
-            //return -1;
-        }
-        ast_traversal_t att = { 0 };
-        ast_traversal_begin(&att, &G_root_node, true, false);
-        ast_node_t *n = NULL;
-        while ((n = ast_traverse_next(&att, NULL)) != NULL) {
-            print_node(stdout, n, att.stack_cnt - 1);
+            return -1;
         }
     } else {
         fprintf(stderr, "Invalid code path\n");
