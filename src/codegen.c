@@ -451,8 +451,7 @@ static void emit_pre_inc_dec(ast_node_t *n)
     } else {
         EMIT("_vspcIncDec = %s - 1;\n", lhs->md.sym);
     }
-    EMIT("%s = _var_set(\"%s\", %s, 1, _vspcIncDec);\n",
-        n->md.sym,
+    EMIT("_var_set(\"%s\", %s, 1, _vspcIncDec);\n",
         lhs->tok->lexeme,
         get_type_label(lhs->md.type));
 }
@@ -534,6 +533,17 @@ static void emit_var_decl(ast_node_t *n)
     (void)c0, (void)c1, (void)c2;
 
     EMIT("_var_decl(\"%s\", %s, %d);\n", n->childs[1]->tok->lexeme, get_type_label(n->md.type), n->md.array_len);
+}
+
+static void emit_var_init(ast_node_t *n)
+{
+    assert(n->kind == TOK_KW_LET);
+    ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
+    ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
+    ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
+
+    assert(c1);
+    (void)c0, (void)c1, (void)c2;
 
     bool is_array = n->md.type == TYPE_I32_ARRAY || n->md.type == TYPE_F32_ARRAY;
     bool has_rhs = c2 != NULL;
@@ -584,10 +594,10 @@ static void emit_print(ast_node_t *n)
     } break;
     case TYPE_BOOL:
     case TYPE_I32: {
-        EMIT("printf(\"%%d\", %s);\n", c0->md.sym);
+        EMIT("printf(\"%%d\", %s);\n\n", c0->md.sym);
     } break;
     case TYPE_F32: {
-        EMIT("printf(\"%%f\", %s)", c0->md.sym);
+        EMIT("printf(\"%%f\", %s);\n\n", c0->md.sym);
     } break;
     }
 }
@@ -622,13 +632,16 @@ static void emit(ast_node_t *n, bool is_top_down_encounter)
 
     if (is_top_down_encounter) {
         // TOP DOWN ENCOUNTERS
+        if (is_var_decl && c0->parent->kind == TOK_SEMICOLON) {
+            emit_var_decl(c0);
+        }
     } else {
         // BOTTOM UP ENCOUNTERS
         if (is_var_decl && c0->parent->kind == TOK_SEMICOLON) {
-            emit_var_decl(c0);
+            emit_var_init(c0);
         } else if (is_print) {
             emit_print(c0);
-        } else if (n->md.sym && n->parent->kind != TOK_KW_LET) {
+        } else if (n->md.sym) {
             emit_expr(n);
         }
     }

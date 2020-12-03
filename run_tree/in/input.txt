@@ -8,6 +8,4 @@ let c = b;
 
 print(c);
 
-let buf: int[10];
-
-let d = b + a++;
+let d = b + c++;
