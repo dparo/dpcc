@@ -322,7 +322,7 @@ static void first_ast_pass(void)
     }
 }
 
-static void emit_leaf(ast_node_t *n)
+static void emit_sym(ast_node_t *n)
 {
     assert(n->md.type != TYPE_NONE);
 
@@ -332,7 +332,7 @@ static void emit_leaf(ast_node_t *n)
         ast_node_t *decl = n->decl;
         assert(decl);
 
-        EMIT("/* TODO: NEED TO FIGURE IT OUT */");
+        EMIT("_var_get(\"%s\", %s, 0)", n->tok->lexeme, get_type_label(n->md.type));
     } else if (n->kind == TOK_I32_LIT || n->kind == TOK_F32_LIT || n->kind == TOK_CHAR_LIT || n->kind == TOK_BOOL_LIT) {
         if (n->md.type == TYPE_I32) {
             EMIT("%d", n->val.as_i32);
@@ -389,13 +389,13 @@ static void emit_var_decl(ast_node_t *n, bool is_top_down_encounter)
             assert(c2->kind == TOK_OPEN_BRACE);
             assert(c2->num_childs >= 1);
             for (int32_t i = 0; i < n->md.array_len; i++) {
-                emit_leaf(c2->childs[i]);
+                emit_sym(c2->childs[i]);
                 if (i != n->md.array_len - 1) {
                     EMIT(", ");
                 }
             }
         } else {
-            emit_leaf(c2);
+            emit_sym(c2);
         }
 
         EMIT("};\n\n");
