@@ -322,7 +322,6 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
         assert(n->md.type != TYPE_I32_ARRAY);
         assert(n->md.type != TYPE_F32_ARRAY);
         n->md.sym = new_tmp_var(n->md.type);
-    } else if (!n->md.sym && (n->md.type != TYPE_NONE && n->kind == TOK_ID)) {
     } else if (n->kind == TOK_KW_WHILE && n->md.jmp_bot == NULL) {
         n->md.jmp_bot = new_tmp_label();
     } else if (n->kind == TOK_KW_DO && n->md.jmp_top == NULL) {
@@ -373,14 +372,9 @@ static void emit_indexing(ast_node_t *n)
         get_type_label(lhs->md.type),
         rhs->md.sym);
 }
-static void emit_assign(ast_node_t *n)
-{
-    assert(n->kind == TOK_ASSIGN);
-    assert(n->num_childs == 2);
-    assert(n->childs[0] && n->childs[1]);
-    assert(n->md.type);
-    assert(n->md.sym);
 
+static void _var_set(ast_node_t *n)
+{
     ast_node_t *lhs = n->childs[0];
     ast_node_t *rhs = n->childs[1];
 
@@ -395,7 +389,18 @@ static void emit_assign(ast_node_t *n)
         rhs->md.sym);
 }
 
-static void emit_inc_dec(ast_node_t *n)
+static void emit_assign(ast_node_t *n)
+{
+    assert(n->kind == TOK_ASSIGN);
+    assert(n->num_childs == 2);
+    assert(n->childs[0] && n->childs[1]);
+    assert(n->md.type);
+    assert(n->md.sym);
+
+    _var_set(n);
+}
+
+static void emit_pre_inc_dec(ast_node_t *n)
 {
     assert(n->kind == TOK_INC || n->kind == TOK_DEC);
     assert(n->num_childs == 2);
@@ -416,10 +421,7 @@ static void emit_inc_dec(ast_node_t *n)
     } else {
         EMIT("_vspcIncDec = %s - 1;\n", rhs->md.sym);
     }
-    EMIT("%s = _var_set(\"%s\", %s, _vspcIncDec);\n",
-        n->md.sym,
-        lhs->tok->lexeme,
-        get_type_label(lhs->md.type));
+    _var_set(n);
 }
 
 static void emit_expr(ast_node_t *n)
@@ -441,7 +443,7 @@ static void emit_expr(ast_node_t *n)
     } else if (n->kind == TOK_ASSIGN) {
         emit_assign(n);
     } else if (n->kind == TOK_INC || n->kind == TOK_DEC) {
-        emit_inc_dec(n);
+        emit_pre_inc_dec(n);
     } else if (is_expr_node(n)) {
         if (n->num_childs == 1) {
             if (is_prefix_op(n)) {
@@ -486,11 +488,8 @@ static void emit_expr(ast_node_t *n)
     }
 }
 
-static void emit_var_decl(ast_node_t *n, bool is_top_down_encounter)
+static void emit_var_decl(ast_node_t *n)
 {
-    if (is_top_down_encounter == true)
-        return;
-
     assert(n->kind == TOK_KW_LET);
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
     ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
@@ -528,12 +527,34 @@ static void emit_var_decl(ast_node_t *n, bool is_top_down_encounter)
     }
 }
 
-static void emit_print(ast_node_t *n, bool is_top_down_encounter)
+static void emit_print(ast_node_t *n)
 {
-}
+    assert(n->kind == TOK_KW_PRINT);
+    assert(n->num_childs == 1);
+    assert(n->childs[0]);
 
-static void emit_assignment(ast_node_t *n, bool is_top_down_encounter)
-{
+    assert(!n->md.sym);
+    assert(n->md.type);
+
+    ast_node_t *c0 = n->childs[0];
+
+    assert(c0->md.type);
+    assert(c0->md.sym);
+
+    assert(n->md.type == c0->md.type);
+
+    switch (n->md.type) {
+    default: {
+        invalid_code_path();
+    } break;
+    case TYPE_BOOL:
+    case TYPE_I32: {
+        EMIT("printf(\"%%d\", %s);\n", c0->md.sym);
+    } break;
+    case TYPE_F32: {
+        EMIT("printf(\"%%f\", %s)", c0->md.sym);
+    } break;
+    }
 }
 
 static void emit_if(ast_node_t *n, bool is_top_down_encounter)
@@ -558,20 +579,28 @@ static void emit(ast_node_t *n, bool is_top_down_encounter)
 
     bool is_var_decl = c0 && c0->kind == TOK_KW_LET;
     bool is_print = c0 && c0->kind == TOK_KW_PRINT;
-    bool is_assignment = c0 && c0->kind == TOK_ASSIGN;
 
     bool is_if = c0 && c0->kind == TOK_KW_IF;
     bool is_for = c0 && c0->kind == TOK_KW_IF;
     bool is_while = c0 && c0->kind == TOK_KW_IF;
     bool is_do = c0 && c0->kind == TOK_KW_IF;
 
-    if (is_var_decl && n->parent->kind == TOK_SEMICOLON) {
-        emit_var_decl(c0, is_top_down_encounter);
-    } else if (is_print) {
-        emit_print(c0, is_top_down_encounter);
-    } else if (is_assignment) {
-        emit_assignment(c0, is_top_down_encounter);
-    } else if (is_if) {
+    if (is_top_down_encounter) {
+        // TOP DOWN ENCOUNTERS
+        if (is_var_decl && c0->parent->kind == TOK_SEMICOLON) {
+            emit_var_decl(c0);
+        }
+    } else {
+        // BOTTOM UP ENCOUNTERS
+        if (is_print) {
+            emit_print(c0);
+        } else if (n->md.sym && n->parent->kind != TOK_KW_LET) {
+            emit_expr(n);
+        }
+    }
+
+    // Top, down and bottom up encounters
+    if (is_if) {
         emit_if(c0, is_top_down_encounter);
     } else if (is_for) {
         emit_for(c0, is_top_down_encounter);
@@ -579,8 +608,6 @@ static void emit(ast_node_t *n, bool is_top_down_encounter)
         emit_while(c0, is_top_down_encounter);
     } else if (is_do) {
         emit_do(c0, is_top_down_encounter);
-    } else if (!is_top_down_encounter && n->md.sym && n->parent->kind != TOK_KW_LET) {
-        emit_expr(n);
     }
 }
 
