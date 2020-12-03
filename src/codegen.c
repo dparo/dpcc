@@ -380,13 +380,31 @@ static void _var_set(ast_node_t *n)
 
     assert(lhs->md.type != TYPE_NONE);
     assert(rhs->md.type != TYPE_NONE);
-    assert(lhs->decl);
 
-    EMIT("%s = _var_set(\"%s\", %s, %s);\n",
-        n->md.sym,
-        lhs->tok->lexeme,
-        get_type_label(lhs->md.type),
-        rhs->md.sym);
+    if (lhs->kind == TOK_AR_SUBSCR) {
+        assert(lhs->num_childs == 1);
+        assert(lhs->childs[0]);
+        assert(lhs->childs[0]->md.type);
+        assert(lhs->childs[0]->md.sym);
+        char *index = lhs->childs[0]->md.sym;
+        EMIT("%s = _var_set(\"%s\", %s, %s, %s);\n",
+            n->md.sym,
+            lhs->tok->lexeme,
+            get_type_label(lhs->md.type),
+            index,
+            rhs->md.sym);
+
+    } else {
+        assert(lhs->decl);
+        assert(lhs->md.type);
+        assert(lhs->md.sym);
+
+        EMIT("%s = _var_set(\"%s\", %s, 1, %s);\n",
+            n->md.sym,
+            lhs->tok->lexeme,
+            get_type_label(lhs->md.type),
+            rhs->md.sym);
+    }
 }
 
 static void emit_assign(ast_node_t *n)
