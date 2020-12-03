@@ -7,9 +7,12 @@
     "author": "Davide Paro",
     "license": "MIT",
     "scripts": {
-        "build": "tsc",
-        "watch-build": "tsc -w",
-        "run": "npm run build && cd generated_srcs && node dist/main.js",
+        "build": "npm run build-ts && npm run build-c",
+        "build-c": "cd build && make all",
+        "build-ts": "tsc",
+        "watch-build-ts": "tsc -w",
+
+        "run": "npm run build-ts && cd generated_srcs && node dist/main.js",
         "watch-run": "cd generated_srcs && nodemon dist/main.js",
         "run-quick": "cd generated_srcs && ts-node --transpile-only main.ts",
         "lint": "tsc --noEmit && eslint \"**/*.{js,ts}\" --quiet --fix"

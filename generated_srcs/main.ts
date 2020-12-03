@@ -1,6 +1,3 @@
-#!/usr/bin/env node
-
-
 import * as FS from "fs";
 import * as PROC from "process";
 import * as OS from "os";
@@ -885,17 +882,17 @@ namespace DPCC_Gen {
 
                 Gen.ifd({
                     '': '',
-
                     // KW_LET:
-                    'is_top_down_encounter && n->kind == TOK_KW_LET': () => {
-
-                        Gen.print('ast_traversal_pop(&att);')
+                    'is_top_down_encounter == false && n->kind == TOK_KW_LET': () => {
+                        cat('_var_decl(\\"%s\\", \\"%s\\", %d);\\n', "dpcc_type_as_str(n->md.type)", "n->childs[1]->tok->lexeme", "n->md.array_len")
                     },
-                    // Begin and end block
-                    'n->kind == TOK_OPEN_BRACE': () => {
+
+                    'n->kind == TOK_OPEN_BRACE && (!n->parent || n->parent->kind != TOK_KW_LET)': () => {
                         Gen.ifd({
-                            'is_top_down_encounter': () => { cat("push();\\n") },
-                            '':                      () => { cat("pop();\\n") },
+                            // Scope begin
+                            'is_top_down_encounter': () => { cat("_scope_begin();\\n") },
+                            // Scope end
+                            '':                      () => { cat("_scope_end();\\n") },
                         })
                     },
 
