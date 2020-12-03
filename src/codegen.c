@@ -459,14 +459,26 @@ static void emit_expr(ast_node_t *n)
                 invalid_code_path();
             }
         } else if (is_postfix_op(n)) {
-
-        } else {
-            assert(n->num_childs == 2);
-            EMIT("%s = %s %s %s;\n",
+            // NOTE We don't have postfix operators yet
+            EMIT("%s = %s %s;",
                 n->md.sym,
                 n->childs[0]->md.sym,
-                n->tok->lexeme,
-                n->childs[1]->md.sym);
+                n->tok->lexeme);
+        } else {
+            assert(n->num_childs == 2);
+            if (n->kind == TOK_POW) {
+                EMIT("%s = pow%s(%s, %s);\n",
+                    n->md.sym,
+                    n->md.type == TYPE_F32 ? "" : "l",
+                    n->childs[0]->md.sym,
+                    n->childs[1]->md.sym);
+            } else {
+                EMIT("%s = %s %s %s;\n",
+                    n->md.sym,
+                    n->childs[0]->md.sym,
+                    n->tok->lexeme,
+                    n->childs[1]->md.sym);
+            }
         }
 
     } else {
