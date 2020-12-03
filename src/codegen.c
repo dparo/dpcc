@@ -557,6 +557,7 @@ static void emit_statement(ast_node_t *n, bool is_top_down_encounter)
 
     bool is_var_decl = c0->kind == TOK_KW_LET;
     bool is_print = c0->kind == TOK_KW_PRINT;
+    bool is_assignment = c0->kind == TOK_ASSIGN;
 
     bool is_if = c0->kind == TOK_KW_IF;
     bool is_for = c0->kind == TOK_KW_IF;
@@ -567,6 +568,8 @@ static void emit_statement(ast_node_t *n, bool is_top_down_encounter)
         emit_var_decl(c0, is_top_down_encounter);
     } else if (is_print) {
         emit_print(c0, is_top_down_encounter);
+    } else if (is_assignment) {
+        emit_assignment(c0, is_top_down_encounter);
     } else if (is_if) {
         emit_if(c0, is_top_down_encounter);
     } else if (is_for) {
@@ -575,8 +578,8 @@ static void emit_statement(ast_node_t *n, bool is_top_down_encounter)
         emit_while(c0, is_top_down_encounter);
     } else if (is_do) {
         emit_do(c0, is_top_down_encounter);
-    } else if (is_top_down_encounter) {
-        emit_expr(c0);
+    } else {
+        emit_expr(n);
     }
 }
 
@@ -625,6 +628,8 @@ static void second_ast_pass(void)
 
         } else if (n->kind == TOK_SEMICOLON) {
             emit_statement(n, is_top_down_encounter);
+            // Do not recurse. Mark as done. Do not recurse childs
+            att.stack_childs[att.stack_cnt - 1] = att.stack_nodes[att.stack_cnt - 1]->num_childs;
         }
     }
 }
