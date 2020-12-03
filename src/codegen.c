@@ -623,19 +623,26 @@ static void emit_do(ast_node_t *n, bool is_top_down_encounter)
 {
 }
 
+static bool is_controL_flow_node(ast_node_t *n)
+{
+    bool is_if = n->kind == TOK_KW_IF;
+    bool is_for = n->kind == TOK_KW_FOR;
+    bool is_while = n->kind == TOK_KW_WHILE;
+    bool is_do = n->kind == TOK_KW_DO;
+
+    bool is_control_flow = is_if || is_for || is_while || is_do;
+
+    return is_control_flow;
+}
+
 static void emit(ast_node_t *n, bool is_top_down_encounter)
 {
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
 
+    assert(c0->kind != TOK_SEMICOLON);
+
     bool is_var_decl = c0 && c0->kind == TOK_KW_LET;
     bool is_print = c0 && c0->kind == TOK_KW_PRINT;
-
-    bool is_if = c0 && c0->kind == TOK_KW_IF;
-    bool is_for = c0 && c0->kind == TOK_KW_FOR;
-    bool is_while = c0 && c0->kind == TOK_KW_WHILE;
-    bool is_do = c0 && c0->kind == TOK_KW_DO;
-
-    bool is_control_flow = is_if || is_for || is_while || is_do;
 
     if (is_top_down_encounter) {
         // TOP DOWN ENCOUNTERS
@@ -653,14 +660,14 @@ static void emit(ast_node_t *n, bool is_top_down_encounter)
         }
     }
 
-    if (is_control_flow) {
-        if (is_if) {
+    if (is_controL_flow_node(c0)) {
+        if (n->kind == TOK_KW_IF) {
             emit_if(c0, is_top_down_encounter);
-        } else if (is_for) {
+        } else if (n->kind == TOK_KW_FOR) {
             emit_for(c0, is_top_down_encounter);
-        } else if (is_while) {
+        } else if (n->kind == TOK_KW_WHILE) {
             emit_while(c0, is_top_down_encounter);
-        } else if (is_do) {
+        } else if (n->kind == TOK_KW_DO) {
             emit_do(c0, is_top_down_encounter);
         }
     }
