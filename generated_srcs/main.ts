@@ -896,6 +896,15 @@ namespace DPCC_Gen {
                         })
                     },
 
+
+                    // Statement
+                    'is_top_down_encounter == false && n->kind == TOK_SEMICOLON': () => {
+                        cat('// statement;\\n');
+
+
+
+                    },
+
                     // Print
                     'n->kind == TOK_KW_PRINT': () => {
 

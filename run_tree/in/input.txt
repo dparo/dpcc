@@ -1,11 +1,11 @@
 let b = 10;
+let a;
 
-print(b);
-
-let array: int[] = {10, 20, 30};
+a = b * 2;
 
 let c = b;
 
 {
-        let d = b * 2;
+        let d = 1;
+        d = d * c;
 }
