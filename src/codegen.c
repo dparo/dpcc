@@ -331,7 +331,6 @@ static void emit_sym(ast_node_t *n)
     } else if (n->kind == TOK_ID && !n->md.addr) {
         ast_node_t *decl = n->decl;
         assert(decl);
-
         EMIT("_var_get(\"%s\", %s, 0)", n->tok->lexeme, get_type_label(n->md.type));
     } else if (n->kind == TOK_I32_LIT || n->kind == TOK_F32_LIT || n->kind == TOK_CHAR_LIT || n->kind == TOK_BOOL_LIT) {
         if (n->md.type == TYPE_I32) {
@@ -348,6 +347,15 @@ static void emit_sym(ast_node_t *n)
     }
 }
 
+static void emit_assign(ast_node_t *n)
+{
+    assert(n->kind == TOK_ASSIGN);
+    assert(n->md.type);
+    assert(n->num_childs == 2);
+    assert(n->childs[0] && n->childs[2]);
+    assert(n->md.addr);
+}
+
 static void emit_expr(ast_node_t *n)
 {
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
@@ -357,7 +365,68 @@ static void emit_expr(ast_node_t *n)
 
     (void)c0, (void)c1, (void)c2, (void)c3;
 
-    EMIT("// EXPR\n");
+    assert(n->md.addr);
+
+    if (n->num_childs == 0) {
+        emit_sym(n);
+    } else if (n->kind == TOK_OPEN_BRACKET) {
+        assert(n->md.type != TYPE_NONE);
+        assert(n->md.addr);
+        assert(n->num_childs == 2);
+        assert(n->childs[0] && n->childs[1]);
+
+        ast_node_t *lhs = n->childs[0];
+        ast_node_t *rhs = n->childs[1];
+
+        assert(lhs->md.type != TYPE_NONE);
+        assert(lhs->decl);
+        assert(unref_type(lhs->md.type) == n->md.type);
+
+        EMIT("%s = _var_get(\"%s\", %s, ", n->md.addr, lhs->tok->lexeme, get_type_label(lhs->md.type));
+        emit_expr(rhs);
+        EMIT(");\n");
+    } else if (n->kind == TOK_ASSIGN) {
+
+    } else if (n->kind == TOK_INC || n->kind == TOK_DEC) {
+        // TODO
+        //EMIT("%s = %s;\n")
+    } else if (is_expr_node(n)) {
+        for (int32_t i = 0; i < n->num_childs; i++) {
+            emit_expr(n->childs[i]);
+        }
+
+        if (n->num_childs == 1) {
+            emit_expr(n->childs[0]);
+            if (is_prefix_op(n)) {
+                EMIT("%s = %s %s;\n",
+                    n->md.addr,
+                    n->tok->lexeme,
+                    n->childs[0]->md.addr);
+            } else if (is_postfix_op(n)) {
+
+                EMIT("%s = %s %s;\n",
+                    n->md.addr,
+                    n->childs[0]->md.addr,
+                    n->tok->lexeme);
+            } else {
+                invalid_code_path();
+            }
+        } else if (is_postfix_op(n)) {
+
+        } else {
+            assert(n->num_childs == 2);
+            emit_expr(n->childs[0]);
+            emit_expr(n->childs[1]);
+            EMIT("%s = %s %s %s;\n",
+                n->md.addr,
+                n->childs[0]->md.addr,
+                n->tok->lexeme,
+                n->childs[1]->md.addr);
+        }
+
+    } else {
+        invalid_code_path();
+    }
 }
 
 static void emit_var_decl(ast_node_t *n, bool is_top_down_encounter)

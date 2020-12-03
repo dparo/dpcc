@@ -319,6 +319,18 @@ namespace DPCC {
         export let ALL: string[] = [
             // Initialized later
         ];
+
+        export let PREFIX: string[] = [
+            "TOK_POS",
+            "TOK_NEG",
+            "TOK_BNOT",
+            "TOK_LNOT"
+        ];
+
+        export let POSTFIX: string[] = [
+            'TOK_INC',
+            'TOK_DEC',
+        ]
     }
 
     export namespace EXPRS {
@@ -333,7 +345,8 @@ namespace DPCC {
                 "TOK_BRSHIFT",
             ],
             [
-                new ExprTypeRule("int", ["int", "int"])
+                new ExprTypeRule("int", ["int"]),
+                new ExprTypeRule("int", ["int", "int"]),
             ]
         );
 
@@ -387,8 +400,8 @@ namespace DPCC {
                 "TOK_LOR",
             ],
             [
-                new ExprTypeRule("bool", ["bool", "bool"]),
                 new ExprTypeRule("bool", ["bool"]),
+                new ExprTypeRule("bool", ["bool", "bool"]),
             ]
         );
 
@@ -500,6 +513,18 @@ namespace DPCC_Gen {
         })
     }
 
+    export function is_prefix_op() {
+        Gen.fn('bool is_prefix_op(ast_node_t *n)', () => {
+            Gen.print(`return (${Gen.one_of("n->kind", DPCC.OPS.PREFIX)});`);
+        })
+    }
+
+    export function is_postfix_op() {
+        Gen.fn('bool is_postfix_op(ast_node_t *n)', () => {
+            Gen.print(`return (${Gen.one_of("n->kind", DPCC.OPS.POSTFIX)});`);
+        })
+    }
+
     export function typecheck_expr_and_operators() {
         Gen.fn('void typecheck_expr_and_operators(ast_node_t *n)', () => {
             Gen.print(`if (${Gen.one_of("n->kind", DPCC.OPS.ALL)})`)
@@ -579,6 +604,9 @@ function generate_src_file() {
     Gen.print('extern int yynerrs;')
     Gen.print('\n\n')
 
+
+    DPCC_Gen.is_prefix_op();
+    DPCC_Gen.is_postfix_op();
     DPCC_Gen.is_expr_node()
 
     DPCC_Gen.new_tmp_var()
@@ -598,6 +626,8 @@ function generate_hdr_file() {
     Gen.print('char *get_type_label(enum DPCC_TYPE t);');
 
     Gen.print()
+    Gen.print("bool is_prefix_op(ast_node_t *n);")
+    Gen.print("bool is_postfix_op(ast_node_t *n);")
     Gen.print("bool is_expr_node(ast_node_t *n);")
     Gen.print('enum DPCC_TYPE deref_type(enum DPCC_TYPE in);')
     Gen.print('enum DPCC_TYPE unref_type(enum DPCC_TYPE in);')

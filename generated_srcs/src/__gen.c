@@ -27,6 +27,18 @@ extern int yynerrs;
 
 
 
+bool is_prefix_op(ast_node_t *n)
+{
+    return (((n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_BNOT) || (n->kind == TOK_LNOT)));
+}
+
+
+bool is_postfix_op(ast_node_t *n)
+{
+    return (((n->kind == TOK_INC) || (n->kind == TOK_DEC)));
+}
+
+
 bool is_expr_node(ast_node_t *n)
 {
     return (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT) || (n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG) || (n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_LT) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ) || (n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR) || (n->kind == TOK_AR_SUBSCR)));
@@ -180,7 +192,11 @@ void typecheck_expr_and_operators(ast_node_t *n)
         if (((n->kind == TOK_MOD) || (n->kind == TOK_BNOT) || (n->kind == TOK_BAND) || (n->kind == TOK_BOR) || (n->kind == TOK_BXOR) || (n->kind == TOK_BLSHIFT) || (n->kind == TOK_BRSHIFT)))
         {
 
-            if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_I32) && (n->childs[1]->md.type == TYPE_I32)))
+            if ((n->num_childs == 1) && ((n->childs[0]->md.type == TYPE_I32)))
+            {
+                n->md.type = TYPE_I32;
+            }
+            else if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_I32) && (n->childs[1]->md.type == TYPE_I32)))
             {
                 n->md.type = TYPE_I32;
             }
@@ -254,11 +270,11 @@ void typecheck_expr_and_operators(ast_node_t *n)
         if (((n->kind == TOK_LNOT) || (n->kind == TOK_LAND) || (n->kind == TOK_LOR)))
         {
 
-            if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_BOOL) && (n->childs[1]->md.type == TYPE_BOOL)))
+            if ((n->num_childs == 1) && ((n->childs[0]->md.type == TYPE_BOOL)))
             {
                 n->md.type = TYPE_BOOL;
             }
-            else if ((n->num_childs == 1) && ((n->childs[0]->md.type == TYPE_BOOL)))
+            else if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_BOOL) && (n->childs[1]->md.type == TYPE_BOOL)))
             {
                 n->md.type = TYPE_BOOL;
             }

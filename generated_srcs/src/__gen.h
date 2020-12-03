@@ -21,6 +21,8 @@ char *new_tmp_var(enum DPCC_TYPE type);
 char *new_tmp_label(void);
 char *get_type_label(enum DPCC_TYPE t);
 
+bool is_prefix_op(ast_node_t *n);
+bool is_postfix_op(ast_node_t *n);
 bool is_expr_node(ast_node_t *n);
 enum DPCC_TYPE deref_type(enum DPCC_TYPE in);
 enum DPCC_TYPE unref_type(enum DPCC_TYPE in);
