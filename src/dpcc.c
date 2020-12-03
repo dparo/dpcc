@@ -186,12 +186,9 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
         return false;
     }
 
-
     extern int yynerrs;
     char *generated_code = NULL;
     generated_code = codegen();
-
-    int32_t dummy_var = 10;
 
     if (yynerrs == 0 && generated_code != NULL) {
         fprintf(output_stream, "%s", generated_code);

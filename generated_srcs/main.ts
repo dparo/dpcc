@@ -478,6 +478,20 @@ namespace DPCC_Gen {
         })
     }
 
+    export function get_type_label() {
+        Gen.fn('char *get_type_label(enum DPCC_TYPE t)', () => {
+            Gen.print('char *result = 0;')
+            Gen.map('t', 'result', {
+                "TYPE_I32": '"_kI32"',
+                "TYPE_F32": '"_kF32"',
+                "TYPE_BOOL": '"_kBOOL"',
+                "TYPE_I32_ARRAY": '"_kI32_ARRAY"',
+                "TYPE_F32_ARRAY": '"_kF32_ARRAY"',
+            })
+            Gen.print('return result;')
+        })
+    }
+
     export function is_expr_node() {
         Gen.fn('bool is_expr_node(ast_node_t *n)', () => {
             let token_types: string[] = [];
@@ -566,8 +580,10 @@ function generate_src_file() {
     Gen.print('\n\n')
 
     DPCC_Gen.is_expr_node()
+
     DPCC_Gen.new_tmp_var()
     DPCC_Gen.new_tmp_label()
+    DPCC_Gen.get_type_label()
 
     DPCC_Gen.deref_type();
     DPCC_Gen.unref_type();
@@ -577,15 +593,16 @@ function generate_src_file() {
 
 function generate_hdr_file() {
     Gen.print(DPCC.COMMON_BOILERPLATE);
-    Gen.print("bool is_expr_node(ast_node_t *n);")
     Gen.print("char *new_tmp_var(enum DPCC_TYPE type);")
-    Gen.print("bool is_expr_node(ast_node_t *n);")
     Gen.print("char *new_tmp_label(void);")
+    Gen.print('char *get_type_label(enum DPCC_TYPE t);');
+
+    Gen.print()
+    Gen.print("bool is_expr_node(ast_node_t *n);")
     Gen.print('enum DPCC_TYPE deref_type(enum DPCC_TYPE in);')
     Gen.print('enum DPCC_TYPE unref_type(enum DPCC_TYPE in);')
     Gen.print()
     Gen.print('void typecheck_expr_and_operators(ast_node_t *n);')
-
 }
 
 function main() {

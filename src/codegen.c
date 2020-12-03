@@ -40,7 +40,7 @@ static str_t S_str = { 0 };
         LOG(DPCC_SEVERITY_WARNING, (N), __VA_ARGS__); \
     } while (0)
 
-#define CAT(...) \
+#define EMIT(...) \
     sfcat(&G_allctx, &S_str, __VA_ARGS__)
 
 static inline void typemismatch_check(ast_node_t *expected_type, ast_node_t *got_type)
@@ -82,6 +82,9 @@ static void typecheck_array(ast_node_t *n)
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
     ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
     ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
+
+    (void)c0, (void)c1, (void)c2;
+
     // Deduce type of array variable declarations
     assert((c0->childs[1] == NULL) || (c0->childs[1]->kind == TOK_I32_LIT && c0->childs[1]->md.type == TYPE_I32));
     int32_t array_type_len = c0->childs[1] ? c0->childs[1]->val.as_i32 : 0;
@@ -319,6 +322,143 @@ static void first_ast_pass(void)
     }
 }
 
+static void emit_leaf(ast_node_t *n)
+{
+    assert(n->md.type != TYPE_NONE);
+
+    if (n->md.addr) {
+        EMIT("%s", n->md.addr);
+    } else if (n->kind == TOK_ID && !n->md.addr) {
+        ast_node_t *decl = n->decl;
+        assert(decl);
+
+        EMIT("/* TODO: NEED TO FIGURE IT OUT */");
+    } else if (n->kind == TOK_I32_LIT || n->kind == TOK_F32_LIT || n->kind == TOK_CHAR_LIT || n->kind == TOK_BOOL_LIT) {
+        if (n->md.type == TYPE_I32) {
+            EMIT("%d", n->val.as_i32);
+        } else if (n->md.type == TYPE_F32) {
+            EMIT("%f", n->val.as_f32);
+        } else if (n->md.type == TYPE_BOOL) {
+            EMIT("%i", n->val.as_bool);
+        } else {
+            invalid_code_path();
+        }
+    } else {
+        invalid_code_path();
+    }
+}
+
+static void emit_expr(ast_node_t *n)
+{
+    ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
+    ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
+    ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
+    ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;
+
+    (void)c0, (void)c1, (void)c2, (void)c3;
+
+    EMIT("// EXPR\n");
+}
+
+static void emit_var_decl(ast_node_t *n, bool is_top_down_encounter)
+{
+    if (is_top_down_encounter == true)
+        return;
+
+    assert(n->kind == TOK_KW_LET);
+    ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
+    ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
+    ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
+
+    assert(c1);
+    (void)c0, (void)c1, (void)c2;
+
+    EMIT("_var_decl(\"%s\", %s, %d);\n", n->childs[1]->tok->lexeme, get_type_label(n->md.type), n->md.array_len);
+
+    bool is_array = n->md.type == TYPE_I32_ARRAY || n->md.type == TYPE_F32_ARRAY;
+    bool has_rhs = c2 != NULL;
+
+    if (has_rhs) {
+        char *ctype = "int32_t";
+        if (n->md.type == TYPE_F32_ARRAY) {
+            ctype = "float";
+        }
+
+        EMIT("_var_init(\"%s\", %s, %d, (%s[]) {", c1->tok->lexeme, get_type_label(n->md.type), n->md.array_len, ctype);
+        if (is_array) {
+            assert(c2->kind == TOK_OPEN_BRACE);
+            assert(c2->num_childs >= 1);
+            for (int32_t i = 0; i < n->md.array_len; i++) {
+                emit_leaf(c2->childs[i]);
+                if (i != n->md.array_len - 1) {
+                    EMIT(", ");
+                }
+            }
+        } else {
+            emit_leaf(c2);
+        }
+
+        EMIT("};\n\n");
+    }
+}
+
+static void emit_print(ast_node_t *n, bool is_top_down_encounter)
+{
+}
+
+static void emit_assignment(ast_node_t *n, bool is_top_down_encounter)
+{
+}
+
+static void emit_if(ast_node_t *n, bool is_top_down_encounter)
+{
+}
+
+static void emit_for(ast_node_t *n, bool is_top_down_encounter)
+{
+}
+
+static void emit_while(ast_node_t *n, bool is_top_down_encounter)
+{
+}
+
+static void emit_do(ast_node_t *n, bool is_top_down_encounter)
+{
+}
+
+static void emit_statement(ast_node_t *n, bool is_top_down_encounter)
+{
+    assert(n->kind == TOK_SEMICOLON);
+    assert(n->num_childs == 1 && n->childs[0]);
+
+    ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
+
+    bool is_var_decl = c0->kind == TOK_KW_LET;
+    bool is_print = c0->kind == TOK_KW_PRINT;
+    bool is_assignment = c0->kind == TOK_ASSIGN;
+
+    bool is_if = c0->kind == TOK_KW_IF;
+    bool is_for = c0->kind == TOK_KW_IF;
+    bool is_while = c0->kind == TOK_KW_IF;
+    bool is_do = c0->kind == TOK_KW_IF;
+
+    if (is_var_decl) {
+        emit_var_decl(c0, is_top_down_encounter);
+    } else if (is_print) {
+        emit_print(c0, is_top_down_encounter);
+    } else if (is_assignment) {
+        emit_assignment(c0, is_top_down_encounter);
+    } else if (is_if) {
+        emit_if(c0, is_top_down_encounter);
+    } else if (is_for) {
+        emit_for(c0, is_top_down_encounter);
+    } else if (is_while) {
+        emit_while(c0, is_top_down_encounter);
+    } else if (is_do) {
+        emit_do(c0, is_top_down_encounter);
+    }
+}
+
 static void second_ast_pass(void)
 {
     memset(&S_str, 0, sizeof(S_str));
@@ -347,26 +487,19 @@ static void second_ast_pass(void)
         ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
         ast_node_t *c3 = (n->num_childs >= 4) ? n->childs[3] : NULL;
 
-        if (is_top_down_encounter == false && n->kind == TOK_KW_LET) {
-            sfcat(&G_allctx, &S_str, "_var_decl(\"%s\", \"%s\", %d);\n", dpcc_type_as_str(n->md.type), n->childs[1]->tok->lexeme, n->md.array_len);
-        } else if (n->kind == TOK_OPEN_BRACE && (!n->parent || n->parent->kind != TOK_KW_LET)) {
+        (void)c0, (void)c1, (void)c2, (void)c3;
+
+        if (n->kind == TOK_OPEN_BRACE && (!n->parent || n->parent->kind != TOK_KW_LET)) {
 
             if (is_top_down_encounter) {
-                sfcat(&G_allctx, &S_str, "_scope_begin();\n");
+                sfcat(&G_allctx, &S_str, "\n_scope_begin();\n");
             } else {
                 sfcat(&G_allctx, &S_str, "_scope_end();\n");
             }
 
-        } else if (is_top_down_encounter == false && n->kind == TOK_SEMICOLON) {
-            sfcat(&G_allctx, &S_str, "// statement;\n");
-        } else if (n->kind == TOK_KW_PRINT) {
+        } else if (n->kind == TOK_SEMICOLON) {
+            emit_statement(n, is_top_down_encounter);
         }
-    }
-
-    if (yynerrs == 0) {
-        return S_str.cstr;
-    } else {
-        return NULL;
     }
 }
 
