@@ -322,38 +322,105 @@ static void first_ast_pass(void)
     }
 }
 
-static void emit_sym(ast_node_t *n)
+static char *sym(ast_node_t *n)
 {
     assert(n->md.type != TYPE_NONE);
 
+    str_t s = { 0 };
+
     if (n->md.addr) {
-        EMIT("%s", n->md.addr);
+        sfcat(&G_allctx, &s, "%s", n->md.addr);
     } else if (n->kind == TOK_ID && !n->md.addr) {
-        ast_node_t *decl = n->decl;
-        assert(decl);
-        EMIT("_var_get(\"%s\", %s, 0)", n->tok->lexeme, get_type_label(n->md.type));
+        assert(n->decl);
+        sfcat(&G_allctx, &s, "_var_get(\"%s\", %s, 0)", n->tok->lexeme, get_type_label(n->md.type));
     } else if (n->kind == TOK_I32_LIT || n->kind == TOK_F32_LIT || n->kind == TOK_CHAR_LIT || n->kind == TOK_BOOL_LIT) {
         if (n->md.type == TYPE_I32) {
-            EMIT("%d", n->val.as_i32);
+            sfcat(&G_allctx, &s, "%d", n->val.as_i32);
         } else if (n->md.type == TYPE_F32) {
-            EMIT("%f", n->val.as_f32);
+            sfcat(&G_allctx, &s, "%f", n->val.as_f32);
         } else if (n->md.type == TYPE_BOOL) {
-            EMIT("%i", n->val.as_bool);
+            sfcat(&G_allctx, &s, "%i", n->val.as_bool);
         } else {
             invalid_code_path();
         }
     } else {
         invalid_code_path();
     }
+    return s.cstr;
 }
 
+static void emit_indexing(ast_node_t *n)
+{
+    assert(n->kind == TOK_AR_SUBSCR);
+    assert(n->md.type != TYPE_NONE);
+    assert(n->md.addr);
+    assert(n->num_childs == 2);
+    assert(n->childs[0] && n->childs[1]);
+
+    ast_node_t *lhs = n->childs[0];
+    ast_node_t *rhs = n->childs[1];
+
+    assert(lhs->kind == TOK_ID || lhs->kind == TOK_AR_SUBSCR);
+    assert(lhs->md.type != TYPE_NONE);
+    assert(rhs->md.type != TYPE_NONE);
+
+    assert(lhs->decl);
+    assert(unref_type(lhs->md.type) == n->md.type);
+
+    EMIT("%s = _var_get(\"%s\", %s, %s);\n",
+        n->md.addr,
+        lhs->tok->lexeme,
+        get_type_label(lhs->md.type),
+        sym(rhs));
+}
 static void emit_assign(ast_node_t *n)
 {
     assert(n->kind == TOK_ASSIGN);
-    assert(n->md.type);
     assert(n->num_childs == 2);
-    assert(n->childs[0] && n->childs[2]);
+    assert(n->childs[0] && n->childs[1]);
+    assert(n->md.type);
     assert(n->md.addr);
+
+    ast_node_t *lhs = n->childs[0];
+    ast_node_t *rhs = n->childs[1];
+
+    assert(lhs->md.type != TYPE_NONE);
+    assert(rhs->md.type != TYPE_NONE);
+    assert(lhs->decl);
+    assert(unref_type(lhs->md.type) == n->md.type);
+
+    EMIT("%s = _var_set(\"%s\", %s, %s);\n",
+        n->md.addr,
+        lhs->tok->lexeme,
+        get_type_label(lhs->md.type),
+        sym(rhs));
+}
+
+static void emit_inc_dec(ast_node_t *n)
+{
+    assert(n->kind == TOK_INC || n->kind == TOK_DEC);
+    assert(n->num_childs == 2);
+    assert(n->childs[0] && n->childs[1]);
+    assert(n->md.type);
+    assert(n->md.addr);
+
+    ast_node_t *lhs = n->childs[0];
+    ast_node_t *rhs = n->childs[1];
+
+    assert(lhs->md.type != TYPE_NONE);
+    assert(rhs->md.type != TYPE_NONE);
+    assert(lhs->decl);
+
+    EMIT("%s = %s;\n", n->md.addr, sym(n->childs[0]));
+    if (n->kind == TOK_INC) {
+        EMIT("_vspcIncDec = %s + 1;\n", sym(rhs));
+    } else {
+        EMIT("_vspcIncDec = %s - 1;\n", sym(rhs));
+    }
+    EMIT("%s = _var_set(\"%s\", %s, _vspcIncDec);\n",
+        n->md.addr,
+        lhs->tok->lexeme,
+        get_type_label(lhs->md.type));
 }
 
 static void emit_expr(ast_node_t *n)
@@ -368,28 +435,14 @@ static void emit_expr(ast_node_t *n)
     assert(n->md.addr);
 
     if (n->num_childs == 0) {
-        emit_sym(n);
+        // base case just stop
+        return;
     } else if (n->kind == TOK_OPEN_BRACKET) {
-        assert(n->md.type != TYPE_NONE);
-        assert(n->md.addr);
-        assert(n->num_childs == 2);
-        assert(n->childs[0] && n->childs[1]);
-
-        ast_node_t *lhs = n->childs[0];
-        ast_node_t *rhs = n->childs[1];
-
-        assert(lhs->md.type != TYPE_NONE);
-        assert(lhs->decl);
-        assert(unref_type(lhs->md.type) == n->md.type);
-
-        EMIT("%s = _var_get(\"%s\", %s, ", n->md.addr, lhs->tok->lexeme, get_type_label(lhs->md.type));
-        emit_expr(rhs);
-        EMIT(");\n");
+        emit_indexing(n);
     } else if (n->kind == TOK_ASSIGN) {
-
+        emit_assign(n);
     } else if (n->kind == TOK_INC || n->kind == TOK_DEC) {
-        // TODO
-        //EMIT("%s = %s;\n")
+        emit_inc_dec(n);
     } else if (is_expr_node(n)) {
         for (int32_t i = 0; i < n->num_childs; i++) {
             emit_expr(n->childs[i]);
@@ -458,13 +511,13 @@ static void emit_var_decl(ast_node_t *n, bool is_top_down_encounter)
             assert(c2->kind == TOK_OPEN_BRACE);
             assert(c2->num_childs >= 1);
             for (int32_t i = 0; i < n->md.array_len; i++) {
-                emit_sym(c2->childs[i]);
+                EMIT("%s", sym(c2->childs[i]));
                 if (i != n->md.array_len - 1) {
                     EMIT(", ");
                 }
             }
         } else {
-            emit_sym(c2);
+            EMIT("%s", sym(c2));
         }
 
         EMIT("};\n\n");
@@ -504,7 +557,6 @@ static void emit_statement(ast_node_t *n, bool is_top_down_encounter)
 
     bool is_var_decl = c0->kind == TOK_KW_LET;
     bool is_print = c0->kind == TOK_KW_PRINT;
-    bool is_assignment = c0->kind == TOK_ASSIGN;
 
     bool is_if = c0->kind == TOK_KW_IF;
     bool is_for = c0->kind == TOK_KW_IF;
@@ -515,8 +567,6 @@ static void emit_statement(ast_node_t *n, bool is_top_down_encounter)
         emit_var_decl(c0, is_top_down_encounter);
     } else if (is_print) {
         emit_print(c0, is_top_down_encounter);
-    } else if (is_assignment) {
-        emit_assignment(c0, is_top_down_encounter);
     } else if (is_if) {
         emit_if(c0, is_top_down_encounter);
     } else if (is_for) {
@@ -525,6 +575,8 @@ static void emit_statement(ast_node_t *n, bool is_top_down_encounter)
         emit_while(c0, is_top_down_encounter);
     } else if (is_do) {
         emit_do(c0, is_top_down_encounter);
+    } else if (is_top_down_encounter) {
+        emit_expr(c0);
     }
 }
 
@@ -538,8 +590,13 @@ static void second_ast_pass(void)
     ast_node_t *n = NULL;
     bool is_top_down_encounter = false;
 
+    EMIT("// Special variable used to implemenent INC (x++) and dec (x--)\n");
+    EMIT("// It is used to temporary hold the result of the INC/DEC in order to perform the side effect\n");
+    EMIT("int32_t _vspcIncDec;\n");
+    EMIT("\n");
+
     for (int32_t i = 0; i < G_codegen_i32_cnt; i++) {
-        sfcat(&G_allctx, &S_str, "int32_t _vi%d;\n", i);
+        EMIT("int32_t _vi%d;\n", i);
     }
 
     for (int32_t i = 0; i < G_codegen_f32_cnt; i++) {
