@@ -90,6 +90,7 @@ static void typecheck_array(ast_node_t *n)
     int32_t array_type_len = c0->childs[1] ? c0->childs[1]->val.as_i32 : 0;
     int32_t init_list_len = c2 != NULL ? c2->num_childs : 0;
 
+    n->md.array_len = array_type_len;
     if (c0->childs[1] && array_type_len <= 0) {
         ERR(c0->childs[1], "The number of elements in an array must be a positive integer");
         INFO(c0->childs[1], "Got `%d`", array_type_len);
@@ -109,6 +110,7 @@ static void typecheck_array(ast_node_t *n)
         }
 
         check_initializer_list(n, expected_type, array_type_len, init_list_len);
+        n->md.array_len = init_list_len;
     } else if ((c0 == NULL || c0->childs[1] == NULL || c0->childs[1]->kind != TOK_I32_LIT || c0->childs[1]->md.type != TYPE_I32)) {
         ERR(c0, "Size of the array must be specified");
         INFO(c0, "Either specify the size inside the square brackets, or provide an initializer list");
@@ -168,12 +170,6 @@ static void typecheck_vardecl(ast_node_t *n)
     bool var_decl_with_rhs = c2;
     bool array_var_decl = c0 && c0->kind == TOK_OPEN_BRACKET;
 
-    if (array_var_decl && c2 && c2->kind == TOK_OPEN_BRACE) {
-        init_val_len = c2->num_childs;
-    } else if (array_var_decl && !c2) {
-        ERR(n, "Expected valid initializer list for array var decls");
-    }
-
     if (array_var_decl) {
 
         if (var_decl_with_user_listed_type) {
@@ -228,11 +224,11 @@ static void typecheck_vardecl(ast_node_t *n)
             invalid_code_path();
         }
 
+        n->md.array_len = 1;
+
     } else {
         invalid_code_path();
     }
-
-    n->md.array_len = init_val_len;
 }
 
 static void typecheck_print(ast_node_t *n)
@@ -375,6 +371,8 @@ static void emit_indexing(ast_node_t *n)
 
 static void _var_set(ast_node_t *n)
 {
+    assert(n->kind == TOK_ASSIGN);
+
     ast_node_t *lhs = n->childs[0];
     ast_node_t *rhs = n->childs[1];
 
@@ -382,14 +380,14 @@ static void _var_set(ast_node_t *n)
     assert(rhs->md.type != TYPE_NONE);
 
     if (lhs->kind == TOK_AR_SUBSCR) {
-        assert(lhs->num_childs == 1);
+        assert(lhs->num_childs == 2);
         assert(lhs->childs[0]);
         assert(lhs->childs[0]->md.type);
         assert(lhs->childs[0]->md.sym);
-        char *index = lhs->childs[0]->md.sym;
+        char *index = lhs->childs[1]->md.sym;
         EMIT("%s = _var_set(\"%s\", %s, %s, %s);\n",
-            n->md.sym,
-            lhs->tok->lexeme,
+            lhs->md.sym,
+            lhs->childs[0]->tok->lexeme,
             get_type_label(lhs->md.type),
             index,
             rhs->md.sym);
@@ -405,6 +403,29 @@ static void _var_set(ast_node_t *n)
             get_type_label(lhs->md.type),
             rhs->md.sym);
     }
+}
+
+static void emit_array_subscript(ast_node_t *n)
+{
+    assert(n->kind == TOK_AR_SUBSCR);
+    assert(n->num_childs == 2);
+    assert(n->childs[0]);
+    assert(n->childs[0]->md.type);
+    assert(n->childs[0]->md.sym);
+
+    ast_node_t *lhs = n->childs[0];
+    ast_node_t *rhs = n->childs[1];
+
+    assert(lhs->md.type != TYPE_NONE);
+    assert(rhs->md.type != TYPE_NONE);
+
+    char *index = rhs->md.sym;
+
+    EMIT("%s = _var_get(\"%s\", %s, %s);\n",
+        n->md.sym,
+        lhs->tok->lexeme,
+        get_type_label(n->md.type),
+        index);
 }
 
 static void emit_assign(ast_node_t *n)
@@ -462,6 +483,8 @@ static void emit_expr(ast_node_t *n)
         emit_assign(n);
     } else if (n->kind == TOK_INC || n->kind == TOK_DEC) {
         emit_pre_inc_dec(n);
+    } else if (n->kind == TOK_AR_SUBSCR) {
+        emit_array_subscript(n);
     } else if (is_expr_node(n)) {
         if (n->num_childs == 1) {
             if (is_prefix_op(n)) {

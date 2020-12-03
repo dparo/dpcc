@@ -7,6 +7,6 @@ let c = b;
 
 print(c);
 
-let buf: int[3] = {0, 1, 2};
+let buf: int[10];
 
-buf[1] = 10;
+buf[6] = 10;
