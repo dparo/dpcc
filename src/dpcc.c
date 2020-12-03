@@ -13,7 +13,7 @@
 #include "parser.h"
 #include "types.h"
 #include "utils.h"
-#include "gen.h"
+#include "codegen.h"
 
 void symtable_clear(void)
 {
@@ -186,9 +186,13 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
         return false;
     }
 
-    char *generated_code = codegen();
 
     extern int yynerrs;
+    char *generated_code = NULL;
+    generated_code = codegen();
+
+    int32_t dummy_var = 10;
+
     if (yynerrs == 0 && generated_code != NULL) {
         fprintf(output_stream, "%s", generated_code);
         return true;

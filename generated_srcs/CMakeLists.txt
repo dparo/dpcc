@@ -1,6 +1,6 @@
 set(GENERATED_SOURCES_LIST
-  "${CMAKE_SOURCE_DIR}/generated_srcs/src/gen.c"
-  "${CMAKE_SOURCE_DIR}/generated_srcs/src/gen.h"
+  "${CMAKE_SOURCE_DIR}/generated_srcs/src/__gen.c"
+  "${CMAKE_SOURCE_DIR}/generated_srcs/src/__gen.h"
   )
 
 # add_custom_target(gen.py
