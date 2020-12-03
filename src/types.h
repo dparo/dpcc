@@ -80,7 +80,7 @@ typedef struct {
     int32_t array_len;
 
     union {
-        char *addr;
+        char *sym;
         struct {
             char *jmp_top;
             char *jmp_next;

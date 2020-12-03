@@ -307,11 +307,11 @@ void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
     sfcat(&G_allctx, &hdr_str, "%s%s", indentation_level != 0 ? "--" : "", node->skind);
 
     fprintf(f,
-        " %-48s { kind: `%s`, md.type: %s, md.addr: %s, md.array_len: %d, lexeme: \"%s\", tok->loc=[[%d,%d], [%d,%d]] }\n",
+        " %-48s { kind: `%s`, md.type: %s, md.sym: %s, md.array_len: %d, lexeme: \"%s\", tok->loc=[[%d,%d], [%d,%d]] }\n",
         hdr_str.cstr,
         node->skind,
         dpcc_type_as_str(node->md.type),
-        node->md.addr,
+        node->md.sym,
         node->md.array_len,
         node->tok ? node->tok->lexeme : "",
         node->tok ? node->tok->loc.first_line : 0,
