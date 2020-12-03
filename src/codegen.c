@@ -532,7 +532,7 @@ static void emit_var_decl(ast_node_t *n)
     assert(c1);
     (void)c0, (void)c1, (void)c2;
 
-    EMIT("_var_decl(\"%s\", %s, %d);\n", n->childs[1]->tok->lexeme, get_type_label(n->md.type), n->md.array_len);
+    EMIT("\n_var_decl(\"%s\", %s, %d);\n", n->childs[1]->tok->lexeme, get_type_label(n->md.type), n->md.array_len);
 }
 
 static void emit_var_init(ast_node_t *n)
@@ -612,6 +612,11 @@ static void emit_for(ast_node_t *n, bool is_top_down_encounter)
 
 static void emit_while(ast_node_t *n, bool is_top_down_encounter)
 {
+    if (is_top_down_encounter) {
+        EMIT("// While first enconter\n");
+    } else {
+        EMIT("// While second encounter\n");
+    }
 }
 
 static void emit_do(ast_node_t *n, bool is_top_down_encounter)
@@ -626,9 +631,11 @@ static void emit(ast_node_t *n, bool is_top_down_encounter)
     bool is_print = c0 && c0->kind == TOK_KW_PRINT;
 
     bool is_if = c0 && c0->kind == TOK_KW_IF;
-    bool is_for = c0 && c0->kind == TOK_KW_IF;
-    bool is_while = c0 && c0->kind == TOK_KW_IF;
-    bool is_do = c0 && c0->kind == TOK_KW_IF;
+    bool is_for = c0 && c0->kind == TOK_KW_FOR;
+    bool is_while = c0 && c0->kind == TOK_KW_WHILE;
+    bool is_do = c0 && c0->kind == TOK_KW_DO;
+
+    bool is_control_flow = is_if || is_for || is_while || is_do;
 
     if (is_top_down_encounter) {
         // TOP DOWN ENCOUNTERS
@@ -646,15 +653,16 @@ static void emit(ast_node_t *n, bool is_top_down_encounter)
         }
     }
 
-    // Top, down and bottom up encounters
-    if (is_if) {
-        emit_if(c0, is_top_down_encounter);
-    } else if (is_for) {
-        emit_for(c0, is_top_down_encounter);
-    } else if (is_while) {
-        emit_while(c0, is_top_down_encounter);
-    } else if (is_do) {
-        emit_do(c0, is_top_down_encounter);
+    if (is_control_flow) {
+        if (is_if) {
+            emit_if(c0, is_top_down_encounter);
+        } else if (is_for) {
+            emit_for(c0, is_top_down_encounter);
+        } else if (is_while) {
+            emit_while(c0, is_top_down_encounter);
+        } else if (is_do) {
+            emit_do(c0, is_top_down_encounter);
+        }
     }
 }
 
@@ -697,7 +705,7 @@ static void second_ast_pass(void)
 
         (void)c0, (void)c1, (void)c2, (void)c3;
 
-        if (n->kind == TOK_OPEN_BRACE && (!n->parent || n->parent->kind != TOK_KW_LET)) {
+        if (n->kind == TOK_OPEN_BRACE && n->parent == TOK_SEMICOLON) {
 
             if (is_top_down_encounter) {
                 EMIT("\n_scope_begin();\n");

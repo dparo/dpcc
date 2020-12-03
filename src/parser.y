@@ -236,7 +236,7 @@ stmt:           expr[c] ";"[op]                   { $$ = NEW_NODE($op->tok, SEMI
         |       for_stmt[c]                       { $$ = NEW_NODE($c->tok, SEMICOLON); push_child($$, $c); }
         |       while_stmt[c]                     { $$ = NEW_NODE($c->tok, SEMICOLON); push_child($$, $c); }
         |       do_while_stmt[c]                  { $$ = NEW_NODE($c->tok, SEMICOLON); push_child($$, $c); }
-        |       code_block
+        |       code_block[c]                     { $$ = NEW_NODE($c->tok, SEMICOLON); push_child($$, $c); }
         |       ";"                               { $$ = NULL; }
         |       error                             {  }
         ;
@@ -307,7 +307,7 @@ code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                 
                         push_childs($$, $ss->num_childs, $ss->childs);
                         symtable_end_block();
                 }
-        |      "{" "}"                                        { $$ = NULL; }
+        |      "{"[op] "}"                                        { $$ = NEW_NODE($op->tok, OPEN_BRACE); }
         ;
 
 for_1: decl
