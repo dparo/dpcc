@@ -204,10 +204,12 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
     char *three_addr_code = threeac_gen(filepath, input_stream);
     if (three_addr_code) {
         fwrite(THREEAC_PREAMBLE, 1, THREEAC_PREAMBLE_len, output_stream);
+        fprintf(output_stream, "\n\n\n\n\n\n\n");
         fprintf(output_stream, "int main()\n");
         fprintf(output_stream, "{\n");
         fprintf(output_stream, "%s", three_addr_code);
         fprintf(output_stream, "}\n");
+        fprintf(output_stream, "\n\n\n\n\n\n\n");
         fwrite(THREEAC_POSTAMBLE, 1, THREEAC_POSTAMBLE_len, output_stream);
         return true;
     }
