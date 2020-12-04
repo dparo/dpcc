@@ -680,15 +680,16 @@ static void emit(ast_node_t *n, int32_t match_idx)
     if (n->kind == TOK_SEMICOLON) {
         return;
     }
+    bool parent_is_control_flow = is_control_flow_node(n->parent);
 
     if (match_idx == 0) {
         // TOP DOWN ENCOUNTERS
-        if (is_var_decl && (n->parent->kind == TOK_SEMICOLON || n->parent->kind == TOK_KW_FOR)) {
+        if (is_var_decl && (n->parent->kind == TOK_SEMICOLON || parent_is_control_flow)) {
             emit_var_decl(n);
         }
     } else if (match_idx == n->num_childs) {
         // BOTTOM UP ENCOUNTERS
-        if (is_var_decl && n->parent->kind == TOK_SEMICOLON) {
+        if (is_var_decl && (n->parent->kind == TOK_SEMICOLON || parent_is_control_flow)) {
             emit_var_init(n);
         } else if (is_print) {
             emit_print(n);
@@ -725,7 +726,7 @@ static void second_ast_pass(void)
     EMIT("int32_t _vspcIncDec;\n");
     EMIT("// Special variable used to the negation for control flow statements\n");
     EMIT("// For example the for loop needs to negate the user provided condition\n");
-    EMIT("boool   _vspcNeg;\n");
+    EMIT("bool    _vspcNeg;\n");
     EMIT("\n");
 
     EMIT("// 3AC Var decls\n");
