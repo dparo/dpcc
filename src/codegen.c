@@ -354,7 +354,7 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
         assert(n->kind != TOK_KW_WHILE && n->kind != TOK_KW_DO && n->kind != TOK_KW_FOR && n->kind != TOK_KW_IF);
         n->md.sym = new_tmp_var(n);
     } else if (n->kind == TOK_KW_WHILE) {
-        if (n->md.jmp_bot == NULL) {
+        if (n->md.jmp_bot == NULL || n->md.jmp_top == NULL) {
             n->md.jmp_top = new_tmp_label();
             n->md.jmp_bot = new_tmp_label();
         }
@@ -363,7 +363,7 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
             n->md.jmp_top = new_tmp_label();
         }
     } else if (n->kind == TOK_KW_FOR) {
-        if (n->md.jmp_top == NULL || n->md.jmp_bot) {
+        if (n->md.jmp_top == NULL || n->md.jmp_bot == NULL) {
             n->md.jmp_top = new_tmp_label();
             n->md.jmp_bot = new_tmp_label();
         }
@@ -723,6 +723,7 @@ static void emit_while(ast_node_t *n, int32_t match_idx)
     assert(n->childs[1]);
 
     assert(n->childs[0]->md.type != TYPE_NONE);
+    assert(n->childs[0]->md.sym);
 
     assert(match_idx <= 2);
 
@@ -743,8 +744,28 @@ static void emit_while(ast_node_t *n, int32_t match_idx)
     }
 }
 
-static void emit_do(ast_node_t *n, int32_t match_idx)
+static void emit_do_while(ast_node_t *n, int32_t match_idx)
 {
+    assert(n->kind == TOK_KW_DO);
+    assert(n->num_childs == 2);
+    assert(n->childs[0]);
+    assert(n->childs[1]);
+
+    assert(n->childs[1]->md.type != TYPE_NONE);
+    assert(n->childs[1]->md.sym);
+
+    assert(match_idx <= 2);
+
+    EMIT("// DO-WHILE --- match_idx: %d\n", match_idx);
+
+    if (match_idx == 0) {
+        // Before entering the block
+        EMIT("%s:\n", n->md.jmp_top);
+    } else if (match_idx == 1) {
+        // After the do {} while block, and before the computation of loop check
+    } else {
+        EMIT("if (%s) goto %s;\n", n->childs[1]->md.sym, n->md.jmp_top);
+    }
 }
 
 static bool is_control_flow_node(ast_node_t *n)
@@ -796,7 +817,7 @@ static void emit_dispatch(ast_node_t *n, int32_t match_idx)
         } else if (n->kind == TOK_KW_WHILE) {
             emit_while(n, match_idx);
         } else if (n->kind == TOK_KW_DO) {
-            emit_do(n, match_idx);
+            emit_do_while(n, match_idx);
         }
     }
 }

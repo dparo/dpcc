@@ -335,7 +335,7 @@ for_stmt:       "for"[op] "(" { symtable_begin_block(); } for_1[f1] ";" for_2[f2
 while_stmt:     "while"[op] "(" expr[e] ")" code_block[cb]           { $$ = NEW_NODE($op->tok, KW_WHILE); push_childs($$, 2, CAST {$e, $cb} ); }
         |       "while" "(" error ")" code_block          {  }
         ;
-do_while_stmt:  "do"[op] code_block[cb] "while" "(" expr[e] ")" ";"  { $$ = NEW_NODE($op->tok, KW_DO); push_childs($$, 2, CAST {$e, $cb} ); }
+do_while_stmt:  "do"[op] code_block[cb] "while" "(" expr[e] ")" ";"  { $$ = NEW_NODE($op->tok, KW_DO); push_childs($$, 2, CAST {$cb, $e} ); }
         |       "do" code_block "while" "(" error ")" ";" {  }
         ;
 

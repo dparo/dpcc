@@ -34,3 +34,17 @@ print(69);
 print(69);
 print(69);
 print(69);
+
+
+do {
+    print(a * 3 + 2);
+} while(a++ <= 20);
+
+
+
+print(69);
+print(69);
+print(69);
+print(69);
+print(69);
+print(69);
