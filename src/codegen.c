@@ -616,7 +616,7 @@ static void emit_var_init(ast_node_t *n)
             EMIT("%s", c2->md.sym);
         }
 
-        EMIT("});\n\n");
+        EMIT("});\n");
     }
 }
 
