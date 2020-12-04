@@ -702,7 +702,7 @@ static void emit_for(ast_node_t *n, int32_t match_idx)
             EMIT("_vspcNeg = !%s;\n", cond->md.sym);
             EMIT("if (_vspcNeg) goto %s;\n", n->md.jmp_bot);
         }
-        EMIT("// FOR --- Body\n");
+        // FOR --- Body
         // After the checking condition is computed
     } else if (match_idx == 3) {
         // FOR --- Compute Inc/Dec/Update step and loop
@@ -755,8 +755,6 @@ static void emit_do_while(ast_node_t *n, int32_t match_idx)
     assert(n->childs[1]->md.sym);
 
     assert(match_idx <= 2);
-
-    EMIT("// DO-WHILE --- match_idx: %d\n", match_idx);
 
     if (match_idx == 0) {
         // Before entering the block
