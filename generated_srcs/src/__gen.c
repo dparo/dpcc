@@ -45,11 +45,11 @@ bool is_expr_node(ast_node_t *n)
 }
 
 
-char *new_tmp_var(enum DPCC_TYPE type)
+char *new_tmp_var(ast_node_t *n)
 {
     str_t s = {0};
 
-    switch (type)
+    switch (n->md.type)
     {
         default:
         {

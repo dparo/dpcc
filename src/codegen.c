@@ -317,7 +317,7 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
         }
         assert(n->md.type != TYPE_I32_ARRAY);
         assert(n->md.type != TYPE_F32_ARRAY);
-        n->md.sym = new_tmp_var(n->md.type);
+        n->md.sym = new_tmp_var(n);
     } else if (n->kind == TOK_KW_WHILE && n->md.jmp_bot == NULL) {
         n->md.jmp_bot = new_tmp_label();
     } else if (n->kind == TOK_KW_DO && n->md.jmp_top == NULL) {
@@ -411,9 +411,15 @@ static void emit_assign(ast_node_t *n)
         assert(lhs->childs[0]);
         assert(lhs->childs[0]->md.type);
         assert(lhs->childs[0]->md.sym);
+        assert(lhs->md.sym);
+
         char *index = lhs->childs[1]->md.sym;
-        EMIT("%s = _var_set%s(\"%s\",%s, %s);\n",
-            lhs->md.sym,
+
+        if (lhs->md.sym) {
+            EMIT("%s = ", lhs->md.sym);
+        }
+
+        EMIT("_var_set%s(\"%s\", %s, %s);\n",
             get_type_label(lhs->md.type),
             lhs->childs[0]->tok->lexeme,
             index,
@@ -424,8 +430,11 @@ static void emit_assign(ast_node_t *n)
         assert(lhs->md.type);
         assert(lhs->md.sym);
 
-        EMIT("%s = _var_set%s(\"%s\", 1, %s);\n",
-            n->md.sym,
+        if (n->md.sym) {
+            EMIT("%s = ", n->md.sym);
+        }
+
+        EMIT("_var_set%s(\"%s\", 1, %s);\n",
             get_type_label(lhs->md.type),
             lhs->tok->lexeme,
             rhs->md.sym);
@@ -479,44 +488,37 @@ static void emit_expr(ast_node_t *n)
     } else if (n->kind == TOK_AR_SUBSCR) {
         emit_array_subscript(n);
     } else if (is_expr_node(n)) {
+
+        if (n->md.sym) {
+            EMIT("%s = ", n->md.sym);
+        }
         if (n->num_childs == 1) {
             if (is_prefix_op(n)) {
-                EMIT("%s = %s %s;\n",
-                    n->md.sym,
+                EMIT("%s %s;\n",
                     n->tok->lexeme,
                     n->childs[0]->md.sym);
             } else if (is_postfix_op(n)) {
 
-                EMIT("%s = %s %s;\n",
-                    n->md.sym,
+                EMIT("%s %s;\n",
                     n->childs[0]->md.sym,
                     n->tok->lexeme);
             } else {
                 invalid_code_path();
             }
-        } else if (is_postfix_op(n)) {
-            // NOTE We don't have postfix operators yet
-            EMIT("%s = %s %s;",
-                n->md.sym,
-                n->childs[0]->md.sym,
-                n->tok->lexeme);
         } else {
             assert(n->num_childs == 2);
             if (n->kind == TOK_POW) {
-                EMIT("%s = pow%s(%s, %s);\n",
-                    n->md.sym,
+                EMIT("pow%s(%s, %s);\n",
                     n->md.type == TYPE_F32 ? "" : "l",
                     n->childs[0]->md.sym,
                     n->childs[1]->md.sym);
             } else {
-                EMIT("%s = %s %s %s;\n",
-                    n->md.sym,
+                EMIT("%s %s %s;\n",
                     n->childs[0]->md.sym,
                     n->tok->lexeme,
                     n->childs[1]->md.sym);
             }
         }
-
     } else {
         invalid_code_path();
     }

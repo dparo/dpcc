@@ -472,9 +472,13 @@ function info(node: string, fmt: string, ...args: string[]) {
 namespace DPCC_Gen {
 
     export function new_tmp_var() {
-        Gen.fn('char *new_tmp_var(enum DPCC_TYPE type)', () => {
+        Gen.fn('char *new_tmp_var(ast_node_t *n)', () => {
+            //Gen.print('if (n->parent && n->parent->kind == TOK_SEMICOLON)')
+            //Gen.scope(() => {
+            //    Gen.print('return NULL;')
+            //})
             Gen.print('str_t s = {0};')
-            Gen.switchd('type', {
+            Gen.switchd('n->md.type', {
                 "TYPE_I32": 'sfcat(&G_allctx, &s, "_vi%d", G_codegen_i32_cnt++);',
                 "TYPE_F32": 'sfcat(&G_allctx, &s, "_vf%d", G_codegen_f32_cnt++);',
                 "TYPE_BOOL": 'sfcat(&G_allctx, &s, "_vb%d", G_codegen_bool_cnt++);',
@@ -621,7 +625,7 @@ function generate_src_file() {
 
 function generate_hdr_file() {
     Gen.print(DPCC.COMMON_BOILERPLATE);
-    Gen.print("char *new_tmp_var(enum DPCC_TYPE type);")
+    Gen.print("char *new_tmp_var(ast_node_t *n);")
     Gen.print("char *new_tmp_label(void);")
     Gen.print('char *get_type_label(enum DPCC_TYPE t);');
 

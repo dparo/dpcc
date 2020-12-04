@@ -17,7 +17,7 @@
 #include "dpcc.h"
 
 
-char *new_tmp_var(enum DPCC_TYPE type);
+char *new_tmp_var(ast_node_t *n);
 char *new_tmp_label(void);
 char *get_type_label(enum DPCC_TYPE t);
 
