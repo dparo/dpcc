@@ -567,7 +567,7 @@ static void emit_var_init(ast_node_t *n)
             EMIT("%s", c2->md.sym);
         }
 
-        EMIT("};\n\n");
+        EMIT("});\n\n");
     }
 }
 
@@ -713,11 +713,16 @@ static void second_ast_pass(void)
         (void)c0, (void)c1, (void)c2, (void)c3;
 
         if (n->kind == TOK_OPEN_BRACE && n->parent && (n->parent->kind == TOK_YYEOF || n->parent->kind == TOK_SEMICOLON)) {
-
-            if (match_cnt == 0) {
-                EMIT("\n_scope_begin();\n");
-            } else if (match_cnt == n->num_childs) {
-                EMIT("_scope_end();\n");
+            if (n->childs == 0) {
+                // NOTE
+                // Do not generate _scope_begin, _scope_end pair if there's nothing
+                // to put inside this scope
+            } else {
+                if (match_cnt == 0) {
+                    EMIT("\n_scope_begin();\n");
+                } else if (match_cnt == n->num_childs) {
+                    EMIT("_scope_end();\n");
+                }
             }
 
         } else {
