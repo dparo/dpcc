@@ -328,7 +328,9 @@ else_if_stmts:  else_if_stmts[car] else_if_stmt[eif]               { $$ = $car; 
         |       else_if_stmt[eif]                                  { $$ = $eif; }
         ;
 
-if_stmt:         "if"[op] "(" expr[e] ")" code_block[cb] else_if_stmts[car]                           { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, $car, NULL}); }
+if_stmt:         "if"[op] "(" expr[e] ")" code_block[cb]                                               { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, NULL, NULL}); }
+if_stmt:         "if"[op] "(" error ")" code_block[cb]                                                 {  }
+        |        "if"[op] "(" expr[e] ")" code_block[cb] else_if_stmts[car]                           { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, $car, NULL}); }
         |        "if" "(" error ")" code_block else_if_stmts                                          {  }
         |        "if"[op] "(" expr[e] ")" code_block[cb] else_if_stmts[car] "else" code_block[ecb]    { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, $car, $ecb}); }
         |        "if" "(" error ")" code_block else_if_stmts "else" code_block                        {  }

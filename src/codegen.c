@@ -618,6 +618,42 @@ static void emit_print(ast_node_t *n)
 
 static void emit_if(ast_node_t *n, int32_t match_idx)
 {
+    bool has_else_if = n->childs[2];
+    bool has_else = n->childs[3];
+
+    assert(n->childs[0]);
+    assert(n->childs[1]);
+
+    if (match_idx == 0) {
+        // Still needs to compute the condition
+    } else if (match_idx == 1) {
+        ast_node_t *cond = n->childs[0];
+        assert(cond->md.sym);
+        // condition was just computed
+        EMIT("_vspcNeg = !%s;\n", cond->md.sym);
+        char *next_label = n->md.jmp_bot;
+        if (has_else_if) {
+
+        } else if (has_else) {
+        }
+        EMIT("if (_vspcNeg) goto %s;\n", next_label);
+    } else if ((match_idx - has_else_if - has_else) == 2) {
+        // // Entire IF statement is terminated (top if, any `else if` (if present) and any `else` (if present))
+        EMIT("// Entire IF statement is terminated\n");
+        if (!has_else) {
+            EMIT("%s:\n", n->md.jmp_bot);
+        }
+    } else if ((match_idx - has_else_if - has_else) == 3) {
+        // Here lies the else if statements if any
+        if (has_else) {
+            assert(!has_else_if);
+            EMIT("%s:\n", n->md.jmp_bot);
+        }
+    } else if (match_idx == 4) {
+        assert(has_else_if && has_else);
+    } else {
+        invalid_code_path();
+    }
 }
 
 static void emit_for(ast_node_t *n, int32_t match_idx)
@@ -724,7 +760,7 @@ static void second_ast_pass(void)
     EMIT("// Special variable used to implemenent INC (x++) and dec (x--)\n");
     EMIT("// It is used to temporary hold the result of the INC/DEC in order to perform the side effect\n");
     EMIT("int32_t _vspcIncDec;\n");
-    EMIT("// Special variable used to the negation for control flow statements\n");
+    EMIT("// Special variable used to the negation for control statements (if, for, ...)\n");
     EMIT("// For example the for loop needs to negate the user provided condition\n");
     EMIT("bool    _vspcNeg;\n");
     EMIT("\n");
@@ -753,7 +789,7 @@ static void second_ast_pass(void)
 
         (void)c0, (void)c1, (void)c2, (void)c3;
 
-        if (n->kind == TOK_OPEN_BRACE && n->parent && (n->parent->kind == TOK_YYEOF || n->parent->kind == TOK_SEMICOLON)) {
+        if (n->kind == TOK_OPEN_BRACE && n->parent && (n->parent->kind == TOK_YYEOF || n->parent->kind == TOK_SEMICOLON || is_control_flow_node(n->parent))) {
             if (n->childs == 0) {
                 // NOTE
                 // Do not generate _scope_begin, _scope_end pair if there's nothing

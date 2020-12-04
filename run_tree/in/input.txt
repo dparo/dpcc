@@ -1,6 +1,16 @@
 
-let b = 10;
+//for (let i = 5; i < 10; i++) {
+//		print(i);
+//}
 
-for (let i = 5; i < 10; i++) {
-		print(i);
+let a = 10;
+
+if (a == 10) {
+	print(100);
+} else if(a == 20) {
+	print(200);
+} else if ( a == 30) {
+	print(300);
+} else {
+	print(10000);
 }
