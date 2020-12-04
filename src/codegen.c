@@ -43,13 +43,15 @@ static str_t S_str = { 0 };
 
 static int32_t S_indentation = 0;
 
-static void _emit(char *fmt, ...)
-    __attribute__((format(printf, 1, 2)));
+static void _emit(bool indent, char *fmt, ...)
+    __attribute__((format(printf, 2, 3)));
 
-static void _emit(char *fmt, ...)
+static void _emit(bool indent, char *fmt, ...)
 {
-    for (int32_t i = 0; i < S_indentation; i++) {
-        sfcat(&G_allctx, &S_str, "    ");
+    if (indent) {
+        for (int32_t i = 0; i < S_indentation; i++) {
+            sfcat(&G_allctx, &S_str, "    ");
+        }
     }
 
     va_list ap;
@@ -58,7 +60,8 @@ static void _emit(char *fmt, ...)
     va_end(ap);
 }
 
-#define EMIT(...) _emit(__VA_ARGS__)
+#define EMIT(...) _emit(true, __VA_ARGS__)
+#define EMITN(...) _emit(false, __VA_ARGS__)
 
 static void emit_scope_begin(void)
 {
@@ -604,16 +607,16 @@ static void emit_var_init(ast_node_t *n)
             assert(c2->kind == TOK_OPEN_BRACE);
             assert(c2->num_childs >= 1);
             for (int32_t i = 0; i < n->md.array_len; i++) {
-                EMIT("%s", c2->childs[i]->md.sym);
+                EMITN("%s", c2->childs[i]->md.sym);
                 if (i != n->md.array_len - 1) {
-                    EMIT(", ");
+                    EMITN(", ");
                 }
             }
         } else {
-            EMIT("%s", c2->md.sym);
+            EMITN("%s", c2->md.sym);
         }
 
-        EMIT("});\n");
+        EMITN("});\n");
     }
 }
 
