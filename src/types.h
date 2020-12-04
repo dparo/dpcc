@@ -79,13 +79,11 @@ typedef struct {
     enum DPCC_TYPE type;
     int32_t array_len;
 
-    union {
-        char *sym;
-        struct {
-            char *jmp_top;
-            char *jmp_next;
-            char *jmp_bot;
-        };
+    char *sym;
+    struct {
+        char *jmp_top;
+        char *jmp_next;
+        char *jmp_bot;
     };
 } codegen_metadata_t;
 

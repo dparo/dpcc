@@ -284,6 +284,7 @@ static void typecheck(ast_node_t *n)
 static char *gen_sym(ast_node_t *n)
 {
     assert(n->md.type != TYPE_NONE);
+    assert(n->kind != TOK_KW_WHILE && n->kind != TOK_KW_DO && n->kind != TOK_KW_FOR && n->kind != TOK_KW_IF);
 
     str_t s = { 0 };
 
