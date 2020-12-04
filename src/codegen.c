@@ -618,8 +618,7 @@ static void emit_print(ast_node_t *n)
 
 static void emit_if(ast_node_t *n, int32_t match_idx)
 {
-    bool has_else_if = n->childs[2];
-    bool has_else = n->childs[3];
+    bool has_else = n->childs[2];
 
     assert(n->childs[0]);
     assert(n->childs[1]);
@@ -631,26 +630,17 @@ static void emit_if(ast_node_t *n, int32_t match_idx)
         assert(cond->md.sym);
         // condition was just computed
         EMIT("_vspcNeg = !%s;\n", cond->md.sym);
-        char *next_label = n->md.jmp_bot;
-        if (has_else_if) {
-
-        } else if (has_else) {
-        }
-        EMIT("if (_vspcNeg) goto %s;\n", next_label);
-    } else if ((match_idx - has_else_if - has_else) == 2) {
-        // // Entire IF statement is terminated (top if, any `else if` (if present) and any `else` (if present))
-        EMIT("// Entire IF statement is terminated\n");
-        if (!has_else) {
-            EMIT("%s:\n", n->md.jmp_bot);
-        }
-    } else if ((match_idx - has_else_if - has_else) == 3) {
-        // Here lies the else if statements if any
-        if (has_else) {
-            assert(!has_else_if);
-            EMIT("%s:\n", n->md.jmp_bot);
-        }
-    } else if (match_idx == 4) {
-        assert(has_else_if && has_else);
+        EMIT("if (_vspcNeg) goto %s;\n", n->md.jmp_next);
+    } else if (match_idx == 2) {
+        // Positive if block has terminated
+        EMIT("// IF --- positive block is terminated\n");
+        // TODO Need to jmp to the bottom of the if statement
+        EMIT("goto %s;\n", n->md.jmp_bot);
+        EMIT("%s:\n", n->md.jmp_next);
+    } else if (match_idx == 3) {
+        assert(has_else);
+        EMIT("// IF --- Entire if statement (including the else is terminated\n");
+        EMIT("%s:\n", n->md.jmp_bot);
     } else {
         invalid_code_path();
     }
