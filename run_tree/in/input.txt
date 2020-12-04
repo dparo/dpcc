@@ -3,19 +3,18 @@
 //		print(i);
 //}
 
-let a = 10;
+let a = 0;
 
-if (a == 10) {
-    if (a == 2 * 5) {
-        print(2 * 5 * 5);
-    } else {
-        print(2 * 5 * 10);
-    }
-	print(100);
-} else if(a == 20) {
-    print(200);
-} else if (a == 30) {
-    print(300);
-} else {
-    print(400);
-} 
+while(a <= 10) {
+    a++;
+    print(a);
+}
+
+
+
+print(69);
+print(69);
+print(69);
+print(69);
+print(69);
+print(69);

@@ -64,6 +64,13 @@ char *dpcc_type_as_enum_str(enum DPCC_TYPE t);
 void sfcat(mctx_t *ctx, str_t *s, char *fmt, ...)
     __attribute__((format(printf, 3, 4)));
 
+void sfcatv(mctx_t *ctx, str_t *s, char *fmt, va_list ap);
+
+static inline bool is_strprefix(const char *str, const char *prefix)
+{
+    return strncmp(prefix, str, strlen(prefix)) == 0;
+}
+
 /// Equivalent to malloc
 void *dallnew(mctx_t *ctx, size_t size);
 /// Equivalent to realloc

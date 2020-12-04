@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <sys/cdefs.h>
 
 #include "lexer.h"
 #include "types.h"
@@ -40,12 +41,45 @@ static str_t S_str = { 0 };
         LOG(DPCC_SEVERITY_WARNING, (N), __VA_ARGS__); \
     } while (0)
 
-#define EMIT(...) \
-    sfcat(&G_allctx, &S_str, __VA_ARGS__)
+static int32_t S_indentation = 0;
+
+static void _emit(char *fmt, ...)
+    __attribute__((format(printf, 1, 2)));
+
+static void _emit(char *fmt, ...)
+{
+    for (int32_t i = 0; i < S_indentation; i++) {
+        sfcat(&G_allctx, &S_str, "    ");
+    }
+
+    va_list ap;
+    va_start(ap, fmt);
+    sfcatv(&G_allctx, &S_str, fmt, ap);
+    va_end(ap);
+}
+
+/* #define EMIT(...) \ */
+/*     sfcat(&G_allctx, &S_str, __VA_ARGS__) */
+
+#define EMIT(...) _emit(__VA_ARGS__)
+
+static void emit_scope_begin(void)
+{
+    assert(S_indentation >= 0);
+    EMIT("_scope_begin();\n");
+
+    S_indentation += 1;
+}
+
+static void emit_scope_end(void)
+{
+    assert(S_indentation > 0);
+    S_indentation -= 1;
+    EMIT("_scope_end();\n");
+}
 
 static inline void typemismatch_check(ast_node_t *expected_type, ast_node_t *got_type)
 {
-
     if ((expected_type != NULL && got_type != NULL) && (expected_type->md.type != got_type->md.type)) {
         ERR(expected_type, "Type Mismatch");
         INFO(expected_type, "Expected `%s`", dpcc_type_as_str(expected_type->md.type));
@@ -310,7 +344,6 @@ static char *gen_sym(ast_node_t *n)
 
 static void setup_addrs_and_jmp_tables(ast_node_t *n)
 {
-
     if (!n->md.sym && (n->md.type != TYPE_NONE && is_expr_node(n))) {
 
         if (n->kind == TOK_ID) {
@@ -322,6 +355,7 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
         n->md.sym = new_tmp_var(n);
     } else if (n->kind == TOK_KW_WHILE) {
         if (n->md.jmp_bot == NULL) {
+            n->md.jmp_top = new_tmp_label();
             n->md.jmp_bot = new_tmp_label();
         }
     } else if (n->kind == TOK_KW_DO) {
@@ -546,7 +580,7 @@ static void emit_var_decl(ast_node_t *n)
     assert(c1);
     (void)c0, (void)c1, (void)c2;
 
-    EMIT("\n_var_decl(\"%s\", %s, %d);\n", n->childs[1]->tok->lexeme, get_type_label(n->md.type), n->md.array_len);
+    EMIT("_var_decl(\"%s\", %s, %d);\n", n->childs[1]->tok->lexeme, get_type_label(n->md.type), n->md.array_len);
 }
 
 static void emit_var_init(ast_node_t *n)
@@ -608,10 +642,10 @@ static void emit_print(ast_node_t *n)
     } break;
     case TYPE_BOOL:
     case TYPE_I32: {
-        EMIT("printf(\"%%d\", %s);\n\n", c0->md.sym);
+        EMIT("printf(\"%%d\", %s);\n", c0->md.sym);
     } break;
     case TYPE_F32: {
-        EMIT("printf(\"%%f\", %s);\n\n", c0->md.sym);
+        EMIT("printf(\"%%f\", %s);\n", c0->md.sym);
     } break;
     }
 }
@@ -622,6 +656,7 @@ static void emit_if(ast_node_t *n, int32_t match_idx)
 
     assert(n->childs[0]);
     assert(n->childs[1]);
+    assert(n->num_childs == 3);
 
     if (match_idx == 0) {
         // Still needs to compute the condition
@@ -648,19 +683,25 @@ static void emit_if(ast_node_t *n, int32_t match_idx)
 
 static void emit_for(ast_node_t *n, int32_t match_idx)
 {
+    assert(n->kind == TOK_KW_FOR);
+    assert(n->num_childs == 4);
+
     if (match_idx == 0) {
         // FOR --- code block begin (for declaring vars)
-        EMIT("\n_scope_begin();\n");
+        emit_scope_begin();
     } else if (match_idx == 1) {
         // FOR --- compute checking condition
         EMIT("%s:\n", n->md.jmp_top);
     } else if (match_idx == 2) {
         ast_node_t *cond = n->childs[1];
-        assert(cond);
-        assert(cond->md.sym);
-        // FOR --- terminate if checking condition is false
-        EMIT("_vspcNeg = !%s;\n", cond->md.sym);
-        EMIT("if (_vspcNeg) goto %s;\n", n->md.jmp_bot);
+        // Checking condition is optional
+        if (cond) {
+            assert(cond);
+            assert(cond->md.sym);
+            // FOR --- terminate if checking condition is false
+            EMIT("_vspcNeg = !%s;\n", cond->md.sym);
+            EMIT("if (_vspcNeg) goto %s;\n", n->md.jmp_bot);
+        }
         EMIT("// FOR --- Body\n");
         // After the checking condition is computed
     } else if (match_idx == 3) {
@@ -670,13 +711,38 @@ static void emit_for(ast_node_t *n, int32_t match_idx)
         EMIT("goto %s;\n", n->md.jmp_top);
         EMIT("%s:\n", n->md.jmp_bot);
         // FOR --- code block end
-        EMIT("_scope_end();\n");
+        emit_scope_end();
     }
 }
 
 static void emit_while(ast_node_t *n, int32_t match_idx)
 {
-    EMIT("// While encounter %d\n", match_idx);
+    assert(n->kind == TOK_KW_WHILE);
+    assert(n->num_childs == 2);
+    assert(n->childs[0]);
+    assert(n->childs[1]);
+
+    assert(n->childs[0]->md.type != TYPE_NONE);
+
+    assert(match_idx <= 2);
+
+    if (match_idx == 0) {
+        // Before even evaluating the expression
+        EMIT("%s:\n", n->md.jmp_top);
+    } else if (match_idx == 1) {
+        // After the expression evaluation,
+        // and before evaluating the entire block
+        ast_node_t *cond = n->childs[0];
+        EMIT("_vspcNeg = !%s;\n", cond->md.sym);
+        EMIT("if (_vspcNeg) goto %s;\n", n->md.jmp_bot);
+        emit_scope_begin();
+    } else if (match_idx == 2) {
+        EMIT("goto %s;\n", n->md.jmp_top);
+        emit_scope_end();
+        EMIT("%s:\n", n->md.jmp_bot);
+    } else {
+        invalid_code_path();
+    }
 }
 
 static void emit_do(ast_node_t *n, int32_t match_idx)
@@ -698,7 +764,7 @@ static bool is_control_flow_node(ast_node_t *n)
     return is_control_flow;
 }
 
-static void emit(ast_node_t *n, int32_t match_idx)
+static void emit_dispatch(ast_node_t *n, int32_t match_idx)
 {
     bool is_var_decl = n && n->kind == TOK_KW_LET;
     bool is_print = n && n->kind == TOK_KW_PRINT;
@@ -741,6 +807,7 @@ static void second_ast_pass(void)
 {
     memset(&S_str, 0, sizeof(S_str));
     sfcat(&G_allctx, &S_str, "\n");
+    S_indentation = 0;
 
     ast_traversal_t att = { 0 };
     ast_traversal_begin(&att, &G_root_node);
@@ -786,14 +853,14 @@ static void second_ast_pass(void)
                 // to put inside this scope
             } else {
                 if (match_cnt == 0) {
-                    EMIT("\n_scope_begin();\n");
+                    emit_scope_begin();
                 } else if (match_cnt == n->num_childs) {
-                    EMIT("_scope_end();\n");
+                    emit_scope_end();
                 }
             }
 
         } else {
-            emit(n, match_cnt);
+            emit_dispatch(n, match_cnt);
         }
     }
 }

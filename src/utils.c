@@ -441,6 +441,20 @@ void sfcat(mctx_t *ctx, str_t *s, char *fmt, ...)
 
     s->len += chars_to_write;
 }
+void sfcatv(mctx_t *ctx, str_t *s, char *fmt, va_list ap)
+{
+    va_list cp;
+    va_copy(cp, ap);
+    int32_t chars_to_write = vsnprintf(NULL, 0, fmt, ap);
+    s->cstr = dallrsz(ctx, s->cstr, s->len + chars_to_write + 1);
+    s->cstr[s->len + chars_to_write] = 0;
+
+    char *bumped = s->cstr + s->len;
+    vsnprintf(bumped, chars_to_write + 1, fmt, cp);
+    va_end(cp);
+
+    s->len += chars_to_write;
+}
 
 char *get_current_working_dir(void)
 {
