@@ -692,14 +692,14 @@ function main() {
 
     {
         let contents = FS.readFileSync("3ac_preamble.c", { encoding: "utf-8"});
-        let converted: string = CHexConvert("3AC_PREAMBLE",  contents);
+        let converted: string = CHexConvert("THREEAC_PREAMBLE",  contents);
         let out = FS.openSync("src/__3ac_preamble.h", "w");
         FS.writeSync(out, converted)
         FS.closeSync(out)
     }
     {
         let contents = FS.readFileSync("3ac_postamble.c", { encoding: "utf-8"});
-        let converted: string = CHexConvert("3AC_POSTAMBLE",  contents);
+        let converted: string = CHexConvert("THREEAC_POSTAMBLE",  contents);
         let out = FS.openSync("src/__3ac_postamble.h", "w");
         FS.writeSync(out, converted)
         FS.closeSync(out)

@@ -15,6 +15,9 @@
 #include "utils.h"
 #include "codegen.h"
 
+#include "__3ac_preamble.h"
+#include "__3ac_postamble.h"
+
 void symtable_clear(void)
 {
     for (int32_t list_idx = 0; list_idx < G_symtable.num_lists; list_idx++) {
@@ -168,7 +171,7 @@ bool parse(char *filepath, FILE *input_stream)
     return result == 0 && yynerrs == 0;
 }
 
-bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
+char *threeac_gen(char *filepath, FILE *input_stream)
 {
     dpcc_reset();
     setup_filepath(filepath);
@@ -176,9 +179,6 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
     if (input_stream == NULL) {
         fprintf(stderr, "dpcc::parse() --- NULL input_stream\n");
         abort();
-    }
-    if (output_stream == NULL) {
-        output_stream = stdout;
     }
 
     bool parse_success = parse(filepath, input_stream);
@@ -189,13 +189,30 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
     extern int yynerrs;
     char *generated_code = NULL;
     generated_code = codegen();
-
-    if (yynerrs == 0 && generated_code != NULL) {
-        fprintf(output_stream, "%s", generated_code);
-        return true;
-    } else {
-        return false;
+    if (yynerrs != 0) {
+        return NULL;
     }
+    return generated_code;
+}
+
+bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
+{
+    if (!output_stream) {
+        output_stream = stdout;
+    }
+
+    char *three_addr_code = threeac_gen(filepath, input_stream);
+    if (three_addr_code) {
+        fwrite(THREEAC_PREAMBLE, 1, THREEAC_PREAMBLE_len, output_stream);
+        fprintf(output_stream, "int main()\n");
+        fprintf(output_stream, "{\n");
+        fprintf(output_stream, "%s", three_addr_code);
+        fprintf(output_stream, "}\n");
+        fwrite(THREEAC_POSTAMBLE, 1, THREEAC_POSTAMBLE_len, output_stream);
+        return true;
+    }
+
+    return false;
 }
 
 void ast_traversal_push(ast_traversal_t *t, ast_node_t *parent, int32_t current_child)
