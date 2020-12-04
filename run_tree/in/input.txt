@@ -18,3 +18,19 @@ print(69);
 print(69);
 print(69);
 print(69);
+
+
+for(let a = 3; a <= 10; a++) {
+    a++;
+    print(a);
+}
+
+
+
+
+print(69);
+print(69);
+print(69);
+print(69);
+print(69);
+print(69);

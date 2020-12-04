@@ -58,9 +58,6 @@ static void _emit(char *fmt, ...)
     va_end(ap);
 }
 
-/* #define EMIT(...) \ */
-/*     sfcat(&G_allctx, &S_str, __VA_ARGS__) */
-
 #define EMIT(...) _emit(__VA_ARGS__)
 
 static void emit_scope_begin(void)
@@ -735,10 +732,8 @@ static void emit_while(ast_node_t *n, int32_t match_idx)
         ast_node_t *cond = n->childs[0];
         EMIT("_vspcNeg = !%s;\n", cond->md.sym);
         EMIT("if (_vspcNeg) goto %s;\n", n->md.jmp_bot);
-        emit_scope_begin();
     } else if (match_idx == 2) {
         EMIT("goto %s;\n", n->md.jmp_top);
-        emit_scope_end();
         EMIT("%s:\n", n->md.jmp_bot);
     } else {
         invalid_code_path();
