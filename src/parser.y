@@ -321,21 +321,12 @@ for_3: expr
      | %empty { $$ = NULL; }
      ;
 
-else_if_stmt:   "else" "if"[op] "(" expr[e] ")" code_block[cb]     { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 2, CAST { $e, $cb}); }
-        |       "else" "if" "(" error ")" code_block               {  }
-
-else_if_stmts:  else_if_stmts[car] else_if_stmt[eif]               { $$ = $car; push_child($car, $eif); }
-        |       else_if_stmt[eif]                                  { $$ = $eif; }
-        ;
-
-if_stmt:         "if"[op] "(" expr[e] ")" code_block[cb]                                               { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, NULL, NULL}); }
-if_stmt:         "if"[op] "(" error ")" code_block[cb]                                                 {  }
-        |        "if"[op] "(" expr[e] ")" code_block[cb] else_if_stmts[car]                           { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, $car, NULL}); }
-        |        "if" "(" error ")" code_block else_if_stmts                                          {  }
-        |        "if"[op] "(" expr[e] ")" code_block[cb] else_if_stmts[car] "else" code_block[ecb]    { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, $car, $ecb}); }
-        |        "if" "(" error ")" code_block else_if_stmts "else" code_block                        {  }
-        |        "if"[op] "(" expr[e] ")" code_block[cb] "else" code_block[ecb]                       { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 4, CAST { $e, $cb, NULL, $ecb}); }
-        |        "if" "(" error ")" code_block "else" code_block                                      {  }
+if_stmt:         "if"[op] "(" expr[e] ")" code_block[cb]                                              { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 3, CAST { $e, $cb, NULL}); }
+        |        "if"[op] "(" expr[e] ")" code_block[cbi] "else" code_block[cbe]                      { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 3, CAST { $e, $cbi, $cbe}); }
+        |        "if"[op] "(" expr[e] ")" code_block[cb] "else" if_stmt[car]                          { $$ = NEW_NODE($op->tok, KW_IF); push_childs($$, 3, CAST { $e, $cb, $car}); }
+        |        "if"[op] "(" error ")" code_block[cb]                                                {  }
+        |        "if"[op] "(" error ")" code_block[cbi] "else" code_block[cbe]                        {  }
+        |        "if"[op] "("error ")" code_block[cb] "else" if_stmt[car]                             {  }
         ;
 
 for_stmt:       "for"[op] "(" for_1[f1] ";" for_2[f2] ";" for_3[f3] ")" code_block[cb]        { $$ = NEW_NODE($op->tok, KW_FOR); push_childs($$, 4, CAST {$f1, $f2, $cb, $f3} ); }
