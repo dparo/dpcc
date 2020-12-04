@@ -247,11 +247,12 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t, int32_t *match_idx)
                 t->stack_childs[t->stack_cnt - 1] = ci + 1;
                 ast_traversal_push(t, child, 0);
 
-                /// Top down traverse, after pushing child to be explored next
-                /// return the child
                 if (match_idx) {
-                    *match_idx = t->stack_childs[t->stack_cnt - 1];
-                    return t->stack_nodes[t->stack_cnt - 1];
+                    // First return
+                    assert(t->stack_childs[t->stack_cnt - 1] == 0);
+                    assert(t->stack_cnt - 2 >= 0);
+                    *match_idx = t->stack_childs[t->stack_cnt - 2];
+                    return t->stack_nodes[t->stack_cnt - 2];
                 }
             } else {
                 break;
@@ -262,19 +263,27 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t, int32_t *match_idx)
             return NULL;
         }
         ast_node_t *nvcs = t->stack_nodes[t->stack_cnt - 1];
+        ast_node_t *parent = t->stack_cnt >= 2 ? t->stack_nodes[t->stack_cnt - 2] : 0;
+
         bool pop_success = ast_traversal_pop(t);
+
         assert(pop_success);
 
         if (nvcs->kind == TOK_YYEOF) {
             return NULL;
         }
 
-        if (match_idx) {
-            // Last traversal visited at the top and once for each child
-            *match_idx = nvcs->num_childs;
+        if (parent == NULL) {
+            return NULL;
         }
-        if (match_idx == NULL || nvcs->num_childs != 0) {
+        // If bottom up (match_idx == NULL return)
+        if (match_idx == NULL) {
             return nvcs;
+        } else {
+            if (parent) {
+                *match_idx = t->stack_childs[t->stack_cnt - 1];
+            }
+            return parent;
         }
     }
 }
