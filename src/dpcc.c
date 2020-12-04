@@ -249,10 +249,10 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t, int32_t *match_idx)
 
                 if (match_idx) {
                     // First return
+                    assert(t->stack_cnt >= 1);
                     assert(t->stack_childs[t->stack_cnt - 1] == 0);
-                    assert(t->stack_cnt - 2 >= 0);
-                    *match_idx = t->stack_childs[t->stack_cnt - 2];
-                    return t->stack_nodes[t->stack_cnt - 2];
+                    *match_idx = t->stack_childs[t->stack_cnt - 1];
+                    return t->stack_nodes[t->stack_cnt - 1];
                 }
             } else {
                 break;
