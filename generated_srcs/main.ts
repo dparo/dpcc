@@ -639,6 +639,30 @@ function generate_hdr_file() {
     Gen.print('void typecheck_expr_and_operators(ast_node_t *n);')
 }
 
+function CHexConvert(name: string, fileContents: string): string {
+    let result = "";
+
+    result += "#include <stddef.h>\n"
+    result += "#include <stdint.h>\n"
+    result += `static int32_t ${name}_len = ${fileContents.length}\n`;
+
+    result += `static uint8_t ${name} = {\n    `
+
+    for (let i = 0; i < name.length; i++) {
+        let char = Number(name.charCodeAt(i)).toString(16);
+        result += `${char}, `;
+        if (i % 32 == 0) {
+            result += '\n    ';
+        }
+    }
+
+    result += '};'
+
+    return result;
+}
+
+
+
 function main() {
     DPCC.init();
 
@@ -665,6 +689,21 @@ function main() {
                 ws.end();
             }
         }
+    }
+
+    {
+        let contents = FS.readFileSync("3ac_preamble.c", { encoding: "utf-8"});
+        let converted: string = CHexConvert("3ac_preamble",  contents);
+        let out = FS.openSync("src/__3ac_preamble.h", "w");
+        FS.writeSync(out, converted)
+        FS.closeSync(out)
+    }
+    {
+        let contents = FS.readFileSync("3ac_postamble.c", { encoding: "utf-8"});
+        let converted: string = CHexConvert("3ac_postamble",  contents);
+        let out = FS.openSync("src/__3ac_postamble.h", "w");
+        FS.writeSync(out, converted)
+        FS.closeSync(out)
     }
 }
 
