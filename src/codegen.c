@@ -642,10 +642,10 @@ static void emit_print(ast_node_t *n)
     } break;
     case TYPE_BOOL:
     case TYPE_I32: {
-        EMIT("printf(\"%%d\", %s);\n", c0->md.sym);
+        EMIT("printf(\"%%d\\n\", %s);\n", c0->md.sym);
     } break;
     case TYPE_F32: {
-        EMIT("printf(\"%%f\", %s);\n", c0->md.sym);
+        EMIT("printf(\"%%f\\n\", %s);\n", c0->md.sym);
     } break;
     }
 }
