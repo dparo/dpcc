@@ -291,7 +291,8 @@ static char *gen_sym(ast_node_t *n)
         sfcat(&G_allctx, &s, "%s", n->md.sym);
     } else if (n->kind == TOK_ID && !n->md.sym) {
         assert(n->decl);
-        sfcat(&G_allctx, &s, "_var_get(\"%s\", %s, 0)", n->tok->lexeme, get_type_label(n->md.type));
+        assert(n->md.type == TYPE_I32 || n->md.type == TYPE_F32 || n->md.type == TYPE_BOOL);
+        sfcat(&G_allctx, &s, "_var_get%s(\"%s\", 0)", get_type_label(n->md.type), n->tok->lexeme);
     } else if (n->kind == TOK_I32_LIT || n->kind == TOK_F32_LIT || n->kind == TOK_CHAR_LIT || n->kind == TOK_BOOL_LIT) {
         if (n->md.type == TYPE_I32) {
             sfcat(&G_allctx, &s, "%d", n->val.as_i32);
@@ -384,10 +385,10 @@ static void emit_array_subscript(ast_node_t *n)
 
     char *index = rhs->md.sym;
 
-    EMIT("%s = _var_get(\"%s\", %s, %s);\n",
+    EMIT("%s = _var_get%s(\"%s\", %s);\n",
         n->md.sym,
-        lhs->tok->lexeme,
         get_type_label(n->md.type),
+        lhs->tok->lexeme,
         index);
 }
 
@@ -411,10 +412,10 @@ static void emit_assign(ast_node_t *n)
         assert(lhs->childs[0]->md.type);
         assert(lhs->childs[0]->md.sym);
         char *index = lhs->childs[1]->md.sym;
-        EMIT("%s = _var_set(\"%s\", %s, %s, %s);\n",
+        EMIT("%s = _var_set%s(\"%s\",%s, %s);\n",
             lhs->md.sym,
-            lhs->childs[0]->tok->lexeme,
             get_type_label(lhs->md.type),
+            lhs->childs[0]->tok->lexeme,
             index,
             rhs->md.sym);
 
@@ -423,10 +424,10 @@ static void emit_assign(ast_node_t *n)
         assert(lhs->md.type);
         assert(lhs->md.sym);
 
-        EMIT("%s = _var_set(\"%s\", %s, 1, %s);\n",
+        EMIT("%s = _var_set%s(\"%s\", 1, %s);\n",
             n->md.sym,
-            lhs->tok->lexeme,
             get_type_label(lhs->md.type),
+            lhs->tok->lexeme,
             rhs->md.sym);
     }
 }
@@ -450,9 +451,9 @@ static void emit_pre_inc_dec(ast_node_t *n)
     } else {
         EMIT("_vspcIncDec = %s - 1;\n", lhs->md.sym);
     }
-    EMIT("_var_set(\"%s\", %s, 1, _vspcIncDec);\n",
-        lhs->tok->lexeme,
-        get_type_label(lhs->md.type));
+    EMIT("_var_set%s(\"%s\", 1, _vspcIncDec);\n",
+        get_type_label(lhs->md.type),
+        lhs->tok->lexeme);
 }
 
 static void emit_expr(ast_node_t *n)
