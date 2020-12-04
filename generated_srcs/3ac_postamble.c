@@ -1,19 +1,3 @@
-#include <assert.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-
-enum TYPE {
-    _kI32,
-    _kF32,
-    _kBOOL,
-    _kI32_ARRAY,
-    _kF32_ARRAY,
-};
-
 #define INVALID_CODE_PATH() assert(!"Invalid code path")
 
 typedef struct {

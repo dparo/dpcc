@@ -1,8 +1,6 @@
 import * as FS from "fs";
 import * as PROC from "process";
-import * as OS from "os";
 import * as PATH from "path";
-import { stringify } from "querystring";
 
 
 namespace Utils {
@@ -644,19 +642,20 @@ function CHexConvert(name: string, fileContents: string): string {
 
     result += "#include <stddef.h>\n"
     result += "#include <stdint.h>\n"
-    result += `static int32_t ${name}_len = ${fileContents.length}\n`;
+    result += "\n"
+    result += `static int32_t ${name}_len = ${fileContents.length};\n`;
 
-    result += `static uint8_t ${name} = {\n    `
+    result += `static uint8_t ${name}[${fileContents.length}] = {\n    `
 
-    for (let i = 0; i < name.length; i++) {
-        let char = Number(name.charCodeAt(i)).toString(16);
-        result += `${char}, `;
-        if (i % 32 == 0) {
+    for (let i = 0; i < fileContents.length; i++) {
+        let char = Number(fileContents.charCodeAt(i)).toString(16);
+        result += `0x${char}, `;
+        if ((i + 1) % 32 == 0) {
             result += '\n    ';
         }
     }
 
-    result += '};'
+    result += '\n};'
 
     return result;
 }
@@ -693,14 +692,14 @@ function main() {
 
     {
         let contents = FS.readFileSync("3ac_preamble.c", { encoding: "utf-8"});
-        let converted: string = CHexConvert("3ac_preamble",  contents);
+        let converted: string = CHexConvert("3AC_PREAMBLE",  contents);
         let out = FS.openSync("src/__3ac_preamble.h", "w");
         FS.writeSync(out, converted)
         FS.closeSync(out)
     }
     {
         let contents = FS.readFileSync("3ac_postamble.c", { encoding: "utf-8"});
-        let converted: string = CHexConvert("3ac_postamble",  contents);
+        let converted: string = CHexConvert("3AC_POSTAMBLE",  contents);
         let out = FS.openSync("src/__3ac_postamble.h", "w");
         FS.writeSync(out, converted)
         FS.closeSync(out)
