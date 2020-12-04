@@ -336,7 +336,7 @@ if_stmt:         "if"[op] "(" expr[e] ")" code_block[cb] else_if_stmts[car]     
         |        "if" "(" error ")" code_block "else" code_block                                      {  }
         ;
 
-for_stmt:       "for"[op] "(" for_1[f1] ";" for_2[f2] ";" for_3[f3] ")" code_block[cb]        { $$ = NEW_NODE($op->tok, KW_FOR); push_childs($$, 4, CAST {$f1, $f2, $f3, $cb} ); }
+for_stmt:       "for"[op] "(" for_1[f1] ";" for_2[f2] ";" for_3[f3] ")" code_block[cb]        { $$ = NEW_NODE($op->tok, KW_FOR); push_childs($$, 4, CAST {$f1, $f2, $cb, $f3} ); }
         |       "for" "(" error ")" code_block            {  }
         ;
 while_stmt:     "while"[op] "(" expr[e] ")" code_block[cb]           { $$ = NEW_NODE($op->tok, KW_WHILE); push_childs($$, 2, CAST {$e, $cb} ); }

@@ -329,8 +329,9 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
             n->md.jmp_top = new_tmp_label();
         }
     } else if (n->kind == TOK_KW_FOR) {
-        if (n->md.jmp_top == NULL) {
+        if (n->md.jmp_top == NULL || n->md.jmp_bot) {
             n->md.jmp_top = new_tmp_label();
+            n->md.jmp_bot = new_tmp_label();
         }
     } else if (n->kind == TOK_KW_IF) {
         if (n->md.jmp_next == NULL || n->md.jmp_bot == NULL) {
@@ -621,6 +622,30 @@ static void emit_if(ast_node_t *n, int32_t match_idx)
 
 static void emit_for(ast_node_t *n, int32_t match_idx)
 {
+    if (match_idx == 0) {
+        EMIT("// FOR --- code block begin (for declaring vars)\n");
+        EMIT("\n_scope_begin();\n");
+    } else if (match_idx == 1) {
+        EMIT("// FOR --- compute checking condition\n");
+        EMIT("%s:\n", n->md.jmp_top);
+    } else if (match_idx == 2) {
+        ast_node_t *cond = n->childs[1];
+        assert(cond);
+        assert(cond->md.sym);
+        EMIT("// FOR --- terminate if checking condition is false\n");
+        EMIT("_vspcNeg = !%s;\n", cond->md.sym);
+        EMIT("if (_vspcNeg) goto %s;\n", n->md.jmp_bot);
+        EMIT("// FOR --- Body\n");
+        // After the checking condition is computed
+    } else if (match_idx == 3) {
+        EMIT("// FOR --- Compute Inc/Dec/Update step and loop\n");
+    } else if (match_idx == n->num_childs) {
+        // Uncoditionally jump to the top
+        EMIT("goto %s;\n", n->md.jmp_top);
+        EMIT("%s:\n", n->md.jmp_bot);
+        EMIT("// FOR --- code block end\n");
+        EMIT("_scope_end();\n");
+    }
 }
 
 static void emit_while(ast_node_t *n, int32_t match_idx)
@@ -656,15 +681,9 @@ static void emit(ast_node_t *n, int32_t match_idx)
         return;
     }
 
-    if (n->kind == TOK_KW_WHILE) {
-        EMIT("// MY WHILE ENCOUNTER --> %d\n", match_idx);
-    } else if (n->kind == TOK_KW_FOR) {
-        EMIT("// MY FOR ENCOUNTER --> %d\n", match_idx);
-    }
-
     if (match_idx == 0) {
         // TOP DOWN ENCOUNTERS
-        if (is_var_decl && n->parent->kind == TOK_SEMICOLON) {
+        if (is_var_decl && (n->parent->kind == TOK_SEMICOLON || n->parent->kind == TOK_KW_FOR)) {
             emit_var_decl(n);
         }
     } else if (match_idx == n->num_childs) {
@@ -704,6 +723,9 @@ static void second_ast_pass(void)
     EMIT("// Special variable used to implemenent INC (x++) and dec (x--)\n");
     EMIT("// It is used to temporary hold the result of the INC/DEC in order to perform the side effect\n");
     EMIT("int32_t _vspcIncDec;\n");
+    EMIT("// Special variable used to the negation for control flow statements\n");
+    EMIT("// For example the for loop needs to negate the user provided condition\n");
+    EMIT("boool   _vspcNeg;\n");
     EMIT("\n");
 
     EMIT("// 3AC Var decls\n");
