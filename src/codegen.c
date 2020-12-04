@@ -162,7 +162,6 @@ static void typecheck_vardecl(ast_node_t *n)
 
     ast_node_t *type = c0 ? c0 : NULL;
     ast_node_t *rhs = c2 ? c2 : NULL;
-    int32_t init_val_len = 1;
 
     bool var_decl_with_user_listed_type = c0;
     bool var_decl_no_user_listed_type = !c0;
@@ -335,7 +334,7 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
 static void first_ast_pass(void)
 {
     ast_traversal_t att = { 0 };
-    ast_traversal_begin(&att, &G_root_node, false, true);
+    ast_traversal_begin(&att, &G_root_node);
     ast_node_t *n = NULL;
 
     while ((n = ast_traverse_next(&att, NULL)) != NULL) {
@@ -602,29 +601,32 @@ static void emit_print(ast_node_t *n)
     }
 }
 
-static void emit_if(ast_node_t *n, bool is_top_down_encounter)
+static void emit_if(ast_node_t *n, int32_t match_idx)
 {
 }
 
-static void emit_for(ast_node_t *n, bool is_top_down_encounter)
+static void emit_for(ast_node_t *n, int32_t match_idx)
 {
 }
 
-static void emit_while(ast_node_t *n, bool is_top_down_encounter)
+static void emit_while(ast_node_t *n, int32_t match_idx)
 {
-    if (is_top_down_encounter) {
+    if (match_idx == 0) {
         EMIT("// While first enconter\n");
-    } else {
+    } else if (match_idx == n->num_childs) {
         EMIT("// While second encounter\n");
     }
 }
 
-static void emit_do(ast_node_t *n, bool is_top_down_encounter)
+static void emit_do(ast_node_t *n, int32_t match_idx)
 {
 }
 
-static bool is_controL_flow_node(ast_node_t *n)
+static bool is_control_flow_node(ast_node_t *n)
 {
+    if (!n) {
+        return false;
+    }
     bool is_if = n->kind == TOK_KW_IF;
     bool is_for = n->kind == TOK_KW_FOR;
     bool is_while = n->kind == TOK_KW_WHILE;
@@ -635,21 +637,19 @@ static bool is_controL_flow_node(ast_node_t *n)
     return is_control_flow;
 }
 
-static void emit(ast_node_t *n, bool is_top_down_encounter)
+static void emit(ast_node_t *n, int32_t match_idx)
 {
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
-
-    assert(c0->kind != TOK_SEMICOLON);
 
     bool is_var_decl = c0 && c0->kind == TOK_KW_LET;
     bool is_print = c0 && c0->kind == TOK_KW_PRINT;
 
-    if (is_top_down_encounter) {
+    if (match_idx == 0) {
         // TOP DOWN ENCOUNTERS
         if (is_var_decl && c0->parent->kind == TOK_SEMICOLON) {
             emit_var_decl(c0);
         }
-    } else {
+    } else if (match_idx == n->num_childs) {
         // BOTTOM UP ENCOUNTERS
         if (is_var_decl && c0->parent->kind == TOK_SEMICOLON) {
             emit_var_init(c0);
@@ -660,15 +660,15 @@ static void emit(ast_node_t *n, bool is_top_down_encounter)
         }
     }
 
-    if (is_controL_flow_node(c0)) {
+    if (is_control_flow_node(c0)) {
         if (n->kind == TOK_KW_IF) {
-            emit_if(c0, is_top_down_encounter);
+            emit_if(c0, match_idx);
         } else if (n->kind == TOK_KW_FOR) {
-            emit_for(c0, is_top_down_encounter);
+            emit_for(c0, match_idx);
         } else if (n->kind == TOK_KW_WHILE) {
-            emit_while(c0, is_top_down_encounter);
+            emit_while(c0, match_idx);
         } else if (n->kind == TOK_KW_DO) {
-            emit_do(c0, is_top_down_encounter);
+            emit_do(c0, match_idx);
         }
     }
 }
@@ -679,9 +679,9 @@ static void second_ast_pass(void)
     sfcat(&G_allctx, &S_str, "\n");
 
     ast_traversal_t att = { 0 };
-    ast_traversal_begin(&att, &G_root_node, true, true);
+    ast_traversal_begin(&att, &G_root_node);
     ast_node_t *n = NULL;
-    bool is_top_down_encounter = false;
+    int32_t match_cnt = 0;
 
     EMIT("// Special variable used to implemenent INC (x++) and dec (x--)\n");
     EMIT("// It is used to temporary hold the result of the INC/DEC in order to perform the side effect\n");
@@ -704,7 +704,7 @@ static void second_ast_pass(void)
 
     EMIT("\n");
 
-    while ((n = ast_traverse_next(&att, &is_top_down_encounter)) != NULL) {
+    while ((n = ast_traverse_next(&att, &match_cnt)) != NULL) {
         ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
         ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
         ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
@@ -712,16 +712,16 @@ static void second_ast_pass(void)
 
         (void)c0, (void)c1, (void)c2, (void)c3;
 
-        if (n->kind == TOK_OPEN_BRACE && n->parent == TOK_SEMICOLON) {
+        if (n->kind == TOK_OPEN_BRACE && n->parent && (n->parent->kind == TOK_YYEOF || n->parent->kind == TOK_SEMICOLON)) {
 
-            if (is_top_down_encounter) {
+            if (match_cnt == 0) {
                 EMIT("\n_scope_begin();\n");
             } else {
                 EMIT("_scope_end();\n");
             }
 
         } else {
-            emit(n, is_top_down_encounter);
+            emit(n, match_cnt);
         }
     }
 }
