@@ -633,13 +633,13 @@ static void emit_if(ast_node_t *n, int32_t match_idx)
         EMIT("if (_vspcNeg) goto %s;\n", n->md.jmp_next);
     } else if (match_idx == 2) {
         // Positive if block has terminated
-        EMIT("// IF --- positive block is terminated\n");
+        // IF --- positive block is terminated
         // TODO Need to jmp to the bottom of the if statement
         EMIT("goto %s;\n", n->md.jmp_bot);
         EMIT("%s:\n", n->md.jmp_next);
     } else if (match_idx == 3) {
         assert(has_else);
-        EMIT("// IF --- Entire if statement (including the else is terminated\n");
+        // IF --- Entire if statement (including the else is terminated)
         EMIT("%s:\n", n->md.jmp_bot);
     } else {
         invalid_code_path();
@@ -649,27 +649,27 @@ static void emit_if(ast_node_t *n, int32_t match_idx)
 static void emit_for(ast_node_t *n, int32_t match_idx)
 {
     if (match_idx == 0) {
-        EMIT("// FOR --- code block begin (for declaring vars)\n");
+        // FOR --- code block begin (for declaring vars)
         EMIT("\n_scope_begin();\n");
     } else if (match_idx == 1) {
-        EMIT("// FOR --- compute checking condition\n");
+        // FOR --- compute checking condition
         EMIT("%s:\n", n->md.jmp_top);
     } else if (match_idx == 2) {
         ast_node_t *cond = n->childs[1];
         assert(cond);
         assert(cond->md.sym);
-        EMIT("// FOR --- terminate if checking condition is false\n");
+        // FOR --- terminate if checking condition is false
         EMIT("_vspcNeg = !%s;\n", cond->md.sym);
         EMIT("if (_vspcNeg) goto %s;\n", n->md.jmp_bot);
         EMIT("// FOR --- Body\n");
         // After the checking condition is computed
     } else if (match_idx == 3) {
-        EMIT("// FOR --- Compute Inc/Dec/Update step and loop\n");
+        // FOR --- Compute Inc/Dec/Update step and loop
     } else if (match_idx == n->num_childs) {
         // Uncoditionally jump to the top
         EMIT("goto %s;\n", n->md.jmp_top);
         EMIT("%s:\n", n->md.jmp_bot);
-        EMIT("// FOR --- code block end\n");
+        // FOR --- code block end
         EMIT("_scope_end();\n");
     }
 }

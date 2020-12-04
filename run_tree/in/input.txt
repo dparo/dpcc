@@ -6,17 +6,16 @@
 let a = 10;
 
 if (a == 10) {
+    if (a == 2 * 5) {
+        print(2 * 5 * 5);
+    } else {
+        print(2 * 5 * 10);
+    }
 	print(100);
 } else if(a == 20) {
     print(200);
 } else if (a == 30) {
     print(300);
-} else if (a == 40) {
-    print(400);
-} else if (a == 50) {
-    print(500);
-} else if (a == 60) {
-    print(600);
 } else {
-    print(10000);
-}
+    print(400);
+} 
