@@ -317,17 +317,27 @@ static void setup_addrs_and_jmp_tables(ast_node_t *n)
         }
         assert(n->md.type != TYPE_I32_ARRAY);
         assert(n->md.type != TYPE_F32_ARRAY);
+        assert(n->kind != TOK_KW_WHILE && n->kind != TOK_KW_DO && n->kind != TOK_KW_FOR && n->kind != TOK_KW_IF);
         n->md.sym = new_tmp_var(n);
-    } else if (n->kind == TOK_KW_WHILE && n->md.jmp_bot == NULL) {
-        n->md.jmp_bot = new_tmp_label();
-    } else if (n->kind == TOK_KW_DO && n->md.jmp_top == NULL) {
-        n->md.jmp_top = new_tmp_label();
-    } else if (n->kind == TOK_KW_FOR && n->md.jmp_top == NULL) {
-        n->md.jmp_top = new_tmp_label();
-    } else if ((n->kind == TOK_KW_IF) && (n->md.jmp_next == NULL || n->md.jmp_bot == NULL)) {
-        n->md.jmp_next = new_tmp_label();
-        n->md.jmp_bot = new_tmp_label();
+    } else if (n->kind == TOK_KW_WHILE) {
+        if (n->md.jmp_bot == NULL) {
+            n->md.jmp_bot = new_tmp_label();
+        }
+    } else if (n->kind == TOK_KW_DO) {
+        if (n->md.jmp_top == NULL) {
+            n->md.jmp_top = new_tmp_label();
+        }
+    } else if (n->kind == TOK_KW_FOR) {
+        if (n->md.jmp_top == NULL) {
+            n->md.jmp_top = new_tmp_label();
+        }
+    } else if (n->kind == TOK_KW_IF) {
+        if (n->md.jmp_next == NULL || n->md.jmp_bot == NULL) {
+            n->md.jmp_next = new_tmp_label();
+            n->md.jmp_bot = new_tmp_label();
+        }
     } else if (n->md.type != TYPE_NONE) {
+        assert(n->kind != TOK_KW_WHILE && n->kind != TOK_KW_DO && n->kind != TOK_KW_FOR && n->kind != TOK_KW_IF);
         n->md.sym = gen_sym(n);
     }
 }
@@ -614,11 +624,7 @@ static void emit_for(ast_node_t *n, int32_t match_idx)
 
 static void emit_while(ast_node_t *n, int32_t match_idx)
 {
-    if (match_idx == 0) {
-        EMIT("// While first enconter\n");
-    } else if (match_idx == n->num_childs) {
-        EMIT("// While second encounter\n");
-    }
+    EMIT("// While encounter %d\n", match_idx);
 }
 
 static void emit_do(ast_node_t *n, int32_t match_idx)
@@ -642,36 +648,44 @@ static bool is_control_flow_node(ast_node_t *n)
 
 static void emit(ast_node_t *n, int32_t match_idx)
 {
-    ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
+    bool is_var_decl = n && n->kind == TOK_KW_LET;
+    bool is_print = n && n->kind == TOK_KW_PRINT;
 
-    bool is_var_decl = c0 && c0->kind == TOK_KW_LET;
-    bool is_print = c0 && c0->kind == TOK_KW_PRINT;
+    if (n->kind == TOK_SEMICOLON) {
+        return;
+    }
+
+    if (n->kind == TOK_KW_WHILE) {
+        EMIT("// MY WHILE ENCOUNTER --> %d\n", match_idx);
+    } else if (n->kind == TOK_KW_FOR) {
+        EMIT("// MY FOR ENCOUNTER --> %d\n", match_idx);
+    }
 
     if (match_idx == 0) {
         // TOP DOWN ENCOUNTERS
-        if (is_var_decl && c0->parent->kind == TOK_SEMICOLON) {
-            emit_var_decl(c0);
+        if (is_var_decl && n->parent->kind == TOK_SEMICOLON) {
+            emit_var_decl(n);
         }
     } else if (match_idx == n->num_childs) {
         // BOTTOM UP ENCOUNTERS
-        if (is_var_decl && c0->parent->kind == TOK_SEMICOLON) {
-            emit_var_init(c0);
+        if (is_var_decl && n->parent->kind == TOK_SEMICOLON) {
+            emit_var_init(n);
         } else if (is_print) {
-            emit_print(c0);
+            emit_print(n);
         } else if (n->md.sym) {
             emit_expr(n);
         }
     }
 
-    if (is_control_flow_node(c0)) {
+    if (is_control_flow_node(n)) {
         if (n->kind == TOK_KW_IF) {
-            emit_if(c0, match_idx);
+            emit_if(n, match_idx);
         } else if (n->kind == TOK_KW_FOR) {
-            emit_for(c0, match_idx);
+            emit_for(n, match_idx);
         } else if (n->kind == TOK_KW_WHILE) {
-            emit_while(c0, match_idx);
+            emit_while(n, match_idx);
         } else if (n->kind == TOK_KW_DO) {
-            emit_do(c0, match_idx);
+            emit_do(n, match_idx);
         }
     }
 }
