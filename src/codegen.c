@@ -716,7 +716,7 @@ static void second_ast_pass(void)
 
             if (match_cnt == 0) {
                 EMIT("\n_scope_begin();\n");
-            } else {
+            } else if (match_cnt == n->num_childs) {
                 EMIT("_scope_end();\n");
             }
 
