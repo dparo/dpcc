@@ -52,27 +52,15 @@ int main(int argc, char **argv)
 {
     parse_cmdline(argc, argv);
 
-    char *filepath = "run_tree/in/input.txt";
-    char *mode = "compile";
-
-    if (argc >= 2) {
-        if (argc >= 3) {
-            mode = argv[1];
-            filepath = argv[2];
-        } else {
-            filepath = argv[1];
-        }
-    }
-
-    FILE *input_stream = open_file_for_reading(filepath);
+    FILE *input_stream = open_file_for_reading(S_cmdargs.input_filepath);
     if (input_stream == NULL) {
         return 1;
     }
 
     FILE *output_stream = stdout;
 
-    if (0 == strcmp(mode, "lex")) {
-        bool lexsuccess = dpcc_lex(filepath, input_stream);
+    if (0 == strcmp(S_cmdargs.mode, "lex")) {
+        bool lexsuccess = dpcc_lex(S_cmdargs.input_filepath, input_stream);
         if (!lexsuccess) {
             return -1;
         }
@@ -81,8 +69,8 @@ int main(int argc, char **argv)
             print_token(stdout, G_tok_seq.tokens[i]);
         }
 
-    } else if (0 == strcmp(mode, "parse")) {
-        bool parsesuccess = dpcc_parse(filepath, input_stream);
+    } else if (0 == strcmp(S_cmdargs.mode, "parse")) {
+        bool parsesuccess = dpcc_parse(S_cmdargs.input_filepath, input_stream);
         if (!parsesuccess) {
             return -1;
         }
@@ -95,19 +83,19 @@ int main(int argc, char **argv)
                 print_node(stdout, n, att.stack_cnt - 1);
             }
         }
-    } else if ((0 == strcmp(mode, "3ac"))) {
-        char *generated_code = dpcc_3ac(filepath, input_stream);
+    } else if ((0 == strcmp(S_cmdargs.mode, "3ac"))) {
+        char *generated_code = dpcc_3ac(S_cmdargs.input_filepath, input_stream);
         if (!generated_code) {
             return -1;
         }
         fprintf(output_stream, "%s", generated_code);
-    } else if ((0 == strcmp(mode, "cc"))) {
-        bool compile_success = dpcc_cc(filepath, input_stream, output_stream);
+    } else if ((0 == strcmp(S_cmdargs.mode, "cc"))) {
+        bool compile_success = dpcc_cc(S_cmdargs.input_filepath, input_stream, output_stream);
         if (!compile_success) {
             return -1;
         }
-    } else if ((0 == strcmp(mode, "run"))) {
-        bool run_success = dpcc_run(filepath, input_stream);
+    } else if ((0 == strcmp(S_cmdargs.mode, "run"))) {
+        bool run_success = dpcc_run(S_cmdargs.input_filepath, input_stream);
         if (!run_success) {
             return -1;
         }
