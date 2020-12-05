@@ -22,7 +22,7 @@ void print_usage(char *argv0)
     fprintf(stderr, "    %s lex <input> [-o <out>]     # Lex and print each token in stdout or in the given file\n", argv0);
     fprintf(stderr, "    %s parse <input> [-o <out>]   # Parse and print the entire AST to stdout or in the given file\n", argv0);
     fprintf(stderr, "    %s 3ac <input> [-o <out>]     # Emit 3AC onto stdout or in the given file\n", argv0);
-    fprintf(stderr, "    %s cc <input> [-o <out>]      # Emit valid C code containing 3AC instructions onto stdout or in the given file\n", argv0);
+    fprintf(stderr, "    %s cc <input> [-o <out>]      # Emit a valid self contained C code using 3AC instructions onto stdout or in the given file\n", argv0);
     fprintf(stderr, "    %s run <input> [-o <out>]     # Compile the produced C code and run it in one pass (requires GCC to be on the path)\n", argv0);
     fprintf(stderr, "\n");
     abort();
@@ -33,6 +33,13 @@ void parse_cmdline(int argc, char **argv)
     if (argc < 2) {
         print_usage(argv[0]);
     }
+
+    for (int32_t i = 0; i < argc; i++) {
+        if ((0 == strcmp(argv[i], "--help")) || (0 == strcmp(argv[i], "-h"))) {
+            print_usage(argv[0]);
+        }
+    }
+
     S_cmdargs.mode = argv[1];
     S_cmdargs.input_filepath = argv[2];
 
