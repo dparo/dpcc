@@ -26,6 +26,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    FILE *output_stream = stdout;
+
     if (0 == strcmp(mode, "lex")) {
         bool lexsuccess = lex(filepath, input_stream);
         if (!lexsuccess) {
@@ -50,9 +52,20 @@ int main(int argc, char **argv)
                 print_node(stdout, n, att.stack_cnt - 1);
             }
         }
-    } else if ((0 == strcmp(mode, "compile")) || (0 == strcmp(mode, "cc"))) {
-        bool compile_success = compile(filepath, input_stream, stdout);
+    } else if ((0 == strcmp(mode, "3ac")) || (0 == strcmp(mode, "3ac"))) {
+        char *generated_code = threeac_gen(filepath, input_stream);
+        if (!generated_code) {
+            return -1;
+        }
+        fprintf(output_stream, "%s", generated_code);
+    } else if ((0 == strcmp(mode, "cc"))) {
+        bool compile_success = compile(filepath, input_stream, output_stream);
         if (!compile_success) {
+            return -1;
+        }
+    } else if ((0 == strcmp(mode, "run"))) {
+        bool run_success = run(filepath, input_stream);
+        if (!run_success) {
             return -1;
         }
     } else {

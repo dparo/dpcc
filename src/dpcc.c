@@ -217,6 +217,38 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
     return false;
 }
 
+bool run(char *filepath, FILE *input_stream)
+{
+    bool result = true;
+    str_t gcc_command = { 0 };
+
+    char *output_binary_path = "./a.out";
+    sfcat(&G_allctx, &gcc_command, "gcc -x c -g -o \"%s\" -", output_binary_path);
+
+    FILE *gcc_pipe = popen(gcc_command.cstr, "w");
+    bool compile_success = compile(filepath, input_stream, gcc_pipe);
+
+    if (!compile_success) {
+        result = false;
+        fprintf(stderr, "dpcc_run() :: 3AC compile error\n");
+    }
+
+    int exit_status = pclose(gcc_pipe);
+    if (exit_status != 0) {
+        result = false;
+        fprintf(stderr, "dpcc_run() :: Gcc failed to compile the generated C code\n");
+    }
+
+    str_t run_command = { 0 };
+    sfcat(&G_allctx, &run_command, "\"./%s\"", output_binary_path);
+
+    if (result) {
+        system(run_command.cstr);
+    }
+
+    return result;
+}
+
 void ast_traversal_push(ast_traversal_t *t, ast_node_t *parent, int32_t current_child)
 {
     t->stack_nodes = dallrsz(&G_allctx, t->stack_nodes, (t->stack_cnt + 1) * sizeof(parent));

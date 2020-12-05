@@ -32,7 +32,9 @@ void dpcc_reset(void);
 
 bool lex(char *filepath, FILE *input_stream);
 bool parse(char *filepath, FILE *input_stream);
+char *threeac_gen(char *filepath, FILE *input_stream);
 bool compile(char *filepath, FILE *input_stream, FILE *output_stream);
+bool run(char *filepath, FILE *input_stream);
 
 static inline bool lex_string(char *string)
 {
