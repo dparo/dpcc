@@ -104,16 +104,6 @@ open_from_string(char *string)
     return result;
 }
 
-FILE *open_file_for_reading(char *filepath)
-{
-    FILE *result = fopen(filepath, "r");
-    if (result == NULL) {
-        fprintf(stderr, "%s: No such file or directory\n", filepath);
-    }
-
-    return result;
-}
-
 void dpcc_reset(void)
 {
     yylex_destroy();
@@ -233,7 +223,7 @@ bool dpcc_run(char *filepath, FILE *input_stream)
     bool result = true;
     str_t gcc_command = { 0 };
 
-    char *output_binary_path = "./a.out";
+    char *output_binary_path = tmpnam(NULL);
     sfcat(&G_allctx, &gcc_command, "gcc -x c -g -o \"%s\" -", output_binary_path);
 
     FILE *gcc_pipe = popen(gcc_command.cstr, "w");
@@ -248,13 +238,13 @@ bool dpcc_run(char *filepath, FILE *input_stream)
     if (exit_status != 0) {
         result = false;
         fprintf(stderr, "dpcc_run() :: Gcc failed to compile the generated C code\n");
-    }
+    } else {
 
-    str_t run_command = { 0 };
-    sfcat(&G_allctx, &run_command, "\"./%s\"", output_binary_path);
+        str_t run_command = { 0 };
+        sfcat(&G_allctx, &run_command, "\"./%s\"", output_binary_path);
 
-    if (result) {
         system(run_command.cstr);
+        remove(output_binary_path);
     }
 
     return result;

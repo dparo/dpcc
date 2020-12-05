@@ -52,12 +52,20 @@ int main(int argc, char **argv)
 {
     parse_cmdline(argc, argv);
 
-    FILE *input_stream = open_file_for_reading(S_cmdargs.input_filepath);
+    FILE *input_stream = fopen(S_cmdargs.input_filepath, "r");
     if (input_stream == NULL) {
-        return 1;
+        fprintf(stderr, "%s: No such file or directory\n", S_cmdargs.input_filepath);
+        abort();
     }
 
     FILE *output_stream = stdout;
+    if (S_cmdargs.output_filepath) {
+        output_stream = fopen(S_cmdargs.output_filepath, "w");
+        if (output_stream) {
+            fprintf(stderr, "Failed to open output file (%s)\n", S_cmdargs.output_filepath);
+            abort();
+        }
+    }
 
     if (0 == strcmp(S_cmdargs.mode, "lex")) {
         bool lexsuccess = dpcc_lex(S_cmdargs.input_filepath, input_stream);
@@ -66,7 +74,7 @@ int main(int argc, char **argv)
         }
 
         for (i32 i = 0; i < G_tok_seq.tokens_cnt; i++) {
-            print_token(stdout, G_tok_seq.tokens[i]);
+            print_token(output_stream, G_tok_seq.tokens[i]);
         }
 
     } else if (0 == strcmp(S_cmdargs.mode, "parse")) {
@@ -80,7 +88,7 @@ int main(int argc, char **argv)
         int32_t match_idx = 0;
         while ((n = ast_traverse_next(&att, &match_idx)) != NULL) {
             if (match_idx == 0) {
-                print_node(stdout, n, att.stack_cnt - 1);
+                print_node(output_stream, n, att.stack_cnt - 1);
             }
         }
     } else if ((0 == strcmp(S_cmdargs.mode, "3ac"))) {

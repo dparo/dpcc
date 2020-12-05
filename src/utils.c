@@ -295,7 +295,7 @@ token_t *token_new(loc_t loc, char *yytext, int yychar, char *yychar_str)
     return result;
 }
 
-void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
+void dbg_print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
 {
     assert(node);
 
@@ -313,6 +313,29 @@ void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
         dpcc_type_as_str(node->md.type),
         node->md.sym,
         node->md.array_len,
+        node->tok ? node->tok->lexeme : "",
+        node->tok ? node->tok->loc.first_line : 0,
+        node->tok ? node->tok->loc.first_column : 0,
+        node->tok ? node->tok->loc.last_line : 0,
+        node->tok ? node->tok->loc.last_column : 0);
+    dalldel(&G_allctx, hdr_str.cstr);
+}
+
+void print_node(FILE *f, ast_node_t *node, int32_t indentation_level)
+{
+    assert(node);
+
+    str_t hdr_str = { 0 };
+    for (int32_t i = 0; i < indentation_level; i++) {
+        sfcat(&G_allctx, &hdr_str, "  |");
+    }
+
+    sfcat(&G_allctx, &hdr_str, "%s%s", indentation_level != 0 ? "--" : "", node->skind);
+
+    fprintf(f,
+        " %-48s { kind: `%s`, lexeme: \"%s\", tok->loc=[[%d,%d], [%d,%d]] }\n",
+        hdr_str.cstr,
+        node->skind,
         node->tok ? node->tok->lexeme : "",
         node->tok ? node->tok->loc.first_line : 0,
         node->tok ? node->tok->loc.first_column : 0,

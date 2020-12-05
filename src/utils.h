@@ -97,6 +97,7 @@ token_t *token_new(loc_t loc, char *yytext, int yychar, char *yychar_str);
 
 void print_token(FILE *f, token_t *t);
 void print_node(FILE *f, ast_node_t *node, int32_t indetation_level);
+void dbg_print_node(FILE *f, ast_node_t *node, int32_t indentation_level);
 
 ast_node_t *new_node(token_t *t, int32_t kind, char *skind);
 void node_set_kind(ast_node_t *node, int32_t kind, char *skind);
