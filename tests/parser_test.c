@@ -14,10 +14,10 @@
 
 static void basic_tests(void)
 {
-    TEST_ASSERT_TRUE(parse(NULL, FS("a = b;")));
-    TEST_ASSERT_TRUE(parse(NULL, FS("a = b + c;")));
-    TEST_ASSERT_TRUE(parse(NULL, FS("a = ((1 + 2) + b);")));
-    TEST_ASSERT_TRUE(parse(NULL, FS("a = b * c * d;")));
+    TEST_ASSERT_TRUE(dpcc_parse(NULL, FS("a = b;")));
+    TEST_ASSERT_TRUE(dpcc_parse(NULL, FS("a = b + c;")));
+    TEST_ASSERT_TRUE(dpcc_parse(NULL, FS("a = ((1 + 2) + b);")));
+    TEST_ASSERT_TRUE(dpcc_parse(NULL, FS("a = b * c * d;")));
 }
 
 static void str_to_i32_assert(char *string, i32 expected, bool negated_test)
@@ -59,11 +59,11 @@ static void str_to_literal_test(void)
 static void literal_parsing_test(void)
 {
     for (size_t i = 0; i < ARRAY_LEN(i32_tests); i++) {
-        TEST_ASSERT_FALSE(parse(NULL, open_from_string(i32_tests[i].string)));
+        TEST_ASSERT_FALSE(dpcc_parse(NULL, open_from_string(i32_tests[i].string)));
     }
 
     for (size_t i = 0; i < ARRAY_LEN(f32_tests); i++) {
-        TEST_ASSERT_FALSE(parse(NULL, open_from_string(f32_tests[i].string)));
+        TEST_ASSERT_FALSE(dpcc_parse(NULL, open_from_string(f32_tests[i].string)));
     }
 }
 

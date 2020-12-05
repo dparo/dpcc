@@ -3,10 +3,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-#include "parser.h"
 
 #include "types.h"
 #include "utils.h"
+#include "parser.h"
+#include "dpcc.h"
 
 typedef struct str_i32_tuple {
     char *string;
@@ -72,7 +73,6 @@ static str_f32_tuple_t f32_tests[] = {
     { "-10e4f", -10e4f },
     { "-.10f", -.10f },
     { "-10f", -10.0f },
-
 };
 
 typedef struct {
@@ -88,3 +88,13 @@ static dpcc_test_t all_dpcc_tests[] = {
     { "a = b; // A comment\n",
         ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON }) },
 };
+
+static inline bool lex_string(char *string)
+{
+    return dpcc_lex("", open_from_string(string));
+}
+
+static inline bool parse_string(char *string)
+{
+    return dpcc_parse("", open_from_string(string));
+}

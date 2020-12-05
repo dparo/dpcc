@@ -130,7 +130,7 @@ static void setup_filepath(char *filepath)
     }
 }
 
-bool lex(char *filepath, FILE *input_stream)
+bool dpcc_lex(char *filepath, FILE *input_stream)
 {
     dpcc_reset();
     setup_filepath(filepath);
@@ -154,7 +154,7 @@ bool lex(char *filepath, FILE *input_stream)
     return result == 0;
 }
 
-bool parse(char *filepath, FILE *input_stream)
+bool dpcc_parse(char *filepath, FILE *input_stream)
 {
     dpcc_reset();
     setup_filepath(filepath);
@@ -171,17 +171,17 @@ bool parse(char *filepath, FILE *input_stream)
     return result == 0 && yynerrs == 0;
 }
 
-char *threeac_gen(char *filepath, FILE *input_stream)
+char *dpcc_3ac(char *filepath, FILE *input_stream)
 {
     dpcc_reset();
     setup_filepath(filepath);
 
     if (input_stream == NULL) {
-        fprintf(stderr, "dpcc::parse() --- NULL input_stream\n");
+        fprintf(stderr, "dpcc::3ac() --- NULL input_stream\n");
         abort();
     }
 
-    bool parse_success = parse(filepath, input_stream);
+    bool parse_success = dpcc_parse(filepath, input_stream);
     if (!parse_success) {
         return false;
     }
@@ -195,19 +195,24 @@ char *threeac_gen(char *filepath, FILE *input_stream)
     return generated_code;
 }
 
-bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
+bool dpcc_cc(char *filepath, FILE *input_stream, FILE *output_stream)
 {
     if (!output_stream) {
         output_stream = stdout;
     }
 
-    char *three_addr_code = threeac_gen(filepath, input_stream);
-    if (three_addr_code) {
+    if (input_stream == NULL) {
+        fprintf(stderr, "dpcc::cc() --- NULL input_stream\n");
+        abort();
+    }
+
+    char *code = dpcc_3ac(filepath, input_stream);
+    if (code) {
         fwrite(THREEAC_PREAMBLE, 1, THREEAC_PREAMBLE_len, output_stream);
         fprintf(output_stream, "\n\n\n\n\n\n\n");
         fprintf(output_stream, "int main()\n");
         fprintf(output_stream, "{\n");
-        fprintf(output_stream, "%s", three_addr_code);
+        fprintf(output_stream, "%s", code);
         fprintf(output_stream, "}\n");
         fprintf(output_stream, "\n\n\n\n\n\n\n");
         fwrite(THREEAC_POSTAMBLE, 1, THREEAC_POSTAMBLE_len, output_stream);
@@ -217,8 +222,14 @@ bool compile(char *filepath, FILE *input_stream, FILE *output_stream)
     return false;
 }
 
-bool run(char *filepath, FILE *input_stream)
+bool dpcc_run(char *filepath, FILE *input_stream)
 {
+
+    if (input_stream == NULL) {
+        fprintf(stderr, "dpcc::run() --- NULL input_stream\n");
+        abort();
+    }
+
     bool result = true;
     str_t gcc_command = { 0 };
 
@@ -226,7 +237,7 @@ bool run(char *filepath, FILE *input_stream)
     sfcat(&G_allctx, &gcc_command, "gcc -x c -g -o \"%s\" -", output_binary_path);
 
     FILE *gcc_pipe = popen(gcc_command.cstr, "w");
-    bool compile_success = compile(filepath, input_stream, gcc_pipe);
+    bool compile_success = dpcc_cc(filepath, input_stream, gcc_pipe);
 
     if (!compile_success) {
         result = false;
