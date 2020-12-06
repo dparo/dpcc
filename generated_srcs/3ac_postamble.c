@@ -36,8 +36,9 @@ static void _scope_end(void)
 
     for (int32_t i = 0; i < scope->nsyms; i++) {
         free(scope->syms[i].buf);
-        scope->syms[i].buf = NULL;
     }
+
+    free(scope->syms);
 
     memset(&symtable.scopes[symtable.nscopes - 1], 0, sizeof(symtable.scopes[symtable.nscopes - 1]));
     if ((symtable.nscopes - 1) == 0) {
