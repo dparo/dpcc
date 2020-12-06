@@ -8,7 +8,9 @@ out
 report
 org
 tmp
+
 a.out
+a.out.c
 
 dist
 node_modules

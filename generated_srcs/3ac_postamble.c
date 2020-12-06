@@ -86,6 +86,7 @@ static void _var_decl(char *lexeme, enum TYPE t, int32_t array_len)
     sym.buf = malloc(sym_bufsize(t, array_len));
     sym.lexeme = lexeme;
     sym.type = t;
+    sym.array_len = array_len;
 
     scope_t *scope = &symtable.scopes[symtable.nscopes - 1];
     scope->syms = realloc(scope->syms, sizeof(sym_t) * (scope->nsyms + 1));
@@ -99,46 +100,50 @@ static void _var_init(char *lexeme, enum TYPE t, int32_t init_list_len, void *in
     memcpy(sym->buf, init_list, sym_bufsize(t, init_list_len));
 }
 
-#define GET(type, lexeme, index)                      \
-    do {                                              \
-        sym_t *sym = sym_lookup(lexeme);              \
-        assert(index >= 0 && index < sym->array_len); \
-        return ((type *)sym->buf)[index];             \
-    } while (0)
-
 static int32_t _var_get_kI32(char *lexeme, int32_t index)
 {
-    GET(int32_t, lexeme, index);
+    sym_t *sym = sym_lookup(lexeme);
+    assert(sym);
+    assert(index >= 0 && index < sym->array_len);
+    return ((int32_t *)sym->buf)[index];
 }
 
 static float _var_get_kF32(char *lexeme, int32_t index)
 {
-    GET(float, lexeme, index);
+    sym_t *sym = sym_lookup(lexeme);
+    assert(sym);
+    assert(index >= 0 && index < sym->array_len);
+    return ((float *)sym->buf)[index];
 }
 
 static bool _var_get_kBOOL(char *lexeme, int32_t index)
 {
-    GET(bool, lexeme, index);
+    sym_t *sym = sym_lookup(lexeme);
+    assert(sym);
+    assert(index >= 0 && index < sym->array_len);
+    return ((bool *)sym->buf)[index];
 }
-
-#define SET(type, lexeme, index, val)                 \
-    do {                                              \
-        sym_t *sym = sym_lookup(lexeme);              \
-        assert(index >= 0 && index < sym->array_len); \
-        ((type *)sym->buf)[index] = (val);            \
-    } while (0)
 
 static void _var_set_kI32(char *lexeme, int32_t index, int32_t val)
 {
-    SET(int32_t, lexeme, index, val);
+    sym_t *sym = sym_lookup(lexeme);
+    assert(sym);
+    assert(index >= 0 && index < sym->array_len);
+    ((int32_t *)sym->buf)[index] = (val);
 }
 
 static void _var_set_kF32(char *lexeme, int32_t index, float val)
 {
-    SET(float, lexeme, index, val);
+    sym_t *sym = sym_lookup(lexeme);
+    assert(sym);
+    assert(index >= 0 && index < sym->array_len);
+    ((float *)sym->buf)[index] = (val);
 }
 
 static void _var_set_kBOOL(char *lexeme, int32_t index, bool val)
 {
-    SET(bool, lexeme, index, val);
+    sym_t *sym = sym_lookup(lexeme);
+    assert(sym);
+    assert(index >= 0 && index < sym->array_len);
+    ((float *)sym->buf)[index] = (val);
 }

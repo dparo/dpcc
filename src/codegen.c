@@ -480,7 +480,7 @@ static void emit_assign(ast_node_t *n)
             EMIT("%s = ", n->md.sym);
         }
 
-        EMIT("_var_set%s(\"%s\", 1, %s);\n",
+        EMIT("_var_set%s(\"%s\", 0, %s);\n",
             get_type_label(lhs->md.type),
             lhs->tok->lexeme,
             rhs->md.sym);
@@ -506,7 +506,7 @@ static void emit_pre_inc_dec(ast_node_t *n)
     } else {
         EMIT("_vspcIncDec = %s - 1;\n", lhs->md.sym);
     }
-    EMIT("_var_set%s(\"%s\", 1, _vspcIncDec);\n",
+    EMIT("_var_set%s(\"%s\", 0, _vspcIncDec);\n",
         get_type_label(lhs->md.type),
         lhs->tok->lexeme);
 }
