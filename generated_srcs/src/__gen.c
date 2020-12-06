@@ -113,12 +113,12 @@ char *get_type_label(enum DPCC_TYPE t)
         break;
         case TYPE_I32_ARRAY:
         {
-            result = "_kI32_ARRAY";
+            result = "_kI32";
         }
         break;
         case TYPE_F32_ARRAY:
         {
-            result = "_kF32_ARRAY";
+            result = "_kF32";
         }
         break;
     }

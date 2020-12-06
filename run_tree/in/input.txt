@@ -1,50 +1,13 @@
 
-//for (let i = 5; i < 10; i++) {
-//		print(i);
-//}
+let a: int[4] = {10, 20, 30, 40};
+let b: int[4] = {1, 2, 3, 4};
 
-let a = 0;
+let result = 0;
 
-while(a <= 10) {
-    a++;
-    print(a);
+for (let i = 0; i < 4; i++) {
+    print(a[i]);
+    print(b[i]);
+    result = result + (a[i] * b[i]);
 }
 
-
-
-print(69);
-print(69);
-print(69);
-print(69);
-print(69);
-print(69);
-
-
-for(let a = 3; a <= 10; a++) {
-    a++;
-    print(a);
-}
-
-
-
-
-print(69);
-print(69);
-print(69);
-print(69);
-print(69);
-print(69);
-
-
-do {
-    print(a * 3 + 2);
-} while(a++ <= 20);
-
-
-
-print(69);
-print(69);
-print(69);
-print(69);
-print(69);
-print(69);
+print(result);

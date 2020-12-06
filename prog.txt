@@ -1,20 +1,14 @@
 
+let a: int[4] = {10, 20, 30, 40};
+let b: int[4] = {1, 2, 3, 4};
 
-let i = 100;
-do {
-    if (i <= 80) {
-        if (i <= 70) {
-            print(100);
-        } else {
-            print(200);
-        }
-    } else if (i <= 60) {
-        if (i <= 50) {
-            print(300);
-        } else {
-            print(400);
-        }
-    } else {
-        print(i);
-    }
-} while(i--);
+let result = 0;
+
+for (let i = 0; i < 4; i++) {
+    print(a[i]);
+    print(b[i]);
+    result = result + (a[i] * b[i]);
+    print(result);
+}
+
+print(result);

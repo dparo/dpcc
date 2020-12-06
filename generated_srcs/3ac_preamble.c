@@ -10,8 +10,6 @@ enum TYPE {
     _kI32,
     _kF32,
     _kBOOL,
-    _kI32_ARRAY,
-    _kF32_ARRAY,
 };
 
 static void _scope_begin(void);

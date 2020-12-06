@@ -500,8 +500,8 @@ namespace DPCC_Gen {
                 "TYPE_I32": '"_kI32"',
                 "TYPE_F32": '"_kF32"',
                 "TYPE_BOOL": '"_kBOOL"',
-                "TYPE_I32_ARRAY": '"_kI32_ARRAY"',
-                "TYPE_F32_ARRAY": '"_kF32_ARRAY"',
+                "TYPE_I32_ARRAY": '"_kI32"',
+                "TYPE_F32_ARRAY": '"_kF32"',
             })
             Gen.print('return result;')
         })

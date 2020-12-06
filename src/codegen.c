@@ -324,6 +324,8 @@ static char *gen_sym(ast_node_t *n)
 
     if (n->md.sym) {
         sfcat(&G_allctx, &s, "%s", n->md.sym);
+    } else if (n->kind == TOK_ID && !n->md.sym && (n->md.type == TYPE_I32_ARRAY || n->md.type == TYPE_F32_ARRAY)) {
+        sfcat(&G_allctx, &s, "%s", n->tok->lexeme);
     } else if (n->kind == TOK_ID && !n->md.sym) {
         assert(n->decl);
         assert(n->md.type == TYPE_I32 || n->md.type == TYPE_F32 || n->md.type == TYPE_BOOL);
