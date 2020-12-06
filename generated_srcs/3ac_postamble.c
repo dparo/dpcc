@@ -22,29 +22,44 @@ static symtable_t symtable;
 static void _scope_begin(void)
 {
     scope_t scope = { 0 };
-    symtable.scopes = realloc(symtable.scopes, sizeof(scope) * (symtable.nscopes + 1));
+    symtable.scopes = realloc(symtable.scopes, sizeof(*symtable.scopes) * (symtable.nscopes + 1));
+    assert(symtable.scopes);
     symtable.scopes[symtable.nscopes] = scope;
     symtable.nscopes += 1;
 }
 
 static void _scope_end(void)
 {
+    assert(symtable.nscopes > 0);
+
     scope_t *scope = &symtable.scopes[symtable.nscopes - 1];
 
     for (int32_t i = 0; i < scope->nsyms; i++) {
         free(scope->syms[i].buf);
+        scope->syms[i].buf = NULL;
     }
 
-    assert(symtable.nscopes > 0);
-    symtable.scopes = realloc(symtable.scopes, sizeof(scope) * (symtable.nscopes - 1));
+    memset(&symtable.scopes[symtable.nscopes - 1], 0, sizeof(symtable.scopes[symtable.nscopes - 1]));
+    if ((symtable.nscopes - 1) == 0) {
+        free(symtable.scopes);
+        symtable.scopes = NULL;
+    } else {
+        symtable.scopes = realloc(symtable.scopes, sizeof(*symtable.scopes) * (symtable.nscopes - 1));
+        assert(symtable.scopes);
+    }
     symtable.nscopes -= 1;
 }
 
 static sym_t *sym_lookup(char *lexeme)
 {
+    assert(symtable.nscopes > 0);
+
     for (int32_t scope_idx = symtable.nscopes - 1; scope_idx >= 0; scope_idx--) {
         scope_t *scope = &symtable.scopes[scope_idx];
         for (int32_t sym_idx = 0; sym_idx < scope->nsyms; sym_idx++) {
+            if (scope->syms == NULL) {
+                continue;
+            }
             sym_t *sym = &scope->syms[sym_idx];
             if (0 == strcmp(lexeme, sym->lexeme)) {
                 return sym;
