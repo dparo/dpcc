@@ -241,7 +241,7 @@ bool dpcc_gcc(char *filepath, FILE *input_stream, char *output_binary_path)
     bool result = true;
     str_t gcc_command = { 0 };
 
-    sfcat(&G_allctx, &gcc_command, "gcc -x c -o \"%s\" -", output_binary_path);
+    sfcat(&G_allctx, &gcc_command, "gcc -x c -o \"%s\" - 1> /dev/null 2> /dev/null", output_binary_path);
 
     FILE *gcc_pipe = popen(gcc_command.cstr, "w");
     bool c_code_generation_success = fdpcc_c(filepath, input_stream, gcc_pipe);
@@ -267,7 +267,7 @@ bool dpcc_run(char *filepath, FILE *input_stream)
     bool gcc_success = dpcc_gcc(filepath, input_stream, output_binary_path);
     if (gcc_success == false) {
         result = false;
-        fprintf(stderr, "dpcc_run() :: Gcc failed to compile the generated C code\n");
+        fprintf(stderr, "dpcc_run() :: Gcc failed to compile the emitted  C code\n");
     } else {
         str_t run_command = { 0 };
         sfcat(&G_allctx, &run_command, "exec \"%s\"", output_binary_path);
