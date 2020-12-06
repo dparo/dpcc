@@ -241,7 +241,7 @@ bool dpcc_gcc(char *filepath, FILE *input_stream, char *output_binary_path)
     bool result = true;
     str_t gcc_command = { 0 };
 
-    sfcat(&G_allctx, &gcc_command, "gcc -x c -g -o \"%s\" -", output_binary_path);
+    sfcat(&G_allctx, &gcc_command, "gcc -x c -o \"%s\" -", output_binary_path);
 
     FILE *gcc_pipe = popen(gcc_command.cstr, "w");
     bool c_code_generation_success = fdpcc_c(filepath, input_stream, gcc_pipe);
