@@ -1,4 +1,20 @@
 
-for (let i = 0; i < 10; i = i + 2) {
-    print(i);
-}
+
+let i = 100;
+do {
+    if (i <= 80) {
+        if (i <= 70) {
+            print(100);
+        } else {
+            print(200);
+        }
+    } else if (i <= 60) {
+        if (i <= 50) {
+            print(300);
+        } else {
+            print(400);
+        }
+    } else {
+        print(i);
+    }
+} while(i--);

@@ -665,13 +665,20 @@ static void emit_if(ast_node_t *n, int32_t match_idx)
         assert(cond->md.sym);
         // condition was just computed
         EMIT("_vspcNeg = !%s;\n", cond->md.sym);
-        EMIT("if (_vspcNeg) goto %s;\n", n->md.jmp_next);
+        if (has_else) {
+            EMIT("if (_vspcNeg) goto %s;\n", n->md.jmp_next);
+        } else {
+            EMIT("if (_vspcNeg) goto %s;\n", n->md.jmp_bot);
+        }
     } else if (match_idx == 2) {
         // Positive if block has terminated
         // IF --- positive block is terminated
-        // TODO Need to jmp to the bottom of the if statement
-        EMIT("goto %s;\n", n->md.jmp_bot);
-        EMIT("%s:\n", n->md.jmp_next);
+        if (has_else) {
+            EMIT("goto %s;\n", n->md.jmp_bot);
+            EMIT("%s:\n", n->md.jmp_next);
+        } else {
+            EMIT("%s:\n", n->md.jmp_bot);
+        }
     } else if (match_idx == 3) {
         assert(has_else);
         // IF --- Entire if statement (including the else is terminated)
