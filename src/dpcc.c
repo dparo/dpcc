@@ -270,7 +270,7 @@ bool dpcc_run(char *filepath, FILE *input_stream)
         fprintf(stderr, "dpcc_run() :: Gcc failed to compile the generated C code\n");
     } else {
         str_t run_command = { 0 };
-        sfcat(&G_allctx, &run_command, "\"./%s\"", output_binary_path);
+        sfcat(&G_allctx, &run_command, "exec \"%s\"", output_binary_path);
 
         int exit_status = system(run_command.cstr);
         if (exit_status != 0) {

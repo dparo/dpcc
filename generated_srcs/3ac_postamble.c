@@ -140,26 +140,29 @@ static bool _var_get_kBOOL(char *lexeme, int32_t index)
     return ((bool *)sym->buf)[index];
 }
 
-static void _var_set_kI32(char *lexeme, int32_t index, int32_t val)
+static int32_t _var_set_kI32(char *lexeme, int32_t index, int32_t val)
 {
     sym_t *sym = sym_lookup(lexeme);
     assert(sym);
     assert(index >= 0 && index < sym->array_len);
     ((int32_t *)sym->buf)[index] = (val);
+    return val;
 }
 
-static void _var_set_kF32(char *lexeme, int32_t index, float val)
+static float _var_set_kF32(char *lexeme, int32_t index, float val)
 {
     sym_t *sym = sym_lookup(lexeme);
     assert(sym);
     assert(index >= 0 && index < sym->array_len);
     ((float *)sym->buf)[index] = (val);
+    return val;
 }
 
-static void _var_set_kBOOL(char *lexeme, int32_t index, bool val)
+static bool _var_set_kBOOL(char *lexeme, int32_t index, bool val)
 {
     sym_t *sym = sym_lookup(lexeme);
     assert(sym);
     assert(index >= 0 && index < sym->array_len);
     ((float *)sym->buf)[index] = (val);
+    return val;
 }

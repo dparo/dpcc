@@ -24,6 +24,6 @@ static int32_t _var_get_kI32(char *lexeme, int32_t index);
 static float _var_get_kF32(char *lexeme, int32_t index);
 static bool _var_get_kBOOL(char *lexeme, int32_t index);
 
-static void _var_set_kI32(char *lexeme, int32_t index, int32_t val);
-static void _var_set_kF32(char *lexeme, int32_t index, float val);
-static void _var_set_kBOOL(char *lexeme, int32_t index, bool val);
+static int32_t _var_set_kI32(char *lexeme, int32_t index, int32_t val);
+static float _var_set_kF32(char *lexeme, int32_t index, float val);
+static bool _var_set_kBOOL(char *lexeme, int32_t index, bool val);
