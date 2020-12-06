@@ -29,8 +29,11 @@ bool ast_traversal_pop(ast_traversal_t *t);
 
 void dpcc_reset(void);
 
+FILE *dpcc_xfopen_w(char *filepath);
+
 bool dpcc_lex(char *filepath, FILE *input_stream);
 bool dpcc_parse(char *filepath, FILE *input_stream);
 char *dpcc_3ac(char *filepath, FILE *input_stream);
-bool dpcc_cc(char *filepath, FILE *input_stream, FILE *output_stream);
+bool dpcc_c(char *filepath, FILE *input_stream, char *output_filepath);
+bool dpcc_gcc(char *filepath, FILE *input_stream, char *output_binary_path);
 bool dpcc_run(char *filepath, FILE *input_stream);

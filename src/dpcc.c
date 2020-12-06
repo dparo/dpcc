@@ -18,6 +18,19 @@
 #include "__3ac_preamble.h"
 #include "__3ac_postamble.h"
 
+FILE *dpcc_xfopen_w(char *filepath)
+{
+    if (filepath == NULL) {
+        return stdout;
+    }
+    FILE *stream = fopen(filepath, "w");
+    if (!stream) {
+        fprintf(stderr, "Failed to open output file (%s)\n", filepath);
+        abort();
+    }
+    return stream;
+}
+
 void symtable_clear(void)
 {
     for (int32_t list_idx = 0; list_idx < G_symtable.num_lists; list_idx++) {
@@ -185,14 +198,10 @@ char *dpcc_3ac(char *filepath, FILE *input_stream)
     return generated_code;
 }
 
-bool dpcc_cc(char *filepath, FILE *input_stream, FILE *output_stream)
+static bool fdpcc_c(char *filepath, FILE *input_stream, FILE *output_stream)
 {
-    if (!output_stream) {
-        output_stream = stdout;
-    }
-
     if (input_stream == NULL) {
-        fprintf(stderr, "dpcc::cc() --- NULL input_stream\n");
+        fprintf(stderr, "dpcc::c() --- NULL input_stream\n");
         abort();
     }
 
@@ -208,42 +217,66 @@ bool dpcc_cc(char *filepath, FILE *input_stream, FILE *output_stream)
         fwrite(THREEAC_POSTAMBLE, 1, THREEAC_POSTAMBLE_len, output_stream);
         return true;
     }
-
     return false;
 }
 
-bool dpcc_run(char *filepath, FILE *input_stream)
+bool dpcc_c(char *filepath, FILE *input_stream, char *output_filepath)
 {
+    FILE *output_stream = dpcc_xfopen_w(output_filepath);
+    return fdpcc_c(filepath, input_stream, output_stream);
+}
 
+bool dpcc_gcc(char *filepath, FILE *input_stream, char *output_binary_path)
+{
     if (input_stream == NULL) {
-        fprintf(stderr, "dpcc::run() --- NULL input_stream\n");
+        fprintf(stderr, "dpcc::gcc() --- NULL input_stream\n");
+        abort();
+    }
+
+    if (output_binary_path == NULL) {
+        fprintf(stderr, "dpcc:gcc() --- output filepath must be provided\n");
         abort();
     }
 
     bool result = true;
     str_t gcc_command = { 0 };
 
-    char *output_binary_path = tmpnam(NULL);
     sfcat(&G_allctx, &gcc_command, "gcc -x c -g -o \"%s\" -", output_binary_path);
 
     FILE *gcc_pipe = popen(gcc_command.cstr, "w");
-    bool compile_success = dpcc_cc(filepath, input_stream, gcc_pipe);
+    bool c_code_generation_success = fdpcc_c(filepath, input_stream, gcc_pipe);
 
-    if (!compile_success) {
+    if (c_code_generation_success == false) {
         result = false;
-        fprintf(stderr, "dpcc_run() :: 3AC compile error\n");
+        fprintf(stderr, "dpcc_gcc() :: C code generation failed\n");
     }
 
     int exit_status = pclose(gcc_pipe);
     if (exit_status != 0) {
         result = false;
+        fprintf(stderr, "dpcc_gcc() :: GCC returned with a nonzero error status ($status = %d)\n", exit_status);
+    }
+
+    return result;
+}
+
+bool dpcc_run(char *filepath, FILE *input_stream)
+{
+    bool result = true;
+    char *output_binary_path = tmpnam(NULL);
+    bool gcc_success = dpcc_gcc(filepath, input_stream, output_binary_path);
+    if (gcc_success == false) {
+        result = false;
         fprintf(stderr, "dpcc_run() :: Gcc failed to compile the generated C code\n");
     } else {
-
         str_t run_command = { 0 };
         sfcat(&G_allctx, &run_command, "\"./%s\"", output_binary_path);
 
-        system(run_command.cstr);
+        int exit_status = system(run_command.cstr);
+        if (exit_status != 0) {
+            result = false;
+            fprintf(stderr, "dpcc_run() :: The produced binary returned with a non zero exit status ($status = %d)\n", exit_status);
+        }
         remove(output_binary_path);
     }
 
