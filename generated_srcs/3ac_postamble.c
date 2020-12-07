@@ -74,8 +74,6 @@ static sym_t *sym_lookup(char *lexeme)
 
 static size_t sym_bufsize(enum TYPE t, int32_t array_len)
 {
-    assert(t == _kI32 || t == _kF32);
-
     size_t bufsize = 0;
 
     switch (t) {

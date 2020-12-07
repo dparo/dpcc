@@ -1,3 +1,10 @@
+//
+{
+   let t = true;
+   print(t);
+   print(false);
+}
+
 // Simple integer decl
 {
     let a = 3;
@@ -54,7 +61,3 @@
 
     print(sum);
 }
-
-
-
-
