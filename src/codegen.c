@@ -129,7 +129,7 @@ static void typecheck_array(ast_node_t *n)
         ERR(c0->childs[1], "The number of elements in an array must be a positive integer");
         INFO(c0->childs[1], "Got `%d`", array_type_len);
     } else if (c2) {
-        enum DPCC_TYPE expected_type = c0->childs[0]->md.type;
+        enum DPCC_TYPE expected_type = deref_type(n->md.type);
 
         switch (expected_type) {
         default: {

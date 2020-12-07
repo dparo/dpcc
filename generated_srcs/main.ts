@@ -573,8 +573,8 @@ namespace DPCC_Gen {
         Gen.fn('enum DPCC_TYPE deref_type(enum DPCC_TYPE in)', () => {
             Gen.print('enum DPCC_TYPE result = TYPE_NONE;')
             Gen.map("in", "result", {
-                'TYPE_I32_ARRAY': 'TYPE_I32_ARRAY;',
-                'TYPE_F32_ARRAY': 'TYPE_F32_ARRAY;',
+                'TYPE_I32_ARRAY': 'TYPE_I32;',
+                'TYPE_F32_ARRAY': 'TYPE_F32;',
             })
             Gen.print('assert(result != TYPE_NONE);')
             Gen.print('return result;')

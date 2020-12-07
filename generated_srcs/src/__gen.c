@@ -140,12 +140,12 @@ enum DPCC_TYPE deref_type(enum DPCC_TYPE in)
         break;
         case TYPE_I32_ARRAY:
         {
-            result = TYPE_I32_ARRAY;;
+            result = TYPE_I32;;
         }
         break;
         case TYPE_F32_ARRAY:
         {
-            result = TYPE_F32_ARRAY;;
+            result = TYPE_F32;;
         }
         break;
     }

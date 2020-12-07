@@ -12,11 +12,11 @@
 }
 
 // Immediate print
-//{
-//    print(10);
-//    print(5 + 2 * 3 ** 2);
-//    print(5.0 + 3.0 * 2);
-//}
+{
+    print(10);
+    print(5 + 2 * 3 ** 2);
+    print(5.0 + 3.0 * 2);
+}
 
 // Dot product computation
 {
