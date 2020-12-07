@@ -13,7 +13,7 @@
 
 void invalid_code_path(void)
 {
-    fprintf(stderr, "COMPILER INTERNAL ERROR --- Invalid code path");
+    fprintf(stderr, "COMPILER INTERNAL ERROR --- Invalid code path\n");
     fflush(stderr);
     assert(0);
 }

@@ -279,8 +279,7 @@ static void typecheck_print(ast_node_t *n)
 static void typecheck(ast_node_t *n)
 {
     bool is_casting_operator = ((n->kind == TOK_KW_INT) || (n->kind == TOK_KW_FLOAT) || (n->kind == TOK_KW_BOOL))
-        && (n->num_childs == 1)
-        && !((n->parent->kind == TOK_KW_FN) || (n->parent->kind == TOK_KW_LET));
+        && (n->num_childs == 1);
     bool var_decl = (((n->kind == TOK_KW_FN) || (n->kind == TOK_KW_LET)));
     bool is_typable_identifier = n->kind == TOK_ID && n->parent && !((n->parent->kind == TOK_KW_FN) || (n->parent->kind == TOK_KW_LET));
     bool is_array_subscript = n->kind == TOK_AR_SUBSCR && n->childs[1]->kind == TOK_I32_LIT && n->childs[1]->md.type == TYPE_I32;
@@ -348,9 +347,10 @@ static char *gen_sym(ast_node_t *n)
 
 static void setup_addrs_and_jmp_tables(ast_node_t *n)
 {
-    bool is_casting_op = n->md.type && (n->kind == TOK_KW_INT || n->kind == TOK_KW_FLOAT) && (n->num_childs == 1) && (n->parent->kind != TOK_KW_LET);
+    bool is_casting_operator = ((n->kind == TOK_KW_INT) || (n->kind == TOK_KW_FLOAT) || (n->kind == TOK_KW_BOOL))
+        && (n->num_childs == 1) && n->md.type != TYPE_NONE;
     bool is_expr = (n->md.type != TYPE_NONE && is_expr_node(n));
-    if (!n->md.sym && (is_expr || is_casting_op)) {
+    if (!n->md.sym && (is_expr || is_casting_operator)) {
 
         if (n->kind == TOK_ID) {
             assert(n->decl->md.type == n->md.type);
@@ -526,7 +526,7 @@ static void emit_expr(ast_node_t *n)
 
     (void)c0, (void)c1, (void)c2, (void)c3;
 
-    bool is_casting_op = n->md.type && (n->kind == TOK_KW_INT || n->kind == TOK_KW_FLOAT) && (n->num_childs == 1) && (n->parent->kind != TOK_KW_LET);
+    bool is_casting_op = n->md.type && (n->kind == TOK_KW_INT || n->kind == TOK_KW_FLOAT) && (n->num_childs == 1) && n->md.type != TYPE_NONE && n->md.sym;
 
     assert(n->md.sym);
 
