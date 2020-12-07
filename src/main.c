@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libgen.h>
 
 #include "dpcc.h"
 #include "lexer.h"
@@ -17,16 +18,17 @@ static cmdline_args_t S_cmdargs;
 
 void print_usage(char *argv0)
 {
+    char *exe = basename(argv0);
     fprintf(stderr, "\n");
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "    %s lex <input> [-o <out>]     # Lex and print each token in stdout or in the given file\n", argv0);
-    fprintf(stderr, "    %s parse <input> [-o <out>]   # Parse and print the entire AST to stdout or in the given file\n", argv0);
-    fprintf(stderr, "    %s 3ac <input> [-o <out>]     # Emit 3AC onto stdout or in the given file\n", argv0);
-    fprintf(stderr, "    %s c <input> [-o <out>]       # Emit a valid self contained C code using 3AC instructions onto stdout or in the given file\n", argv0);
-    fprintf(stderr, "    %s gcc <input> [-o <out>]     # Emit a valid self contained C code and call GCC on it to compile it (requires GCC to be on the path)\n", argv0);
-    fprintf(stderr, "    %s run <input>                # GCC and run the self contained C code in one pass (requires GCC to be on the path)\n", argv0);
+    fprintf(stderr, "    %s lex <input> [-o <out>]     # Lex and print each token to stdout or in the given file\n", exe);
+    fprintf(stderr, "    %s parse <input> [-o <out>]   # Parse and print the entire AST to stdout or in the given file\n", exe);
+    fprintf(stderr, "    %s 3ac <input> [-o <out>]     # Emit 3AC onto stdout or in the given file\n", exe);
+    fprintf(stderr, "    %s c <input> [-o <out>]       # Emit a valid self contained C code using 3AC instructions onto stdout or in the given file\n", exe);
+    fprintf(stderr, "    %s gcc <input> [-o <out>]     # Emit a valid self contained C code and call GCC on it to compile it (requires GCC to be on the path)\n", exe);
+    fprintf(stderr, "    %s run <input>                # GCC and run the self contained C code in one pass (requires GCC to be on the path)\n", exe);
     fprintf(stderr, "\n");
-    abort();
+    exit(1);
 }
 
 void parse_cmdline(int argc, char **argv)
