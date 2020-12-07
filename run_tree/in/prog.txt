@@ -1,7 +1,17 @@
+// Simple integer decl
+{
+    let a = 3;
+    let b = 100;
+    print(a);
+    print(b);
+    a = 22;
+    print(a);
+}
+
 
 // Simple var decl
 {
-    let a: float = 1.0;
+    let a = 4.0;
     print(a);
 }
 
@@ -18,7 +28,7 @@
     print(5.0 + 3.0 * 2);
 }
 
-// Dot product computation with floats
+// Dot product computation with integers
 {
     let a: int[] = { 0, 1, 2, 3, 4 };
     let b: int[] = { 7, 14 + 2 * 3, 21, 28, 35 };

@@ -610,8 +610,10 @@ static void emit_var_init(ast_node_t *n)
 
     if (has_rhs) {
         char *ctype = "int32_t";
-        if (n->md.type == TYPE_F32_ARRAY) {
+        if (n->md.type == TYPE_F32 || n->md.type == TYPE_F32_ARRAY) {
             ctype = "float";
+        } else if (n->md.type == TYPE_BOOL) {
+            ctype = "bool";
         }
 
         EMIT("_var_init(\"%s\", %s, %d, (%s[]) {", c1->tok->lexeme, get_type_label(n->md.type), n->md.array_len, ctype);
