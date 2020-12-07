@@ -116,11 +116,21 @@ static void _var_init(char *lexeme, enum TYPE t, int32_t init_list_len, void *in
     memcpy(sym->buf, init_list, sym_bufsize(t, init_list_len));
 }
 
+static void _index_check(sym_t *sym, int32_t index)
+{
+    if (!(index >= 0 && index < sym->array_len)) {
+        fprintf(stderr, "Index out of bounds error on variable `%s`\n", sym->lexeme);
+        fprintf(stderr, "Variable array len is %d\n", sym->array_len);
+        fprintf(stderr, "But got index %d instead\n", index);
+        abort();
+    }
+}
+
 static int32_t _var_get_kI32(char *lexeme, int32_t index)
 {
     sym_t *sym = sym_lookup(lexeme);
     assert(sym);
-    assert(index >= 0 && index < sym->array_len);
+    _index_check(sym, index);
     return ((int32_t *)sym->buf)[index];
 }
 
@@ -128,7 +138,7 @@ static float _var_get_kF32(char *lexeme, int32_t index)
 {
     sym_t *sym = sym_lookup(lexeme);
     assert(sym);
-    assert(index >= 0 && index < sym->array_len);
+    _index_check(sym, index);
     return ((float *)sym->buf)[index];
 }
 
@@ -136,7 +146,7 @@ static bool _var_get_kBOOL(char *lexeme, int32_t index)
 {
     sym_t *sym = sym_lookup(lexeme);
     assert(sym);
-    assert(index >= 0 && index < sym->array_len);
+    _index_check(sym, index);
     return ((bool *)sym->buf)[index];
 }
 
@@ -144,7 +154,7 @@ static int32_t _var_set_kI32(char *lexeme, int32_t index, int32_t val)
 {
     sym_t *sym = sym_lookup(lexeme);
     assert(sym);
-    assert(index >= 0 && index < sym->array_len);
+    _index_check(sym, index);
     ((int32_t *)sym->buf)[index] = (val);
     return val;
 }
@@ -153,7 +163,7 @@ static float _var_set_kF32(char *lexeme, int32_t index, float val)
 {
     sym_t *sym = sym_lookup(lexeme);
     assert(sym);
-    assert(index >= 0 && index < sym->array_len);
+    _index_check(sym, index);
     ((float *)sym->buf)[index] = (val);
     return val;
 }
@@ -162,7 +172,7 @@ static bool _var_set_kBOOL(char *lexeme, int32_t index, bool val)
 {
     sym_t *sym = sym_lookup(lexeme);
     assert(sym);
-    assert(index >= 0 && index < sym->array_len);
+    _index_check(sym, index);
     ((float *)sym->buf)[index] = (val);
     return val;
 }

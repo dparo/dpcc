@@ -80,7 +80,6 @@ EOF              { LEX_FWD(YYEOF); }   /* Must return YYEOF upon EOF in order fo
 
 
 ","              { LEX_FWD(COMMA); }
-"."              { LEX_FWD(DOT); }
 "->"             { LEX_FWD(ARROW); }
 
 ":"              { LEX_FWD(COLON); }

@@ -378,7 +378,6 @@ void node_set_kind(ast_node_t *node, int32_t kind, char *skind)
 void push_child(ast_node_t *parent, ast_node_t *child)
 {
     assert(parent);
-    assert(child);
 
     dallarr(&G_allctx, (void **)&parent->childs, parent->num_childs + 1, sizeof(child));
     parent->childs[parent->num_childs++] = child;
