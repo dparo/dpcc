@@ -8,6 +8,7 @@ out
 report
 org
 tmp
+*.swp
 
 a.out
 a.out.c

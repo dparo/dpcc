@@ -1,0 +1,29 @@
+
+// Simple var decl
+{
+    let a: float = 1.0;
+    print(a);
+}
+
+// Casting example
+{
+    let b = int(10.23);
+    print(b);
+}
+
+// Dot product computation
+{
+    let a: float[] = { 0.0, 1.0, 2.0, 3.0, 4.0 };
+    let b: float[] = { 7.0, 14.0, 21.0, 28.0, 35.0 };
+    let sum = 0.0;
+
+    for (let i = 0; i < 5; i++) {
+        sum = sum + (a[i] * b[i]);
+    }
+
+    print(sum);
+}
+
+
+
+
