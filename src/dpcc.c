@@ -354,10 +354,6 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t, int32_t *match_idx)
 
         assert(pop_success);
 
-        if (nvcs->kind == TOK_YYEOF) {
-            return NULL;
-        }
-
         if (parent == NULL) {
             return NULL;
         }
