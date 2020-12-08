@@ -1,5 +1,5 @@
 
-![CMake](https://github.com/dparo/dpcc/workflows/CMake/badge.svg)
+![build](https://github.com/dparo/dpcc/workflows/CMake/badge.svg)
 
 # dpcc: DParo's own C-alike Compiler frontend
 
