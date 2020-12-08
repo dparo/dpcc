@@ -110,7 +110,7 @@ print("\n\nBubble sort");
 print("\n\nIterative merge sort");
 
 {
-        // 32 elements random array between [0, 100]
+    // 32 elements random array between [0, 100]
     let array: int[] = {
         15, 59, 61, 75, 12, 71,  5, 35, 44,
         6, 98, 17, 81, 56, 53, 31, 20, 11,
@@ -123,7 +123,7 @@ print("\n\nIterative merge sort");
     print("Un-sorted array");
     print(array);
 
-    // mergeSort: https://www.geeksforgeeks.org/iterative-merge-sort/
+    // Iterative mergeSort: https://www.geeksforgeeks.org/iterative-merge-sort/
     {
         for (let curr_size = 1; curr_size <= len - 1; curr_size = 2 * curr_size) {
             for (let left_start = 0; left_start < len - 1; left_start = left_start + 2 * curr_size) {
@@ -162,30 +162,19 @@ print("\n\nIterative merge sort");
                     let j = 0;
                     let k = l;
                     while (i < n1 && j < n2) {
-
                         if (L[i] <= R[j]) {
-                            array[k] = L[i];
-                            i++;
+                            array[k++] = L[i++];
                         } else {
-                            array[k] = R[j];
-                            j++;
+                            array[k++] = R[j++];
                         }
-                        k++;
                     }
-
-
 
                     // Copy the remainder
                     while (i < n1) {
-
-                        array[k] = L[i];
-                        i++;
-                        k++;
+                        array[k++] = L[i++];
                     }
                     while (j < n2) {
-                        array[k] = R[j];
-                        j++;
-                        k++;
+                        array[k++] = R[j++];
                     }
                 }
             }
