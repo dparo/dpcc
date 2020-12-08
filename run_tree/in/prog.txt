@@ -37,10 +37,11 @@ print("\n\nIteration example\n");
 
 print("\n\nCasting example (Cast truncates)\n");
 {
-    let f = 10.23;
-    print(f);
-    let cast = int(f);
-    print(cast);
+    print("int(10.23) = ");
+    print(int(10.23));
+
+    print("float(0xffff0000) = ");
+    print(float(0xffff0000));
 }
 
 print("\n\nImmediate value print\n");
