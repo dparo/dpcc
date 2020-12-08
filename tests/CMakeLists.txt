@@ -1,6 +1,7 @@
 set(TEST_SOURCES_LIST
   "lexer_test.c"
   "parser_test.c"
+  "compile_test.c"
   )
 
 foreach(SRC IN LISTS TEST_SOURCES_LIST)

@@ -263,7 +263,21 @@ void typecheck_expr_and_operators(ast_node_t *n)
             }
         }
 
-        if (((n->kind == TOK_EQ) || (n->kind == TOK_NEQ) || (n->kind == TOK_LT) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ)))
+        if (((n->kind == TOK_EQ)))
+        {
+
+            if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_I32) && (n->childs[1]->md.type == TYPE_I32)))
+            {
+                n->md.type = TYPE_BOOL;
+            }
+            else
+            {
+                dpcc_log(DPCC_SEVERITY_ERROR, &((n)->tok->loc), "Types composing this expression cannot be broadcasted");
+                yynerrs += 1;
+            }
+        }
+
+        if (((n->kind == TOK_NEQ) || (n->kind == TOK_LT) || (n->kind == TOK_GT) || (n->kind == TOK_GTEQ) || (n->kind == TOK_LTEQ)))
         {
 
             if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_I32) && (n->childs[1]->md.type == TYPE_I32)))

@@ -382,10 +382,20 @@ namespace DPCC {
             ]
         );
 
-        export const LOG_COMPS_EXPR = new Expr (
+
+        export const EQ_EQ_EXPR = new Expr (
             [
 
                 "TOK_EQ",
+            ],
+            [
+                new ExprTypeRule("bool", ["int", "int"]),
+            ]
+        );
+
+        export const LOG_COMPS_EXPR = new Expr (
+            [
+
                 "TOK_NEQ",
                 "TOK_LT",
                 "TOK_GT",
@@ -427,6 +437,7 @@ namespace DPCC {
             INTEGER_EXPR,
             ASSIGN_EXPR,
             MATH_EXPR,
+            EQ_EQ_EXPR,
             LOG_COMPS_EXPR,
             LOG_EXPR,
             ARRAY_EXPR,

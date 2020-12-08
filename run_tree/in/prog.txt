@@ -112,7 +112,7 @@ print("\n\Logical operator test\n");
     print(!bool(10));
 }
 
-print("\n\Comparisons test\n");
+print("\n\nInteger Comparisons test\n");
 {
     let c: bool;
 
@@ -143,6 +143,30 @@ print("\n\Comparisons test\n");
     print(c);
 
 }
+
+print("\n\nFloat Comparisons test\n");
+{
+    let c: bool;
+
+    print("10.1234 >= 10.1234  --> ");
+    c = 10.1234 >= 10.1234;
+    print(c);
+
+    print("10.1234 >= 11.975  --> ");
+    c = 10.1234 >= 11.975;
+    print(c);
+
+
+    print("10.1234 <= 10.1234  --> ");
+    c = 10.1234 <= 10.1234;
+    print(c);
+
+    print("10.1234 <= 11.975  --> ");
+    c = 10.1234 <= 11.975;
+    print(c);
+
+}
+
 
 
 print("\n\nBitwise operator test\n");
