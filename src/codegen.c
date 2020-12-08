@@ -17,7 +17,6 @@
 #include "dpcc.h"
 
 #include "__gen.h"
-#include "parser.h"
 
 extern int yynerrs;
 static str_t S_str = { 0 };

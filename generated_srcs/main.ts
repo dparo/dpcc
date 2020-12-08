@@ -296,51 +296,34 @@ namespace DPCC {
 
 
     export namespace OPS {
-        export const DECL = [
-            "TOK_KW_FN",
-            "TOK_KW_LET",
-        ];
-
-        export const CAST = [
-            "TOK_KW_INT",
-            "TOK_KW_FLOAT",
-            "TOK_KW_BOOL",
-        ];
-
-        export const CONTROL_FLOW = [
-            "TOK_KW_IF",
-            "TOK_KW_DO",
-            "TOK_KW_WHILE",
-            "TOK_KW_FOR",
-        ]
 
         export let ALL: string[] = [
             // Initialized later
         ];
 
         export let PREFIX: string[] = [
-            "TOK_POS",
-            "TOK_NEG",
-            "TOK_BNOT",
-            "TOK_LNOT"
+            "ExprPos",
+            "ExprNeg",
+            "ExprBNot",
+            "ExprLNot"
         ];
 
         export let POSTFIX: string[] = [
-            'TOK_INC',
-            'TOK_DEC',
+            "ExprInc",
+            'ExprDec',
         ]
     }
 
     export namespace EXPRS {
         export const INTEGER_EXPR = new Expr(
             [
-                "TOK_MOD",
-                "TOK_BNOT",
-                "TOK_BAND",
-                "TOK_BOR",
-                "TOK_BXOR",
-                "TOK_BLSHIFT",
-                "TOK_BRSHIFT",
+                "ExprMod",
+                "ExprBNot",
+                "ExprBAnd",
+                "ExprBOr",
+                "ExprBXor",
+                "Expr_BLShift",
+                "Epxr_BRShift",
             ],
             [
                 new ExprTypeRule("int", ["int"]),
@@ -350,7 +333,7 @@ namespace DPCC {
 
         export const ASSIGN_EXPR = new Expr (
             [
-                "TOK_ASSIGN",
+                "ExprAssign",
             ],
             [
                 new ExprTypeRule("int", ["int", "int"]),
@@ -361,15 +344,15 @@ namespace DPCC {
 
         export const MATH_EXPR = new Expr (
             [
-                "TOK_ADD",
-                "TOK_SUB",
-                "TOK_MUL",
-                "TOK_DIV",
-                "TOK_POW",
-                "TOK_INC",
-                "TOK_DEC",
-                "TOK_POS",
-                "TOK_NEG",
+                "ExprAdd",
+                "ExprSub",
+                "ExprMul",
+                "ExprDiv",
+                "EpxrPow",
+                "ExprInc",
+                "ExprDec",
+                "ExprPos",
+                "ExprNeg",
             ],
             [
                 new ExprTypeRule("int", ["int", "int"]),
@@ -386,7 +369,7 @@ namespace DPCC {
         export const EQ_EQ_EXPR = new Expr (
             [
 
-                "TOK_EQ",
+                "ExprEq",
             ],
             [
                 new ExprTypeRule("bool", ["int", "int"]),
@@ -396,11 +379,11 @@ namespace DPCC {
         export const LOG_COMPS_EXPR = new Expr (
             [
 
-                "TOK_NEQ",
-                "TOK_LT",
-                "TOK_GT",
-                "TOK_GTEQ",
-                "TOK_LTEQ",
+                "ExprNeq",
+                "ExprLt",
+                "ExprGt",
+                "ExprGtEq",
+                "ExprLtEq",
             ],
             [
                 new ExprTypeRule("bool", ["int", "int"]),
@@ -412,9 +395,9 @@ namespace DPCC {
 
         export const LOG_EXPR = new Expr(
             [
-                "TOK_LNOT",
-                "TOK_LAND",
-                "TOK_LOR",
+                "ExprLNot",
+                "EpxrLAnd",
+                "EpxrLOr",
             ],
             [
                 new ExprTypeRule("bool", ["bool"]),
@@ -425,7 +408,7 @@ namespace DPCC {
 
         export const ARRAY_EXPR = new Expr (
             [
-                "TOK_AR_SUBSCR",
+                "ExprArraySubscript",
             ],
             [
                 new ExprTypeRule("int", ["int[]", "int"]),
@@ -492,10 +475,6 @@ namespace DPCC_Gen {
 
     export function new_tmp_var() {
         Gen.fn('char *new_tmp_var(ast_node_t *n)', () => {
-            //Gen.print('if (n->parent && n->parent->kind == TOK_SEMICOLON)')
-            //Gen.scope(() => {
-            //    Gen.print('return NULL;')
-            //})
             Gen.print('str_t s = {0};')
             Gen.switchd('n->md.type', {
                 "TYPE_I32": 'sfcat(&G_allctx, &s, "_vi%d", G_codegen_i32_cnt++);',
@@ -621,7 +600,6 @@ function generate_src_file() {
     Gen.print(DPCC.COMMON_BOILERPLATE);
 
     Gen.print('#include "__gen.h"')
-    Gen.print('#include "parser.h"')
 
     Gen.print('\n\n')
     Gen.print('extern int yynerrs;')

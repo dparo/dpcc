@@ -88,6 +88,7 @@ typedef enum ast_node_kind {
     StringLit,
 
     MainFn,
+    FnDecl,
     CodeBlock,
 
     Stmt,
@@ -104,6 +105,7 @@ typedef enum ast_node_kind {
     ExprCast,
     ExprAssign,
 
+    ExprPos,
     ExprNeg,
     ExprAdd,
     ExprSub,
