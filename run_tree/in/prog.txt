@@ -168,13 +168,15 @@ print("\n\nDot product computation with integers\n");
 {
     let a: int[] = { 0, 1, 2, 3, 4 };
     let b: int[] = { 7, 14 + 2 * 3, 21, 28, 35 };
-    let sum = 0;
+    let dot = 0;
 
     for (let i = 0; i < 5; i++) {
-        sum = sum + (a[i] * b[i]);
+        dot = dot + (a[i] * b[i]);
     }
 
-    print(sum);
+    print(a);
+    print(b);
+    print(dot);
 }
 
 
@@ -182,13 +184,15 @@ print("\n\nDot product with floats\n");
 {
     let a: float[] = { 0.0, 1.0, 2.0, 3.75, 4.0 };
     let b: float[] = { 7.0, 14.2, 21.0, 28.0, 35.0 + 2 ** 3 };
-    let sum = 0.0;
+    let dot = 0.0;
 
     for (let i = 0; i < 5; i++) {
-        sum = sum + (a[i] * b[i]);
+        dot = dot + (a[i] * b[i]);
     }
 
-    print(sum);
+    print(a);
+    print(b);
+    print(dot);
 }
 
 
