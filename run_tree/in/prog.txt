@@ -19,7 +19,10 @@ print("\n\nInteger var decl\n");
 print("\n\nFloat var decl\n");
 {
     let a = 4.0;
+    let b = 10.23f;
+
     print(a);
+    print(b);
 }
 
 print("\n\nArray var decl\n");

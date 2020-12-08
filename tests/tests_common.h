@@ -80,13 +80,15 @@ typedef struct {
     i32_array_t expected_tokens;
 } dpcc_test_t;
 
+char *non_parsable[] = {
+
+    NULL,
+};
+
 static dpcc_test_t all_dpcc_tests[] = {
-    { "a = a; b = b; long_name = a + long_name; // A comment",
-        ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON, TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON, TOK_ID, TOK_ASSIGN, TOK_ID, TOK_ADD, TOK_ID, TOK_SEMICOLON }) },
-    { "a = b; // A comment",
-        ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON }) },
-    { "a = b; // A comment\n",
-        ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON }) },
+    { "a = a; b = b; long_name = a + long_name; // A comment", ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON, TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON, TOK_ID, TOK_ASSIGN, TOK_ID, TOK_ADD, TOK_ID, TOK_SEMICOLON }) },
+    { "a = b; // A comment", ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON }) },
+    { "a = b; // A comment\n", ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON }) },
 };
 
 static inline bool lex_string(char *string)

@@ -50,7 +50,6 @@ static void lex_test(i32 testidx, dpcc_test_t *test)
         lexsucc,
         G_tok_seq.tokens_cnt);
 
-    TEST_ASSERT(false == true);
     TEST_ASSERT_EQUAL_MESSAGE(expected_lex_success, lexsucc, lexmsg);
     TEST_ASSERT_EQUAL_INT32_MESSAGE(test->expected_tokens.cnt, G_tok_seq.tokens_cnt, lexmsg);
 
