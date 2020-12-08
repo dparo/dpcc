@@ -1,5 +1,0 @@
-
-let array: int[] = { 10, 20, 30, 40 };
-print(array);
-array[1 + 1] = 100;
-print(array);

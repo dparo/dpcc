@@ -1,8 +1,9 @@
 
-/// Boolean var decls
+//@ Boolean var decls
 //@ t = 1
 //@ 0
 
+print("\n\nBoolean var decls\n");
 {
     let t = true;
     print(t);
@@ -11,11 +12,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Integer var decl
+//@ Integer var decl
 //@ a = 3
 //@ b = 100
 //@ a = 22
 
+
+print("\n\nInteger var decl\n");
 {
     let a = 3;
     let b = 100;
@@ -27,10 +30,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Float var decl
+//@ Float var decl
 //@ a = 4.000000
 //@ b = 10.230000
 
+print("\n\nFloat var decl\n");
 {
     let a = 4.0;
     let b = 10.23f;
@@ -41,9 +45,10 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Array var decl
+//@ Array var decl
 //@ a = { 10, 20, 30, 40, 50 }
 
+print("\n\nArray var decl\n");
 {
     let a: int[] = { 10, 20, 30, 40, 50 };
     print(a);
@@ -51,9 +56,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Iteration example
+//@ Iteration example
 //@ a = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }
 
+
+print("\n\nIteration example\n");
 {
     let a: int[10];
 
@@ -65,140 +72,193 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Casting example (Cast truncates)
-//@ 10
-//@ -65536.000000
+//@ Casting example (Cast truncates)
+//@ int(10.23) = 10
+//@ float(0xffff0000) = -65536.000000
 
+
+print("\n\nCasting example (Cast truncates)\n");
 {
+    print("int(10.23) = ");
     print(int(10.23));
+
+    print("float(0xffff0000) = ");
     print(float(0xffff0000));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Immediate value print
-//@ 10
-//@ 23
-//@ 11.630800
+//@ Immediate value print
+//@ 10 = 10
+//@ 5 + 2 * 3 ** 2 = 23
+//@ 5.0 + 3.3154 * 2 = 11.630800
 
+print("\n\nImmediate value print\n");
 {
+    print("10 = ");
     print(10);
+    print("5 + 2 * 3 ** 2 = ");
     print(5 + 2 * 3 ** 2);
+    print("5.0 + 3.3154 * 2 = ");
     print(5.0 + 3.3154 * 2);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Logical operator test
-//@ 1
-//@ 0
+//@ Logical operator test
+//@ true = 1
+//@ false = 0
 
-//@ 0
-//@ 1
+//@ !true = 0
+//@ !false = 1
 
-//@ 1
-//@ 0
-//@ 0
-//@ 0
+//@ true && true = 1
+//@ true && false = 0
+//@ false && true = 0
+//@ false && false = 0
 
-//@ 1
-//@ 1
-//@ 1
-//@ 0
+//@ true || true = 1
+//@ true || false = 1
+//@ false || true = 1
+//@ false || false = 0
 
 
-//@ 0
-//@ 1
+//@ bool(0) = 0
+//@ bool(10) = 1
 
-//@ 1
-//@ 0
+//@ !bool(0) = 1
+//@ !bool(10) = 0
 
+
+print("\n\nLogical operator test\n");
 {
+    print("true = ");
     print(true);
+    print("false = ");
     print(false);
 
+    print("!true = ");
     print(!true);
+
+    print("!false = ");
     print(!false);
 
 
+    print("true && true = ");
     print(true && true);
+
+    print("true && false = ");
     print(true && false);
+
+    print("false && true = ");
     print(false && true);
+
+    print("false && false = ");
     print(false && false);
 
+    print("true || true = ");
     print(true || true);
+
+    print("true || false = ");
     print(true || false);
+
+    print("false || true = ");
     print(false || true);
+
+    print("false || false = ");
     print(false || false);
 
 
+    print("bool(0) = ");
     print(bool(0));
+
+    print("bool(10) = ");
     print(bool(10));
+
+    print("!bool(0) = ");
     print(!bool(0));
+
+    print("!bool(10) = ");
     print(!bool(10));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Integer Comparisons test
-//@ c = 1
-//@ c = 0
-//@ c = 1
-//@ c = 0
-//@ c = 1
-//@ c = 1
+//@ Integer Comparisons test
+//@ 10 == 10  --> c = 1
+//@ 10 == 11  --> c = 0
+//@ 10 >= 10  --> c = 1
+//@ 10 >= 11  --> c = 0
+//@ 10 <= 10  --> c = 1
+//@ 10 <= 11  --> c = 1
 
+
+print("\n\nInteger Comparisons test\n");
 {
     let c: bool;
+
+    print("10 == 10  --> ");
     c = 10 == 10;
     print(c);
 
+    print("10 == 11  --> ");
     c = 10 == 11;
     print(c);
 
 
+    print("10 >= 10  --> ");
     c = 10 >= 10;
     print(c);
 
+    print("10 >= 11  --> ");
     c = 10 >= 11;
     print(c);
 
 
+    print("10 <= 10  --> ");
     c = 10 <= 10;
     print(c);
 
+    print("10 <= 11  --> ");
     c = 10 <= 11;
     print(c);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Float comparisons test
-//@ c = 1
-//@ c = 0
-//@ c = 1
-//@ c = 1
+//@ Float comparisons test
+//@ 10.1234 >= 10.1234  --> c = 1
+//@ 10.1234 >= 11.975  --> c = 0
+//@ 10.1234 <= 10.1234  --> c = 1
+//@ 10.1234 <= 11.975  --> c = 1
 
+
+print("\n\nFloat comparisons test\n");
 {
     let c: bool;
 
+    print("10.1234 >= 10.1234  --> ");
     c = 10.1234 >= 10.1234;
     print(c);
 
+    print("10.1234 >= 11.975  --> ");
     c = 10.1234 >= 11.975;
     print(c);
 
+
+    print("10.1234 <= 10.1234  --> ");
     c = 10.1234 <= 10.1234;
     print(c);
 
+    print("10.1234 <= 11.975  --> ");
     c = 10.1234 <= 11.975;
     print(c);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Bitwise operator test
+//@ Bitwise operator test
 //@ a = 147
 //@ b = 85
 //@ ~a = -148
@@ -206,6 +266,8 @@
 //@ a | b = 215
 //@ a ^ b = 198
 
+
+print("\n\nBitwise operator test\n");
 {
     let a = 0b10010011;
     let b = 0b01010101;
@@ -216,19 +278,26 @@
     print("~a = ");
     print(~a);
 
-    print("a & b = "); print(a & b);
-    print("a | b = "); print(a | b);
-    print("a ^ b = "); print(a ^ b);
+    print("a & b = ");
+    print(a & b);
+
+    print("a | b = ");
+    print(a | b);
+
+    print("a ^ b = ");
+    print(a ^ b);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Dot product computation with integers
+//@ Dot product computation with integers
 //@ a = { 0, 1, 2, 3, 4 }
 //@ b = { 7, 20, 21, 28, 35 }
 //@ dot = 286
 
 
+print("\n\nDot product computation with integers\n");
 {
     let a: int[] = { 0, 1, 2, 3, 4 };
     let b: int[] = { 7, 14 + 2 * 3, 21, 28, 35 };
@@ -246,11 +315,12 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Dot product computation with floats
+//@ Dot product computation with floats
 //@ a = { 0.000000, 1.000000, 2.000000, 3.750000, 4.000000 }
 //@ b = { 7.000000, 14.200000, 21.000000, 28.000000, 43.000000 }
 //@ dot = 333.200012
 
+print("\n\nDot product computation with floats\n");
 {
     let a: float[] = { 0.0, 1.0, 2.0, 3.75, 4.0 };
     let b: float[] = { 7.0, 14.2, 21.0, 28.0, 35.0 + 2 ** 3 };
@@ -267,13 +337,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Bubble sort
+//@ Bubble sort
 //@ Un-sorted array
 //@ array = { 15, 59, 61, 75, 12, 71, 5, 35, 44, 6, 98, 17, 81, 56, 53, 31, 20, 11, 45, 80, 8, 34, 71, 83, 64, 28, 3, 88, 50, 48, 80, 5 }
 //@ Sorted array
 //@ array = { 3, 5, 5, 6, 8, 11, 12, 15, 17, 20, 28, 31, 34, 35, 44, 45, 48, 50, 53, 56, 59, 61, 64, 71, 71, 75, 80, 80, 81, 83, 88, 98 }
 
 
+print("\n\nBubble sort\n");
 {
     // 32 elements random array between [0, 100]
     let array: int[] = {
@@ -305,12 +376,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Iterative Merge sort
+//@ Iterative Merge sort
 //@ Un-sorted array
 //@ array = { 15, 59, 61, 75, 12, 71, 5, 35, 44, 6, 98, 17, 81, 56, 53, 31, 20, 11, 45, 80, 8, 34, 71, 83, 64, 28, 3, 88, 50, 48, 80, 5 }
 //@ Sorted array
 //@ array = { 3, 5, 5, 6, 8, 11, 12, 15, 17, 20, 28, 31, 34, 35, 44, 45, 48, 50, 53, 56, 59, 61, 64, 71, 71, 75, 80, 80, 81, 83, 88, 98 }
 
+
+print("\n\nIterative Merge sort\n");
 {
     let array: int[] = {
         15, 59, 61, 75, 12, 71,  5, 35, 44,

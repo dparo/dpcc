@@ -65,7 +65,7 @@ def test_chunk(input, expected_output):
     out_fh.close()
 
     process = Popen(["run_tree/bin/dpcc", "run", out_filepath], stdout=PIPE)
-    (output, err) = process.communicate()
+    (output, _) = process.communicate()
     exit_code = process.wait()
 
     output = output.decode("utf-8")
