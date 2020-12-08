@@ -478,14 +478,19 @@ static void emit_assign(ast_node_t *n)
         char *index = lhs->childs[1]->md.sym;
 
         if (lhs->md.sym) {
-            EMIT("%s = ", lhs->md.sym);
+            EMIT("%s = _var_set%s(\"%s\", %s, %s);\n",
+                lhs->md.sym,
+                get_type_label(lhs->md.type),
+                lhs->childs[0]->tok->lexeme,
+                index,
+                rhs->md.sym);
+        } else {
+            EMIT("_var_set%s(\"%s\", %s, %s);\n",
+                get_type_label(lhs->md.type),
+                lhs->childs[0]->tok->lexeme,
+                index,
+                rhs->md.sym);
         }
-
-        EMIT("_var_set%s(\"%s\", %s, %s);\n",
-            get_type_label(lhs->md.type),
-            lhs->childs[0]->tok->lexeme,
-            index,
-            rhs->md.sym);
 
     } else {
         assert(lhs->decl);
@@ -493,13 +498,17 @@ static void emit_assign(ast_node_t *n)
         assert(lhs->md.sym);
 
         if (n->md.sym) {
-            EMIT("%s = ", n->md.sym);
+            EMIT("%s = _var_set%s(\"%s\", 0, %s);\n",
+                n->md.sym,
+                get_type_label(lhs->md.type),
+                lhs->tok->lexeme,
+                rhs->md.sym);
+        } else {
+            EMIT("_var_set%s(\"%s\", 0, %s);\n",
+                get_type_label(lhs->md.type),
+                lhs->tok->lexeme,
+                rhs->md.sym);
         }
-
-        EMIT("_var_set%s(\"%s\", 0, %s);\n",
-            get_type_label(lhs->md.type),
-            lhs->tok->lexeme,
-            rhs->md.sym);
     }
 }
 
@@ -557,17 +566,16 @@ static void emit_expr(ast_node_t *n)
             cast, n->childs[0]->md.sym);
     } else if (is_expr_node(n)) {
 
-        if (n->md.sym) {
-            EMIT("%s = ", n->md.sym);
-        }
         if (n->num_childs == 1) {
             if (is_prefix_op(n)) {
-                EMIT("%s %s;\n",
+                EMIT("%s = %s %s;\n",
+                    n->md.sym,
                     n->tok->lexeme,
                     n->childs[0]->md.sym);
             } else if (is_postfix_op(n)) {
 
-                EMIT("%s %s;\n",
+                EMIT("%s = %s %s;\n",
+                    n->md.sym,
                     n->childs[0]->md.sym,
                     n->tok->lexeme);
             } else {
