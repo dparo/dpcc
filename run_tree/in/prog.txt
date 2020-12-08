@@ -112,8 +112,33 @@ print("\n\Logical operator test\n");
 print("\n\Comparisons test\n");
 {
     let c: bool;
+
+    print("10 == 10  --> ");
     c = 10 == 10;
     print(c);
+
+    print("10 == 11  --> ");
+    c = 10 == 11;
+    print(c);
+
+
+    print("10 >= 10  --> ");
+    c = 10 >= 10;
+    print(c);
+
+    print("10 >= 11  --> ");
+    c = 10 >= 11;
+    print(c);
+
+
+    print("10 <= 10  --> ");
+    c = 10 <= 10;
+    print(c);
+
+    print("10 <= 11  --> ");
+    c = 10 <= 11;
+    print(c);
+
 }
 
 
