@@ -80,38 +80,6 @@ typedef struct {
     i32_array_t expected_tokens;
 } dpcc_test_t;
 
-char *non_valid_programs[] = {
-    // Arrays are not trivially assignable
-    "let a: int[] = {10, 20, 30}; let b: int[] = a;",
-
-    // Arrays must be typed
-    "let a = {10, 20, 30};",
-
-    // Arrays with no RHS must be sized
-    "let b: int[];",
-
-    // Array must have reasonable size
-    "let b: int[-1];",
-    "let b: int[0];",
-
-    // Arrays with RHS must have correct size
-    "let b: int[3] = {2, 3};",
-
-    // Array indexing with constants must follow the declaration
-    "let b: int[2] = { 10, 20}; print(a[40]);"
-    "let b: int[2] = { 10, 20}; print(a[-1]);"
-
-    // Floats are not equality comparable
-    "let a = 10.0f == 12.0f;",
-    NULL,
-};
-
-static dpcc_test_t all_dpcc_tests[] = {
-    { "a = a; b = b; long_name = a + long_name; // A comment", ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON, TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON, TOK_ID, TOK_ASSIGN, TOK_ID, TOK_ADD, TOK_ID, TOK_SEMICOLON }) },
-    { "a = b; // A comment", ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON }) },
-    { "a = b; // A comment\n", ARRAY_LIT(i32, { TOK_ID, TOK_ASSIGN, TOK_ID, TOK_SEMICOLON }) },
-};
-
 static inline bool lex_string(char *string)
 {
     return dpcc_lex("", open_from_string(string));

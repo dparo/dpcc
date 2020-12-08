@@ -60,7 +60,7 @@ print("\n\nImmediate value print\n");
 
 
 
-print("\n\Logical operator test\n");
+print("\n\nLogical operator test\n");
 {
     print("true = ");
     print(true);

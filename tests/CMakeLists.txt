@@ -1,7 +1,6 @@
 set(TEST_SOURCES_LIST
   "lexer_test.c"
   "parser_test.c"
-  "compile_test.c"
   )
 
 foreach(SRC IN LISTS TEST_SOURCES_LIST)
@@ -18,3 +17,10 @@ foreach(SRC IN LISTS TEST_SOURCES_LIST)
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/run_tree"
     )
 endforeach(SRC)
+
+
+add_test(NAME compile_test.py
+  COMMAND python3 "${CMAKE_SOURCE_DIR}/tests/compile_test.py"
+  DEPENDS "${CMAKE_SOURCE_DIR}/tests/compile_test.py"
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)

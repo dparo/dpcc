@@ -76,20 +76,12 @@ static void lex_test(i32 testidx, dpcc_test_t *test)
     free(lexmsg);
 }
 
-static void testture_lexing_test(void)
-{
-    for (size_t i = 0; i < ARRAY_LEN(all_dpcc_tests); i++) {
-        lex_test(i, &all_dpcc_tests[i]);
-    }
-}
-
 int main(void)
 {
     UNITY_BEGIN();
     {
 
         RUN_TEST(number_lexing_test);
-        RUN_TEST(testture_lexing_test);
     }
 
     return UNITY_END();
