@@ -119,7 +119,7 @@ static void typecheck_array(ast_node_t *n)
     (void)c0, (void)c1, (void)c2;
 
     // Deduce type of array variable declarations
-    assert((c0->childs[1] == NULL) || (c0->childs[1]->kind == TOK_I32_LIT && c0->childs[1]->md.type == TYPE_I32));
+    assert((c0->childs[1] == NULL) || (c0->childs[1]->kind == I32Lit && c0->childs[1]->md.type == TYPE_I32));
     int32_t array_type_len = c0->childs[1] ? c0->childs[1]->val.as_i32 : 0;
     int32_t init_list_len = c2 != NULL ? c2->num_childs : 0;
 
@@ -144,7 +144,7 @@ static void typecheck_array(ast_node_t *n)
 
         check_initializer_list(n, expected_type, array_type_len, init_list_len);
         n->md.array_len = init_list_len;
-    } else if ((c0 == NULL || c0->childs[1] == NULL || c0->childs[1]->kind != TOK_I32_LIT || c0->childs[1]->md.type != TYPE_I32)) {
+    } else if ((c0 == NULL || c0->childs[1] == NULL || c0->childs[1]->kind != I32Lit || c0->childs[1]->md.type != TYPE_I32)) {
         ERR(c0, "Size of the array must be specified");
         INFO(c0, "Either specify the size inside the square brackets, or provide an initializer list");
     }
@@ -156,13 +156,13 @@ static void typecheck_casting_operator(ast_node_t *n)
     default: {
         invalid_code_path();
     } break;
-    case TOK_KW_INT: {
+    case ExprCastInt: {
         n->md.type = TYPE_I32;
     } break;
-    case TOK_KW_FLOAT: {
+    case ExprCastFloat: {
         n->md.type = TYPE_F32;
     } break;
-    case TOK_KW_BOOL: {
+    case ExprCastBool: {
         n->md.type = TYPE_BOOL;
     } break;
     }
@@ -185,7 +185,7 @@ static void typecheck_array_subscript(ast_node_t *n)
 
 static void typecheck_vardecl(ast_node_t *n)
 {
-    assert(((n->kind == TOK_KW_FN) || (n->kind == TOK_KW_LET)));
+    assert(n->kind == VarDeclStmt);
 
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
     ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
@@ -198,9 +198,9 @@ static void typecheck_vardecl(ast_node_t *n)
 
     bool var_decl_with_user_listed_type = c0;
     bool var_decl_no_user_listed_type = !c0;
-    bool integral_var_decl = (!c0 || c0->kind != TOK_OPEN_BRACKET);
+    bool integral_var_decl = (!c0 || c0->kind != InitializerList);
     bool var_decl_with_rhs = c2;
-    bool array_var_decl = c0 && c0->kind == TOK_OPEN_BRACKET;
+    bool array_var_decl = c0 && c0->kind == InitializerList;
 
     if (array_var_decl) {
 
@@ -210,10 +210,10 @@ static void typecheck_vardecl(ast_node_t *n)
             default: {
                 invalid_code_path();
             } break;
-            case TOK_KW_INT: {
+            case TypeInfoInt: {
                 n->md.type = TYPE_I32_ARRAY;
             } break;
-            case TOK_KW_FLOAT: {
+            case TypeInfoFloat: {
                 n->md.type = TYPE_F32_ARRAY;
             } break;
             }
@@ -235,13 +235,13 @@ static void typecheck_vardecl(ast_node_t *n)
             default: {
                 invalid_code_path();
             } break;
-            case TOK_KW_INT: {
+            case TypeInfoInt: {
                 n->md.type = TYPE_I32;
             } break;
-            case TOK_KW_FLOAT: {
+            case TypeInfoFloat: {
                 n->md.type = TYPE_F32;
             } break;
-            case TOK_KW_BOOL: {
+            case TypeInfoBool: {
                 n->md.type = TYPE_BOOL;
             } break;
             }
@@ -283,29 +283,36 @@ static void typecheck_print(ast_node_t *n)
 
 static void typecheck(ast_node_t *n)
 {
-    bool is_casting_operator = ((n->kind == TOK_KW_INT) || (n->kind == TOK_KW_FLOAT) || (n->kind == TOK_KW_BOOL))
-        && (n->num_childs == 1);
-    bool var_decl = (((n->kind == TOK_KW_FN) || (n->kind == TOK_KW_LET)));
-    bool is_typable_identifier = n->kind == TOK_ID && n->parent && !((n->parent->kind == TOK_KW_FN) || (n->parent->kind == TOK_KW_LET));
-    bool is_array_subscript = n->kind == TOK_AR_SUBSCR && n->childs[1]->kind == TOK_I32_LIT && n->childs[1]->md.type == TYPE_I32;
-    bool is_print = n->kind == TOK_KW_PRINT;
+    bool is_casting_operator = ((n->kind == ExprCastInt) || (n->kind == ExprCastFloat) || (n->kind == ExprCastBool)) && (n->num_childs == 1);
+    bool var_decl = n->kind == VarDeclStmt;
+    bool is_typable_identifier = n->kind == Ident && n->parent && !(n->parent->kind == VarDeclStmt);
+    bool is_array_subscript = n->kind == ExprArraySubscript && n->childs[1]->kind == I32Lit && n->childs[1]->md.type == TYPE_I32;
+    bool is_print = n->kind == PrintStmt;
 
-    if (n->kind == TOK_CHAR_LIT) {
+    if (n->kind == CharLit) {
         n->md.type = TYPE_I32;
-    } else if (n->kind == TOK_I32_LIT) {
+    } else if (n->kind == I32Lit) {
         n->md.type = TYPE_I32;
-    } else if (n->kind == TOK_F32_LIT) {
+    } else if (n->kind == F32Lit) {
         n->md.type = TYPE_F32;
-    } else if (n->kind == TOK_BOOL_LIT) {
+    } else if (n->kind == BoolLit) {
         n->md.type = TYPE_BOOL;
-    } else if (n->kind == TOK_STRING_LIT) {
+    } else if (n->kind == StringLit) {
         n->md.type = TYPE_STR;
-    } else if (n->kind == TOK_ID) {
+    } else if (n->kind == TypeInfoInt) {
+        n->md.type = TYPE_I32;
+    } else if (n->kind == TypeInfoFloat) {
+        n->md.type = TYPE_F32;
+    } else if (n->kind == TypeInfoBool) {
+        n->md.type = TYPE_BOOL;
+    } else if (n->kind == Ident) {
         if (n->decl) {
             n->md.type = n->decl->md.type;
         }
     } else if (n->md.type == TYPE_NONE) {
-        typecheck_expr_and_operators(n);
+        if (is_expr_node(n)) {
+            typecheck_expr_and_operators(n);
+        }
 
         if (is_casting_operator) {
             typecheck_casting_operator(n);
@@ -320,25 +327,26 @@ static void typecheck(ast_node_t *n)
         } else if (is_print) {
             typecheck_print(n);
         }
+    } else {
     }
 }
 
 static char *gen_sym(ast_node_t *n)
 {
     assert(n->md.type != TYPE_NONE);
-    assert(n->kind != TOK_KW_WHILE && n->kind != TOK_KW_DO && n->kind != TOK_KW_FOR && n->kind != TOK_KW_IF);
+    assert(n->kind != WhileStmt && n->kind != DoWhileStmt && n->kind != ForStmt && n->kind != IfStmt);
 
     str_t s = { 0 };
 
     if (n->md.sym) {
         return n->md.sym;
-    } else if (n->kind == TOK_ID && !n->md.sym && (n->md.type == TYPE_I32_ARRAY || n->md.type == TYPE_F32_ARRAY)) {
+    } else if (n->kind == Ident && !n->md.sym && (n->md.type == TYPE_I32_ARRAY || n->md.type == TYPE_F32_ARRAY)) {
         sfcat(&G_allctx, &s, "%s", n->tok->lexeme);
-    } else if (n->kind == TOK_ID && !n->md.sym) {
+    } else if (n->kind == Ident && !n->md.sym) {
         assert(n->decl);
         assert(n->md.type == TYPE_I32 || n->md.type == TYPE_F32 || n->md.type == TYPE_BOOL);
         sfcat(&G_allctx, &s, "_var_get%s(\"%s\", 0)", get_type_label(n->md.type), n->tok->lexeme);
-    } else if (n->kind == TOK_I32_LIT || n->kind == TOK_F32_LIT || n->kind == TOK_CHAR_LIT || n->kind == TOK_BOOL_LIT || n->kind == TOK_STRING_LIT) {
+    } else if (n->kind == I32Lit || n->kind == F32Lit || n->kind == CharLit || n->kind == BoolLit || n->kind == StringLit) {
         if (n->md.type == TYPE_I32) {
             sfcat(&G_allctx, &s, "%d", n->val.as_i32);
         } else if (n->md.type == TYPE_F32) {
@@ -356,39 +364,39 @@ static char *gen_sym(ast_node_t *n)
 
 static void setup_addrs_and_jmp_tables(ast_node_t *n)
 {
-    bool is_casting_operator = ((n->kind == TOK_KW_INT) || (n->kind == TOK_KW_FLOAT) || (n->kind == TOK_KW_BOOL))
+    bool is_casting_operator = ((n->kind == I32Lit) || (n->kind == F32Lit) || (n->kind == BoolLit) || (n->kind == CharLit))
         && (n->num_childs == 1) && n->md.type != TYPE_NONE;
     bool is_expr = (n->md.type != TYPE_NONE && is_expr_node(n));
     if (!n->md.sym && (is_expr || is_casting_operator)) {
 
-        if (n->kind == TOK_ID) {
+        if (n->kind == Ident) {
             assert(n->decl->md.type == n->md.type);
         }
         assert(n->md.type != TYPE_I32_ARRAY);
         assert(n->md.type != TYPE_F32_ARRAY);
-        assert(n->kind != TOK_KW_WHILE && n->kind != TOK_KW_DO && n->kind != TOK_KW_FOR && n->kind != TOK_KW_IF);
+        assert(n->kind != WhileStmt && n->kind != DoWhileStmt && n->kind != ForStmt && n->kind != IfStmt);
         n->md.sym = new_tmp_var(n);
-    } else if (n->kind == TOK_KW_WHILE) {
+    } else if (n->kind == WhileStmt) {
         if (n->md.jmp_bot == NULL || n->md.jmp_top == NULL) {
             n->md.jmp_top = new_tmp_label();
             n->md.jmp_bot = new_tmp_label();
         }
-    } else if (n->kind == TOK_KW_DO) {
+    } else if (n->kind == DoWhileStmt) {
         if (n->md.jmp_top == NULL) {
             n->md.jmp_top = new_tmp_label();
         }
-    } else if (n->kind == TOK_KW_FOR) {
+    } else if (n->kind == ForStmt) {
         if (n->md.jmp_top == NULL || n->md.jmp_bot == NULL) {
             n->md.jmp_top = new_tmp_label();
             n->md.jmp_bot = new_tmp_label();
         }
-    } else if (n->kind == TOK_KW_IF) {
+    } else if (n->kind == IfStmt) {
         if (n->md.jmp_next == NULL || n->md.jmp_bot == NULL) {
             n->md.jmp_next = new_tmp_label();
             n->md.jmp_bot = new_tmp_label();
         }
     } else if (n->md.type != TYPE_NONE) {
-        assert(n->kind != TOK_KW_WHILE && n->kind != TOK_KW_DO && n->kind != TOK_KW_FOR && n->kind != TOK_KW_IF);
+        assert(n->kind != WhileStmt && n->kind != DoWhileStmt && n->kind != ForStmt && n->kind != IfStmt);
         n->md.sym = gen_sym(n);
     }
 }
@@ -405,9 +413,9 @@ static void first_ast_pass(void)
     }
 }
 
-static void emit_indexing(ast_node_t *n)
+static void emit_array_subscript(ast_node_t *n)
 {
-    assert(n->kind == TOK_AR_SUBSCR);
+    assert(n->kind == ExprArraySubscript);
     assert(n->md.type != TYPE_NONE);
     assert(n->md.sym);
     assert(n->num_childs == 2);
@@ -416,7 +424,7 @@ static void emit_indexing(ast_node_t *n)
     ast_node_t *lhs = n->childs[0];
     ast_node_t *rhs = n->childs[1];
 
-    assert(lhs->kind == TOK_ID || lhs->kind == TOK_AR_SUBSCR);
+    assert(lhs->kind == Ident || lhs->kind == ExprArraySubscript);
     assert(lhs->md.type != TYPE_NONE);
     assert(rhs->md.type != TYPE_NONE);
 
@@ -430,32 +438,9 @@ static void emit_indexing(ast_node_t *n)
         rhs->md.sym);
 }
 
-static void emit_array_subscript(ast_node_t *n)
-{
-    assert(n->kind == TOK_AR_SUBSCR);
-    assert(n->num_childs == 2);
-    assert(n->childs[0]);
-    assert(n->childs[0]->md.type);
-    assert(n->childs[0]->md.sym);
-
-    ast_node_t *lhs = n->childs[0];
-    ast_node_t *rhs = n->childs[1];
-
-    assert(lhs->md.type != TYPE_NONE);
-    assert(rhs->md.type != TYPE_NONE);
-
-    char *index = rhs->md.sym;
-
-    EMIT("%s = _var_get%s(\"%s\", %s);\n",
-        n->md.sym,
-        get_type_label(n->md.type),
-        lhs->tok->lexeme,
-        index);
-}
-
 static void emit_assign(ast_node_t *n)
 {
-    assert(n->kind == TOK_ASSIGN);
+    assert(n->kind == ExprAssign);
     assert(n->num_childs == 2);
     assert(n->childs[0] && n->childs[1]);
     assert(n->md.type);
@@ -467,7 +452,7 @@ static void emit_assign(ast_node_t *n)
     assert(lhs->md.type != TYPE_NONE);
     assert(rhs->md.type != TYPE_NONE);
 
-    if (lhs->kind == TOK_AR_SUBSCR) {
+    if (lhs->kind == ExprArraySubscript) {
         assert(lhs->num_childs == 2);
         assert(lhs->childs[0]);
         assert(lhs->childs[0]->md.type);
@@ -513,7 +498,7 @@ static void emit_assign(ast_node_t *n)
 
 static void emit_pre_inc_dec(ast_node_t *n)
 {
-    assert(n->kind == TOK_INC || n->kind == TOK_DEC);
+    assert(n->kind == ExprInc || n->kind == ExprDec);
     assert(n->num_childs == 1);
     assert(n->childs[0]);
     assert(n->md.type);
@@ -525,7 +510,7 @@ static void emit_pre_inc_dec(ast_node_t *n)
     assert(lhs->decl);
 
     EMIT("%s = %s;\n", n->md.sym, n->childs[0]->md.sym);
-    if (n->kind == TOK_INC) {
+    if (n->kind == ExprInc) {
         EMIT("_vspcIncDec = %s + 1;\n", lhs->md.sym);
     } else {
         EMIT("_vspcIncDec = %s - 1;\n", lhs->md.sym);
@@ -544,21 +529,19 @@ static void emit_expr(ast_node_t *n)
 
     (void)c0, (void)c1, (void)c2, (void)c3;
 
-    bool is_casting_op = n->md.type && (n->kind == TOK_KW_BOOL || n->kind == TOK_KW_INT || n->kind == TOK_KW_FLOAT) && (n->num_childs == 1) && n->md.type != TYPE_NONE && n->md.sym;
+    bool is_casting_op = n->md.type && (n->kind == BoolLit || n->kind == I32Lit || n->kind == F32Lit) && (n->num_childs == 1) && n->md.type != TYPE_NONE && n->md.sym;
 
     assert(n->md.sym);
 
     if (n->num_childs == 0) {
         // base case just stop
         return;
-    } else if (n->kind == TOK_OPEN_BRACKET) {
-        emit_indexing(n);
-    } else if (n->kind == TOK_ASSIGN) {
-        emit_assign(n);
-    } else if (n->kind == TOK_INC || n->kind == TOK_DEC) {
-        emit_pre_inc_dec(n);
-    } else if (n->kind == TOK_AR_SUBSCR) {
+    } else if (n->kind == ExprArraySubscript) {
         emit_array_subscript(n);
+    } else if (n->kind == ExprAssign) {
+        emit_assign(n);
+    } else if (n->kind == ExprInc || n->kind == ExprDec) {
+        emit_pre_inc_dec(n);
     } else if (is_casting_op) {
         char *cast = n->tok->lexeme;
         EMIT("%s = (%s) %s;\n", n->md.sym,
@@ -582,7 +565,7 @@ static void emit_expr(ast_node_t *n)
             }
         } else {
             assert(n->num_childs == 2);
-            if (n->kind == TOK_POW) {
+            if (n->kind == ExprPow) {
                 EMIT("%s = pow%s(%s, %s);\n",
                     n->md.sym,
                     n->md.type == TYPE_F32 ? "" : "l",
@@ -603,7 +586,7 @@ static void emit_expr(ast_node_t *n)
 
 static void emit_var_decl(ast_node_t *n)
 {
-    assert(n->kind == TOK_KW_LET);
+    assert(n->kind == VarDeclStmt);
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
     ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
     ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
@@ -616,7 +599,7 @@ static void emit_var_decl(ast_node_t *n)
 
 static void emit_var_init(ast_node_t *n)
 {
-    assert(n->kind == TOK_KW_LET);
+    assert(n->kind == VarDeclStmt);
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
     ast_node_t *c1 = (n->num_childs >= 2) ? n->childs[1] : NULL;
     ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
@@ -637,7 +620,7 @@ static void emit_var_init(ast_node_t *n)
 
         EMIT("_var_init(\"%s\", %s, %d, (%s[]) {", c1->tok->lexeme, get_type_label(n->md.type), n->md.array_len, ctype);
         if (is_array) {
-            assert(c2->kind == TOK_OPEN_BRACE);
+            assert(c2->kind == InitializerList);
             assert(c2->num_childs >= 1);
             for (int32_t i = 0; i < n->md.array_len; i++) {
                 EMITN("%s", c2->childs[i]->md.sym);
@@ -655,7 +638,7 @@ static void emit_var_init(ast_node_t *n)
 
 static void emit_print(ast_node_t *n)
 {
-    assert(n->kind == TOK_KW_PRINT);
+    assert(n->kind == PrintStmt);
     assert(n->num_childs == 1);
     assert(n->childs[0]);
 
@@ -669,7 +652,7 @@ static void emit_print(ast_node_t *n)
 
     assert(n->md.type == c0->md.type);
 
-    if (c0->kind == TOK_ID) {
+    if (c0->kind == Ident) {
         EMIT("print_sym(\"%s\");\n", c0->tok->lexeme);
     } else {
         switch (n->md.type) {
@@ -730,7 +713,7 @@ static void emit_if(ast_node_t *n, int32_t match_idx)
 
 static void emit_for(ast_node_t *n, int32_t match_idx)
 {
-    assert(n->kind == TOK_KW_FOR);
+    assert(n->kind == ForStmt);
     assert(n->num_childs == 4);
 
     if (match_idx == 0) {
@@ -764,7 +747,7 @@ static void emit_for(ast_node_t *n, int32_t match_idx)
 
 static void emit_while(ast_node_t *n, int32_t match_idx)
 {
-    assert(n->kind == TOK_KW_WHILE);
+    assert(n->kind == WhileStmt);
     assert(n->num_childs == 2);
     assert(n->childs[0]);
     assert(n->childs[1]);
@@ -793,7 +776,7 @@ static void emit_while(ast_node_t *n, int32_t match_idx)
 
 static void emit_do_while(ast_node_t *n, int32_t match_idx)
 {
-    assert(n->kind == TOK_KW_DO);
+    assert(n->kind == DoWhileStmt);
     assert(n->num_childs == 2);
     assert(n->childs[0]);
     assert(n->childs[1]);
@@ -818,10 +801,10 @@ static bool is_control_flow_node(ast_node_t *n)
     if (!n) {
         return false;
     }
-    bool is_if = n->kind == TOK_KW_IF;
-    bool is_for = n->kind == TOK_KW_FOR;
-    bool is_while = n->kind == TOK_KW_WHILE;
-    bool is_do = n->kind == TOK_KW_DO;
+    bool is_if = n->kind == IfStmt;
+    bool is_for = n->kind == ForStmt;
+    bool is_while = n->kind == WhileStmt;
+    bool is_do = n->kind == DoWhileStmt;
 
     bool is_control_flow = is_if || is_for || is_while || is_do;
 
@@ -830,22 +813,22 @@ static bool is_control_flow_node(ast_node_t *n)
 
 static void emit_dispatch(ast_node_t *n, int32_t match_idx)
 {
-    bool is_var_decl = n && n->kind == TOK_KW_LET;
-    bool is_print = n && n->kind == TOK_KW_PRINT;
+    bool is_var_decl = n && n->kind == VarDeclStmt;
+    bool is_print = n && n->kind == PrintStmt;
 
-    if (n->kind == TOK_SEMICOLON) {
+    if (n->kind == Stmt) {
         return;
     }
     bool parent_is_control_flow = is_control_flow_node(n->parent);
 
     if (match_idx == 0) {
         // TOP DOWN ENCOUNTERS
-        if (is_var_decl && (n->parent->kind == TOK_SEMICOLON || parent_is_control_flow)) {
+        if (is_var_decl && (n->parent->kind == Stmt || parent_is_control_flow)) {
             emit_var_decl(n);
         }
     } else if (match_idx == n->num_childs) {
         // BOTTOM UP ENCOUNTERS
-        if (is_var_decl && (n->parent->kind == TOK_SEMICOLON || parent_is_control_flow)) {
+        if (is_var_decl && (n->parent->kind == Stmt || parent_is_control_flow)) {
             emit_var_init(n);
         } else if (is_print) {
             emit_print(n);
@@ -855,13 +838,13 @@ static void emit_dispatch(ast_node_t *n, int32_t match_idx)
     }
 
     if (is_control_flow_node(n)) {
-        if (n->kind == TOK_KW_IF) {
+        if (n->kind == IfStmt) {
             emit_if(n, match_idx);
-        } else if (n->kind == TOK_KW_FOR) {
+        } else if (n->kind == ForStmt) {
             emit_for(n, match_idx);
-        } else if (n->kind == TOK_KW_WHILE) {
+        } else if (n->kind == WhileStmt) {
             emit_while(n, match_idx);
-        } else if (n->kind == TOK_KW_DO) {
+        } else if (n->kind == DoWhileStmt) {
             emit_do_while(n, match_idx);
         }
     }
@@ -910,7 +893,7 @@ static void second_ast_pass(void)
 
         (void)c0, (void)c1, (void)c2, (void)c3;
 
-        if (n->kind == TOK_OPEN_BRACE && n->parent && (n->parent->kind == TOK_YYEOF || n->parent->kind == TOK_SEMICOLON || is_control_flow_node(n->parent))) {
+        if (n->kind == CodeBlock && n->parent && (n->parent->kind == RootNode || n->parent->kind == Stmt || is_control_flow_node(n->parent))) {
             if (n->childs == 0) {
                 // NOTE
                 // Do not generate _scope_begin, _scope_end pair if there's nothing

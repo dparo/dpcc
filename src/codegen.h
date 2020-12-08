@@ -14,6 +14,4 @@
 #include "log.h"
 #include "dpcc.h"
 
-#include "parser.h"
-
 char *codegen(void);

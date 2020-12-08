@@ -40,7 +40,7 @@ bool is_postfix_op(ast_node_t *n)
 
 bool is_expr_node(ast_node_t *n)
 {
-    return (((n->kind == ExprMod) || (n->kind == ExprBNot) || (n->kind == ExprBAnd) || (n->kind == ExprBOr) || (n->kind == ExprBXor) || (n->kind == Expr_BLShift) || (n->kind == Expr_BRShift) || (n->kind == ExprAssign) || (n->kind == ExprAdd) || (n->kind == ExprSub) || (n->kind == ExprMul) || (n->kind == ExprDiv) || (n->kind == ExprPow) || (n->kind == ExprInc) || (n->kind == ExprDec) || (n->kind == ExprPos) || (n->kind == ExprNeg) || (n->kind == ExprEq) || (n->kind == ExprNeq) || (n->kind == ExprLt) || (n->kind == ExprGt) || (n->kind == ExprGtEq) || (n->kind == ExprLtEq) || (n->kind == ExprLNot) || (n->kind == ExprLAnd) || (n->kind == ExprLOr) || (n->kind == ExprArraySubscript)));
+    return (((n->kind == ExprMod) || (n->kind == ExprBNot) || (n->kind == ExprBAnd) || (n->kind == ExprBOr) || (n->kind == ExprBXor) || (n->kind == ExprBLShift) || (n->kind == ExprBRShift) || (n->kind == ExprAssign) || (n->kind == ExprAdd) || (n->kind == ExprSub) || (n->kind == ExprMul) || (n->kind == ExprDiv) || (n->kind == ExprPow) || (n->kind == ExprInc) || (n->kind == ExprDec) || (n->kind == ExprPos) || (n->kind == ExprNeg) || (n->kind == ExprEq) || (n->kind == ExprNeq) || (n->kind == ExprLt) || (n->kind == ExprGt) || (n->kind == ExprGtEq) || (n->kind == ExprLtEq) || (n->kind == ExprLNot) || (n->kind == ExprLAnd) || (n->kind == ExprLOr) || (n->kind == ExprArraySubscript)));
 }
 
 
@@ -185,10 +185,10 @@ enum DPCC_TYPE unref_type(enum DPCC_TYPE in)
 void typecheck_expr_and_operators(ast_node_t *n)
 {
 
-    if (((n->kind == ExprMod) || (n->kind == ExprBNot) || (n->kind == ExprBAnd) || (n->kind == ExprBOr) || (n->kind == ExprBXor) || (n->kind == Expr_BLShift) || (n->kind == Expr_BRShift) || (n->kind == ExprAssign) || (n->kind == ExprAdd) || (n->kind == ExprSub) || (n->kind == ExprMul) || (n->kind == ExprDiv) || (n->kind == ExprPow) || (n->kind == ExprInc) || (n->kind == ExprDec) || (n->kind == ExprPos) || (n->kind == ExprNeg) || (n->kind == ExprEq) || (n->kind == ExprNeq) || (n->kind == ExprLt) || (n->kind == ExprGt) || (n->kind == ExprGtEq) || (n->kind == ExprLtEq) || (n->kind == ExprLNot) || (n->kind == ExprLAnd) || (n->kind == ExprLOr) || (n->kind == ExprArraySubscript)))
+    if (((n->kind == ExprMod) || (n->kind == ExprBNot) || (n->kind == ExprBAnd) || (n->kind == ExprBOr) || (n->kind == ExprBXor) || (n->kind == ExprBLShift) || (n->kind == ExprBRShift) || (n->kind == ExprAssign) || (n->kind == ExprAdd) || (n->kind == ExprSub) || (n->kind == ExprMul) || (n->kind == ExprDiv) || (n->kind == ExprPow) || (n->kind == ExprInc) || (n->kind == ExprDec) || (n->kind == ExprPos) || (n->kind == ExprNeg) || (n->kind == ExprEq) || (n->kind == ExprNeq) || (n->kind == ExprLt) || (n->kind == ExprGt) || (n->kind == ExprGtEq) || (n->kind == ExprLtEq) || (n->kind == ExprLNot) || (n->kind == ExprLAnd) || (n->kind == ExprLOr) || (n->kind == ExprArraySubscript)))
     {
 
-        if (((n->kind == ExprMod) || (n->kind == ExprBNot) || (n->kind == ExprBAnd) || (n->kind == ExprBOr) || (n->kind == ExprBXor) || (n->kind == Expr_BLShift) || (n->kind == Expr_BRShift)))
+        if (((n->kind == ExprMod) || (n->kind == ExprBNot) || (n->kind == ExprBAnd) || (n->kind == ExprBOr) || (n->kind == ExprBXor) || (n->kind == ExprBLShift) || (n->kind == ExprBRShift)))
         {
 
             if ((n->num_childs == 1) && ((n->childs[0]->md.type == TYPE_I32)))

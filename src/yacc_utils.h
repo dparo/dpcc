@@ -82,7 +82,7 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         yylloc.last_line = yylloc.first_line;                  \
         yylloc.last_column = yylloc.first_column + yyleng;     \
         token_t *t = token_new(yylloc, yytext, TOK_##X, (#X)); \
-        yylval = new_node(t, TOK_##X, (#X));                   \
+        yylval = new_node(t, 0, "");                           \
         return (TOK_##X);                                      \
     } while (0)
 

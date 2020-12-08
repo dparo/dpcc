@@ -322,8 +322,8 @@ namespace DPCC {
                 "ExprBAnd",
                 "ExprBOr",
                 "ExprBXor",
-                "Expr_BLShift",
-                "Expr_BRShift",
+                "ExprBLShift",
+                "ExprBRShift",
             ],
             [
                 new ExprTypeRule("int", ["int"]),

@@ -245,7 +245,7 @@ assignment:     expr[lhs] "="[op] expr[rhs]                   { $$ = NEW_NODE($o
         ;
 
 print_stmt:     "print"[op] "(" expr[e] ")"                   { $$ = NEW_NODE($op->tok, PrintStmt); push_child($$, $e); }
-        |       "print"[op] "(" STRING_LIT[s] ")"             { $$ = NEW_NODE($op->tok, PrintStmt); push_child($$, $s); }
+        |       "print"[op] "(" error ")"                     {  }
         ;
 
 
@@ -266,19 +266,19 @@ list_elems:       list_elems[car] "," list_elem[self]  { $$ = $car; push_child($
 list_elem:        expr  { $$ = $1; }
         ;
 
-integral_var_decl: "let"[op] ID[id]                                                  { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {NULL, $id, NULL}); }
-        |          "let"[op] ID[id] "=" expr[e]                                      { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {NULL, $id, $e}); }
-        |          "let"[op] ID[id] ":" integral_type[t]                             { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {$t, $id, NULL}); }
-        |          "let"[op] ID[id] ":" integral_type[t] "=" expr[e]                 { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {$t, $id, $e}); }
+integral_var_decl: "let"[op] ident[id]                                                  { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {NULL, $id, NULL}); }
+        |          "let"[op] ident[id] "=" expr[e]                                      { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {NULL, $id, $e}); }
+        |          "let"[op] ident[id] ":" integral_type[t]                             { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {$t, $id, NULL}); }
+        |          "let"[op] ident[id] ":" integral_type[t] "=" expr[e]                 { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {$t, $id, $e}); }
         ;
 
-array_var_decl:  "let"[op] ID[id] ":" array_type[t]                                  { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {$t, $id, NULL}); }
-        |        "let"[op] ID[id] ":" array_type[t] "=" list_init[il]                { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {$t, $id, $il}); }
+array_var_decl:  "let"[op] ident[id] ":" array_type[t]                                  { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {$t, $id, NULL}); }
+        |        "let"[op] ident[id] ":" array_type[t] "=" list_init[il]                { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {$t, $id, $il}); }
         ;
 
-integral_type:  "int"      { $$ = $1; }
-        |       "float"    { $$ = $1; }
-        |       "bool"     { $$ = $1; }
+integral_type:  "int"      { $$ = $1; NODE_KIND($$, TypeInfoInt); }
+        |       "float"    { $$ = $1; NODE_KIND($$, TypeInfoFloat);}
+        |       "bool"     { $$ = $1; NODE_KIND($$, TypeInfoBool); }
         ;
 
 array_type:  sized_array_type    { $$ = $1; }
@@ -286,12 +286,12 @@ array_type:  sized_array_type    { $$ = $1; }
         ;
 
 
-sized_array_type:     "int"[t] "["[op] pI32_LIT[n] "]"      { $$ = NEW_NODE($op->tok, TypeInfo); push_childs($$, 2, YYANARRAY {$t, $n}); }
-        |             "float"[t] "["[op] pI32_LIT[n] "]"    { $$ = NEW_NODE($op->tok, TypeInfo); push_childs($$, 2, YYANARRAY {$t, $n}); }
+sized_array_type:     "int"[t] "["[op] pI32_LIT[n] "]"      { $$ = NEW_NODE($op->tok, TypeInfoInt); push_childs($$, 2, YYANARRAY {$t, $n}); }
+        |             "float"[t] "["[op] pI32_LIT[n] "]"    { $$ = NEW_NODE($op->tok, TypeInfoFloat); push_childs($$, 2, YYANARRAY {$t, $n}); }
         ;
 
-unsized_array_type:   "int"[t] "["[op] "]"      { $$ = NEW_NODE($op->tok, TypeInfo); push_childs($$, 2, YYANARRAY { $t, NULL}); }
-        |             "float"[t] "["[op] "]"    { $$ = NEW_NODE($op->tok, TypeInfo); push_childs($$, 2, YYANARRAY { $t, NULL}); }
+unsized_array_type:   "int"[t] "["[op] "]"      { $$ = NEW_NODE($op->tok, TypeInfoInt); push_childs($$, 2, YYANARRAY { $t, NULL}); }
+        |             "float"[t] "["[op] "]"    { $$ = NEW_NODE($op->tok, TypeInfoFloat); push_childs($$, 2, YYANARRAY { $t, NULL}); }
         ;
 
 
@@ -343,6 +343,7 @@ do_while_stmt:  "do"[op] code_block[cb] "while" "(" expr[e] ")" ";"  { $$ = NEW_
         ;
 
 
+ident: ID { $$ = $1; NODE_KIND($$, Ident); }
 pID: ID  {
         $$ = $1;
         NODE_KIND($$, Ident);
@@ -358,8 +359,9 @@ pID: ID  {
 
 pI32_LIT:    I32_LIT                                            { NODE_KIND($$, I32Lit); INIT_I32($$); }
 pF32_LIT:    F32_LIT                                            { NODE_KIND($$, F32Lit); INIT_F32($$); }
-pCHAR_LIT:   CHAR_LIT                                           { NODE_KIND($$, CharLit); INIT_CHAR($$); }
+pCHAR_LIT:   CHAR_LIT                                           { NODE_KIND($$, I32Lit); INIT_CHAR($$); }
 pBOOL_LIT:   BOOL_LIT                                           { NODE_KIND($$, BoolLit); INIT_BOOL($$); }
+pSTRING_LIT: STRING_LIT                                         { NODE_KIND($$, StringLit); }
 
 
 
@@ -396,10 +398,11 @@ expr:          "(" error ")"                                       {  }
         |       pCHAR_LIT                                          { $$ = $1; }
         |       pBOOL_LIT                                          { $$ = $1; }
         |       pID                                                { $$ = $1; }
+        |       pSTRING_LIT                                        { $$ = $1; }
         |       pID[lhs] "["[op] expr[rhs] "]" %prec AR_SUBSCR     { $$ = NEW_NODE($op->tok, ExprArraySubscript); push_childs($$, 2, YYANARRAY {$lhs, $rhs}); }
-        |       "int"[op] "(" expr[e] ")"                          { $$ = NEW_NODE($op->tok, ExprCast); push_child($$, $e); }
-        |       "float"[op] "(" expr[e] ")"                        { $$ = NEW_NODE($op->tok, ExprCast); push_child($$, $e); }
-        |       "bool"[op] "(" expr[e] ")"                         { $$ = NEW_NODE($op->tok, ExprCast); push_child($$, $e); }
+        |       "int"[op] "(" expr[e] ")"                          { $$ = NEW_NODE($op->tok, ExprCastInt); push_child($$, $e); }
+        |       "float"[op] "(" expr[e] ")"                        { $$ = NEW_NODE($op->tok, ExprCastFloat); push_child($$, $e); }
+        |       "bool"[op] "(" expr[e] ")"                         { $$ = NEW_NODE($op->tok, ExprCastBool); push_child($$, $e); }
         ;
 
 %%

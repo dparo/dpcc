@@ -354,13 +354,6 @@ ast_node_t *ast_traverse_next(ast_traversal_t *t, int32_t *match_idx)
 
         assert(pop_success);
 
-        if (nvcs->kind == NullAstNodeKind) {
-            return NULL;
-        }
-
-        if (parent == NULL) {
-            return NULL;
-        }
         // If bottom up (match_idx == NULL return)
         if (match_idx == NULL) {
             return nvcs;
