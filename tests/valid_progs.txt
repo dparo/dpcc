@@ -1,0 +1,385 @@
+
+/// Boolean var decls
+//@ t = 1
+//@ 0
+
+{
+    let t = true;
+    print(t);
+    print(false);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+/// Integer var decl
+//@ a = 3
+//@ b = 100
+//@ a = 22
+
+{
+    let a = 3;
+    let b = 100;
+    print(a);
+    print(b);
+    a = 22;
+    print(a);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+/// Float var decl
+//@ a = 4.000000
+//@ b = 10.230000
+
+{
+    let a = 4.0;
+    let b = 10.23f;
+
+    print(a);
+    print(b);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Array var decl
+//@ a = { 10, 20, 30, 40, 50 }
+
+{
+    let a: int[] = { 10, 20, 30, 40, 50 };
+    print(a);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Iteration example
+//@ a = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }
+
+{
+    let a: int[10];
+
+    for (let i = 0; i < 10; i++) {
+        a[i] = i;
+    }
+    print(a);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Casting example (Cast truncates)
+//@ 10
+//@ -65536.000000
+
+{
+    print(int(10.23));
+    print(float(0xffff0000));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Immediate value print
+//@ 10
+//@ 23
+//@ 11.630800
+
+{
+    print(10);
+    print(5 + 2 * 3 ** 2);
+    print(5.0 + 3.3154 * 2);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Logical operator test
+//@ 1
+//@ 0
+
+//@ 0
+//@ 1
+
+//@ 1
+//@ 0
+//@ 0
+//@ 0
+
+//@ 1
+//@ 1
+//@ 1
+//@ 0
+
+
+//@ 0
+//@ 1
+
+//@ 1
+//@ 0
+
+{
+    print(true);
+    print(false);
+
+    print(!true);
+    print(!false);
+
+
+    print(true && true);
+    print(true && false);
+    print(false && true);
+    print(false && false);
+
+    print(true || true);
+    print(true || false);
+    print(false || true);
+    print(false || false);
+
+
+    print(bool(0));
+    print(bool(10));
+    print(!bool(0));
+    print(!bool(10));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Integer Comparisons test
+//@ c = 1
+//@ c = 0
+//@ c = 1
+//@ c = 0
+//@ c = 1
+//@ c = 1
+
+{
+    let c: bool;
+    c = 10 == 10;
+    print(c);
+
+    c = 10 == 11;
+    print(c);
+
+
+    c = 10 >= 10;
+    print(c);
+
+    c = 10 >= 11;
+    print(c);
+
+
+    c = 10 <= 10;
+    print(c);
+
+    c = 10 <= 11;
+    print(c);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Float comparisons test
+//@ c = 1
+//@ c = 0
+//@ c = 1
+//@ c = 1
+
+{
+    let c: bool;
+
+    c = 10.1234 >= 10.1234;
+    print(c);
+
+    c = 10.1234 >= 11.975;
+    print(c);
+
+    c = 10.1234 <= 10.1234;
+    print(c);
+
+    c = 10.1234 <= 11.975;
+    print(c);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Bitwise operator test
+//@ a = 147
+//@ b = 85
+//@ ~a = -148
+//@ a & b = 17
+//@ a | b = 215
+//@ a ^ b = 198
+
+{
+    let a = 0b10010011;
+    let b = 0b01010101;
+
+    print(a);
+    print(b);
+
+    print("~a = ");
+    print(~a);
+
+    print("a & b = "); print(a & b);
+    print("a | b = "); print(a | b);
+    print("a ^ b = "); print(a ^ b);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Dot product computation with integers
+//@ a = { 0, 1, 2, 3, 4 }
+//@ b = { 7, 20, 21, 28, 35 }
+//@ dot = 286
+
+
+{
+    let a: int[] = { 0, 1, 2, 3, 4 };
+    let b: int[] = { 7, 14 + 2 * 3, 21, 28, 35 };
+    let dot = 0;
+
+    for (let i = 0; i < 5; i++) {
+        dot = dot + (a[i] * b[i]);
+    }
+
+    print(a);
+    print(b);
+    print(dot);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Dot product computation with floats
+//@ a = { 0.000000, 1.000000, 2.000000, 3.750000, 4.000000 }
+//@ b = { 7.000000, 14.200000, 21.000000, 28.000000, 43.000000 }
+//@ dot = 333.200012
+
+{
+    let a: float[] = { 0.0, 1.0, 2.0, 3.75, 4.0 };
+    let b: float[] = { 7.0, 14.2, 21.0, 28.0, 35.0 + 2 ** 3 };
+    let dot = 0.0;
+
+    for (let i = 0; i < 5; i++) {
+        dot = dot + (a[i] * b[i]);
+    }
+
+    print(a);
+    print(b);
+    print(dot);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Bubble sort
+//@ Un-sorted array
+//@ array = { 15, 59, 61, 75, 12, 71, 5, 35, 44, 6, 98, 17, 81, 56, 53, 31, 20, 11, 45, 80, 8, 34, 71, 83, 64, 28, 3, 88, 50, 48, 80, 5 }
+//@ Sorted array
+//@ array = { 3, 5, 5, 6, 8, 11, 12, 15, 17, 20, 28, 31, 34, 35, 44, 45, 48, 50, 53, 56, 59, 61, 64, 71, 71, 75, 80, 80, 81, 83, 88, 98 }
+
+
+{
+    // 32 elements random array between [0, 100]
+    let array: int[] = {
+        15, 59, 61, 75, 12, 71,  5, 35, 44,
+        6, 98, 17, 81, 56, 53, 31, 20, 11,
+        45, 80,  8, 34, 71, 83, 64, 28,  3,
+        88, 50, 48, 80,  5
+    };
+
+    let len = 32;
+
+    print("Un-sorted array\n");
+    print(array);
+
+    for (let i = 0; i < len; i++) {
+        for (let k = i; k < len; k++) {
+            let s: int;
+            if (array[i] > array[k]) {
+                s = array[i];
+                array[i] = array[k];
+                array[k] = s;
+            }
+        }
+    }
+
+    print("Sorted array\n");
+    print(array);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Iterative Merge sort
+//@ Un-sorted array
+//@ array = { 15, 59, 61, 75, 12, 71, 5, 35, 44, 6, 98, 17, 81, 56, 53, 31, 20, 11, 45, 80, 8, 34, 71, 83, 64, 28, 3, 88, 50, 48, 80, 5 }
+//@ Sorted array
+//@ array = { 3, 5, 5, 6, 8, 11, 12, 15, 17, 20, 28, 31, 34, 35, 44, 45, 48, 50, 53, 56, 59, 61, 64, 71, 71, 75, 80, 80, 81, 83, 88, 98 }
+
+{
+    let array: int[] = {
+        15, 59, 61, 75, 12, 71,  5, 35, 44,
+        6, 98, 17, 81, 56, 53, 31, 20, 11,
+        45, 80,  8, 34, 71, 83, 64, 28,  3,
+        88, 50, 48, 80,  5
+    };
+
+
+    let len = 32;
+    print("Un-sorted array\n");
+    print(array);
+
+    {
+        for (let curr_size = 1; curr_size < len; curr_size = 2 * curr_size) {
+            for (let left_start = 0; left_start < len - 1; left_start = left_start + 2 * curr_size) {
+                let mid = len - 1;
+                if ((left_start + curr_size - 1) < len - 1) {
+                    mid = left_start + curr_size - 1;
+                }
+                let right_end = len - 1;
+                if ((left_start + 2 * curr_size - 1) < len - 1) {
+                    right_end = left_start + 2 * curr_size - 1;
+                }
+
+
+                {
+                    let l = left_start;
+                    let m = mid;
+                    let r = right_end;
+                    let n1 = m - l + 1;
+                    let n2 = r - m;
+
+                    let L: int[1024];
+                    let R: int[1024];
+
+                    // Copy to temp arrays
+                    for (let i = 0; i < n1; i++) {
+                        L[i] = array[l + i];
+                    }
+                    for (let i = 0; i < n2; i++) {
+                        R[i] = array[m + 1 + i];
+                    }
+
+
+                    let i = 0;
+                    let j = 0;
+                    let k = l;
+                    while (i < n1 && j < n2) {
+                        if (!(L[i] > R[j])) {
+                            array[k++] = L[i++];
+                        } else {
+                            array[k++] = R[j++];
+                        }
+                    }
+
+                    while (i < n1) {
+                        array[k++] = L[i++];
+                    }
+                    while (j < n2) {
+                        array[k++] = R[j++];
+                    }
+                }
+            }
+        }
+    }
+
+    print("Sorted array\n");
+    print(array);
+}
+
+///////////////////////////////////////////////////////////////////////////////

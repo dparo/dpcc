@@ -53,8 +53,8 @@ def check_test(input, exit_code, output, expected_output):
 
 
 
-def test(input, expected_output):
-    if len(expected_output) == 0 or expected_output == "\n":
+def test_chunk(input, expected_output):
+    if expected_output is not None and (len(expected_output) == 0 or expected_output == "\n"):
         expected_output = None
 
     out_filepath = "tmp/code.txt"
@@ -75,18 +75,26 @@ def test(input, expected_output):
     check_test(input, exit_code, output, expected_output)
 
 
+import re
+
+def test_file(filepath, is_valid=True):
+
+    with open(filepath, "r") as progs:
+        contents = progs.read()
+
+        chunks = re.split(r'^/{8}/*$', contents, flags=re.MULTILINE)
+        chunks = list(map(lambda c: c.strip(), chunks))
+
+        for c in chunks:
+            input = strip_comments(c).strip()
+            expected_output = "\n".join(extract_expected_out(c))
+            if is_valid == False:
+                expected_output = None
+
+            if len(input) > 0 and not input.isspace():
+                test_chunk(input, expected_output)
 
 
-with open("tests/progs.txt", "r") as progs:
-    import re
-    contents = progs.read()
 
-    chunks = re.split(r'^/{8}/*$', contents, flags=re.MULTILINE)
-    chunks = list(map(lambda c: c.strip(), chunks))
-
-    for c in chunks:
-        input = strip_comments(c).strip()
-        expected_output = "\n".join(extract_expected_out(c))
-
-        if len(input) > 0 and not input.isspace():
-            test(input, expected_output)
+test_file('tests/valid_progs.txt', True)
+test_file('tests/invalid_progs.txt', False)
