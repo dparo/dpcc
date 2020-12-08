@@ -674,7 +674,7 @@ static void emit_print(ast_node_t *n)
             EMIT("printf(\"%%f\\n\", %s);\n", c0->md.sym);
         } break;
         case TYPE_STR: {
-            EMIT("printf(\"%%s\\n\", %s);\n", c0->tok->lexeme);
+            EMIT("printf(\"%%s\", %s);\n", c0->tok->lexeme);
         } break;
         }
     }
