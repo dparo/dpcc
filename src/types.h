@@ -76,6 +76,66 @@ enum DPCC_TYPE {
     TYPE_STR,
 };
 
+typedef enum ast_node_kind {
+    InvalidAstNodeKind = 0,
+
+    Ident,
+    I32Lit,
+    F32Lit,
+    CharLit,
+    BoolLit,
+    StringLit,
+
+    CodeBlock,
+
+    Stmt,
+    PrintStmt,
+    VarDeclStmt,
+    IfStmt,
+    ForStmt,
+    WhileStmt,
+    DoWhileStmt,
+
+    TypeInfo,
+    InitializerList,
+
+    ExprCast,
+    ExprAssign,
+
+    EpxrNeg,
+    ExprAdd,
+    ExprSub,
+    ExprMul,
+    ExprDiv,
+    ExprMod,
+
+    ExprEq,
+    ExprNeq,
+    ExprGt,
+    ExprGtEq,
+    ExprLt,
+    ExprLtEq,
+
+    ExprLNot,
+    ExprLAnd,
+    ExprLOr,
+
+    ExprBNot,
+    ExprBAnd,
+    ExprBOr,
+    ExprBXor,
+
+    ExprInc,
+    ExprDec,
+
+    ExprArraySubscript,
+
+    ExprBLShift,
+    ExprBRShift,
+
+    ExprPow,
+} ast_node_kind_t;
+
 typedef struct {
     enum DPCC_TYPE type;
     int32_t array_len;
