@@ -1,16 +1,20 @@
-build
-logs
-.cache
-cache
 .gdb_history
 .log
-report
-org
-tmp
+.cache
 *.swp
 
 a.out
 a.out.c
+
+
+/tmp
+/build
+/logs
+/org
+/report
+
+/cache
+
 
 dist
 node_modules

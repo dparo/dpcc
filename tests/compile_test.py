@@ -57,7 +57,7 @@ def test_chunk(input, expected_output):
     if expected_output is not None and (len(expected_output) == 0 or expected_output == "\n"):
         expected_output = None
 
-    out_filepath = "tmp/code.txt"
+    out_filepath = "tests/tmp/code.txt"
 
     out_fh = open(out_filepath, "w")
 
