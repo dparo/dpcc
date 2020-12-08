@@ -198,6 +198,6 @@ static bool _var_set_kBOOL(char *lexeme, int32_t index, bool val)
     sym_t *sym = sym_lookup(lexeme);
     assert(sym);
     _index_check(sym, index);
-    ((float *)sym->buf)[index] = (val);
+    ((bool *)sym->buf)[index] = (val);
     return val;
 }

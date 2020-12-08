@@ -477,9 +477,9 @@ static void emit_assign(ast_node_t *n)
 
         char *index = lhs->childs[1]->md.sym;
 
-        if (lhs->md.sym) {
+        if (n->md.sym) {
             EMIT("%s = _var_set%s(\"%s\", %s, %s);\n",
-                lhs->md.sym,
+                n->md.sym,
                 get_type_label(lhs->md.type),
                 lhs->childs[0]->tok->lexeme,
                 index,
@@ -497,7 +497,7 @@ static void emit_assign(ast_node_t *n)
         assert(lhs->md.type);
         assert(lhs->md.sym);
 
-        if (n->md.sym) {
+        if (lhs->md.sym) {
             EMIT("%s = _var_set%s(\"%s\", 0, %s);\n",
                 n->md.sym,
                 get_type_label(lhs->md.type),
@@ -584,12 +584,14 @@ static void emit_expr(ast_node_t *n)
         } else {
             assert(n->num_childs == 2);
             if (n->kind == TOK_POW) {
-                EMIT("pow%s(%s, %s);\n",
+                EMIT("%s = pow%s(%s, %s);\n",
+                    n->md.sym,
                     n->md.type == TYPE_F32 ? "" : "l",
                     n->childs[0]->md.sym,
                     n->childs[1]->md.sym);
             } else {
-                EMIT("%s %s %s;\n",
+                EMIT("%s = %s %s %s;\n",
+                    n->md.sym,
                     n->childs[0]->md.sym,
                     n->tok->lexeme,
                     n->childs[1]->md.sym);

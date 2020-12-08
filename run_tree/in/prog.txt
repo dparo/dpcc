@@ -109,6 +109,14 @@ print("\n\Logical operator test\n");
     print(!bool(10));
 }
 
+print("\n\Comparisons test\n");
+{
+    let c: bool;
+    c = 10 == 10;
+    print(c);
+}
+
+
 print("\n\nBitwise operator test\n");
 {
     let a = 0b10010011;
@@ -125,7 +133,7 @@ print("\n\nBitwise operator test\n");
 
     print("a | b = ");
     print(a | b);
-    
+
     print("a ^ b = ");
     print(a ^ b);
 }

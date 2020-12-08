@@ -207,7 +207,29 @@ void typecheck_expr_and_operators(ast_node_t *n)
             }
         }
 
-        if (((n->kind == TOK_ASSIGN) || (n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG)))
+        if (((n->kind == TOK_ASSIGN)))
+        {
+
+            if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_I32) && (n->childs[1]->md.type == TYPE_I32)))
+            {
+                n->md.type = TYPE_I32;
+            }
+            else if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_F32) && (n->childs[1]->md.type == TYPE_F32)))
+            {
+                n->md.type = TYPE_F32;
+            }
+            else if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_BOOL) && (n->childs[1]->md.type == TYPE_BOOL)))
+            {
+                n->md.type = TYPE_BOOL;
+            }
+            else
+            {
+                dpcc_log(DPCC_SEVERITY_ERROR, &((n)->tok->loc), "Types composing this expression cannot be broadcasted");
+                yynerrs += 1;
+            }
+        }
+
+        if (((n->kind == TOK_ADD) || (n->kind == TOK_SUB) || (n->kind == TOK_MUL) || (n->kind == TOK_DIV) || (n->kind == TOK_POW) || (n->kind == TOK_INC) || (n->kind == TOK_DEC) || (n->kind == TOK_POS) || (n->kind == TOK_NEG)))
         {
 
             if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_I32) && (n->childs[1]->md.type == TYPE_I32)))

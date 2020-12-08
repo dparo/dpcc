@@ -348,10 +348,19 @@ namespace DPCC {
             ]
         );
 
+        export const ASSIGN_EXPR = new Expr (
+            [
+                "TOK_ASSIGN",
+            ],
+            [
+                new ExprTypeRule("int", ["int", "int"]),
+                new ExprTypeRule("float", ["float", "float"]),
+                new ExprTypeRule("bool", ["bool", "bool"]),
+            ]
+        );
 
         export const MATH_EXPR = new Expr (
             [
-                "TOK_ASSIGN",
                 "TOK_ADD",
                 "TOK_SUB",
                 "TOK_MUL",
@@ -416,6 +425,7 @@ namespace DPCC {
 
         export const ALL = [
             INTEGER_EXPR,
+            ASSIGN_EXPR,
             MATH_EXPR,
             LOG_COMPS_EXPR,
             LOG_EXPR,
