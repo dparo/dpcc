@@ -11,17 +11,20 @@ set(GENERATED_SOURCES_LIST
 #   )
 
 
-add_custom_target(gen.js
-  node "${CMAKE_SOURCE_DIR}/generated_srcs/dist/main.js"
-  DEPENDS "${CMAKE_SOURCE_DIR}/generated_srcs/dist/main.js"
-  BYPRODUCTS "${CMAKE_SOURCE_DIR}/generated_srcs/last_gen.txt"
-  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/generated_srcs"
-  )
+if(EXISTS "${CMAKE_SOURCE_DIR}/generated_srcs/dist/main.js")
+
+  add_custom_target(gen.js
+    node "${CMAKE_SOURCE_DIR}/generated_srcs/dist/main.js"
+    DEPENDS "${CMAKE_SOURCE_DIR}/generated_srcs/dist/main.js"
+    BYPRODUCTS "${CMAKE_SOURCE_DIR}/generated_srcs/last_gen.txt"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/generated_srcs"
+    )
 
 
-# add_dependencies(libdpcc gen.py)
-add_dependencies(libdpcc gen.js)
+  # add_dependencies(libdpcc gen.py)
+  add_dependencies(libdpcc gen.js)
 
+endif()
 
 foreach(SRC IN LISTS GENERATED_SOURCES_LIST)
   if (EXISTS "${SRC}")
