@@ -267,18 +267,19 @@ static void typecheck_vardecl(ast_node_t *n)
 static void typecheck_print(ast_node_t *n)
 {
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
-    assert(c0 && c0->md.type);
+    if (c0->md.type) {
 
-    bool is_valid_print = ((c0->md.type == TYPE_I32) || (c0->md.type == TYPE_F32) || (c0->md.type == TYPE_BOOL)
-        || (c0->md.type == TYPE_I32_ARRAY) || (c0->md.type == TYPE_F32_ARRAY)
-        || (c0->md.type == TYPE_STR));
+        bool is_valid_print = ((c0->md.type == TYPE_I32) || (c0->md.type == TYPE_F32) || (c0->md.type == TYPE_BOOL)
+            || (c0->md.type == TYPE_I32_ARRAY) || (c0->md.type == TYPE_F32_ARRAY)
+            || (c0->md.type == TYPE_STR));
 
-    if (!is_valid_print) {
-        ERR(c0, "The provided element type (%s) is not printable", c0->tok->lexeme);
-        INFO(c0, "Valid printable types are: %s %s %s %s", dpcc_type_as_str(TYPE_I32), dpcc_type_as_str(TYPE_F32), dpcc_type_as_str(TYPE_BOOL), dpcc_type_as_str(TYPE_STR));
+        if (!is_valid_print) {
+            ERR(c0, "The provided element type (%s) is not printable", c0->tok->lexeme);
+            INFO(c0, "Valid printable types are: %s %s %s %s", dpcc_type_as_str(TYPE_I32), dpcc_type_as_str(TYPE_F32), dpcc_type_as_str(TYPE_BOOL), dpcc_type_as_str(TYPE_STR));
+        }
+
+        n->md.type = c0->md.type;
     }
-
-    n->md.type = c0->md.type;
 }
 
 static void typecheck(ast_node_t *n)
@@ -535,7 +536,7 @@ static void emit_expr(ast_node_t *n)
 
     (void)c0, (void)c1, (void)c2, (void)c3;
 
-    bool is_casting_op = n->md.type && (n->kind == TOK_KW_INT || n->kind == TOK_KW_FLOAT) && (n->num_childs == 1) && n->md.type != TYPE_NONE && n->md.sym;
+    bool is_casting_op = n->md.type && (n->kind == TOK_KW_BOOL || n->kind == TOK_KW_INT || n->kind == TOK_KW_FLOAT) && (n->num_childs == 1) && n->md.type != TYPE_NONE && n->md.sym;
 
     assert(n->md.sym);
 

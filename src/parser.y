@@ -397,8 +397,9 @@ expr:          "(" error ")"                                       {  }
         |       pBOOL_LIT                                          { $$ = $1; }
         |       pID                                                { $$ = $1; }
         |       pID[lhs] "["[op] expr[rhs] "]" %prec AR_SUBSCR     { $$ = NEW_NODE($op->tok, AR_SUBSCR); push_childs($$, 2, CAST {$lhs, $rhs}); }
-        |       integral_type[op] "(" expr[e] ")"                  { $$ = NEW_NODE($op->tok, KW_INT); push_child($$, $e); }
-
+        |       "int"[op] "(" expr[e] ")"                            { $$ = NEW_NODE($op->tok, KW_INT); push_child($$, $e); }
+        |       "float"[op] "(" expr[e] ")"                          { $$ = NEW_NODE($op->tok, KW_FLOAT); push_child($$, $e); }
+        |       "bool"[op] "(" expr[e] ")"                           { $$ = NEW_NODE($op->tok, KW_BOOL); push_child($$, $e); }
         ;
 
 %%
