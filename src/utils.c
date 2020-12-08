@@ -235,6 +235,8 @@ bool str_to_f32(char *string, f32 *out)
 {
     size_t len = strlen(string);
 
+    bool terminating_f = len >= 1 && (string[len - 1] == 'f' || string[len - 1] == 'F');
+
     char *endptr = NULL;
 
     errno = 0;
@@ -242,12 +244,14 @@ bool str_to_f32(char *string, f32 *out)
 
     bool out_of_range = (errno == ERANGE);
     bool failed = len == 0 || out_of_range || endptr == string || endptr == NULL;
-    bool result = !failed && *endptr == '\0';
+
+    bool valid_endptr = *endptr == '\0' || (terminating_f && endptr == string + len - 1);
+    bool result = !failed && valid_endptr;
 
     if (result) {
         *out = conv_ret_val;
     } else {
-        *out = INT32_MIN;
+        *out = NAN;
     }
 
     return result;
