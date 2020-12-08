@@ -323,7 +323,7 @@ namespace DPCC {
                 "ExprBOr",
                 "ExprBXor",
                 "Expr_BLShift",
-                "Epxr_BRShift",
+                "Expr_BRShift",
             ],
             [
                 new ExprTypeRule("int", ["int"]),
@@ -348,7 +348,7 @@ namespace DPCC {
                 "ExprSub",
                 "ExprMul",
                 "ExprDiv",
-                "EpxrPow",
+                "ExprPow",
                 "ExprInc",
                 "ExprDec",
                 "ExprPos",
@@ -396,8 +396,8 @@ namespace DPCC {
         export const LOG_EXPR = new Expr(
             [
                 "ExprLNot",
-                "EpxrLAnd",
-                "EpxrLOr",
+                "ExprLAnd",
+                "ExprLOr",
             ],
             [
                 new ExprTypeRule("bool", ["bool"]),
