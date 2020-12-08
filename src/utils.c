@@ -27,6 +27,9 @@ char *dpcc_type_as_str(enum DPCC_TYPE t)
     case TYPE_NONE: {
         return "<NONE>";
     } break;
+    case TYPE_STR: {
+        return "char *";
+    } break;
     case TYPE_I32: {
         return "int";
     } break;

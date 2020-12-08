@@ -1,11 +1,11 @@
-//
+print("Boolean var decls");
 {
    let t = true;
    print(t);
    print(false);
 }
 
-// Simple integer decl
+print("Integer var decl");
 {
     let a = 3;
     let b = 100;
@@ -16,26 +16,40 @@
 }
 
 
-// Simple var decl
+print("Float var decl");
 {
     let a = 4.0;
     print(a);
 }
 
-// Casting example
+print("Array var decl");
+{
+    let a: int[] = { 10, 20, 30, 40, 50};
+    print(a);
+}
+
+print("Iteration example");
+{
+    for (let i = 0; i < 10; i++) {
+        print(i);
+    }
+}
+
+print("Casting example");
 {
     let b = int(10.23);
     print(b);
 }
 
-// Immediate print
+print("Immediate value print");
 {
     print(10);
     print(5 + 2 * 3 ** 2);
     print(5.0 + 3.0 * 2);
 }
 
-// Dot product computation with integers
+
+print("Dot product computation with integers");
 {
     let a: int[] = { 0, 1, 2, 3, 4 };
     let b: int[] = { 7, 14 + 2 * 3, 21, 28, 35 };
@@ -49,7 +63,7 @@
 }
 
 
-// Dot product computation with floats
+print("Dot product with floats");
 {
     let a: float[] = { 0.0, 1.0, 2.0, 3.75, 4.0 };
     let b: float[] = { 7.0, 14.2, 21.0, 28.0, 35.0 + 2 ** 3 };

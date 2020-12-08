@@ -243,7 +243,10 @@ stmt:           expr[c] ";"[op]                   { $$ = NEW_NODE($op->tok, SEMI
 
 assignment:     expr[lhs] "="[op] expr[rhs]                   { $$ = NEW_NODE($op->tok, ASSIGN); push_childs($$, 2, CAST {$lhs, $rhs}); }
         ;
+
 print_stmt:     "print"[op] "(" expr[e] ")"                   { $$ = NEW_NODE($op->tok, KW_PRINT); push_child($$, $e); }
+        |       "print"[op] "(" STRING_LIT[s] ")"             { $$ = NEW_NODE($op->tok, KW_PRINT); push_child($$, $s); }
+        ;
 
 
 decl:      integral_var_decl                                  { $$ = $1; if (!var_decl($1)) { PARSE_ERROR(); } }

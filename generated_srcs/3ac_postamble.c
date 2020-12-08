@@ -1,6 +1,6 @@
 #define INVALID_CODE_PATH() assert(!"Invalid code path")
 
-typedef struct {
+typedef struct sym {
     char *lexeme;
     void *buf;
     int32_t array_len;
@@ -122,6 +122,33 @@ static void _index_check(sym_t *sym, int32_t index)
         fprintf(stderr, "But got index %d instead\n", index);
         abort();
     }
+}
+
+static void print_sym(char *lexeme)
+{
+    sym_t *sym = sym_lookup(lexeme);
+    assert(sym);
+
+    printf("%s = ", lexeme);
+    if (sym->array_len > 1) {
+        printf("{ ");
+    }
+
+    for (int32_t i = 0; i < sym->array_len; i++) {
+        char *comma = i == sym->array_len - 1 ? "" : ", ";
+        switch (sym->type) {
+        default: { INVALID_CODE_PATH(); } break;
+        case _kBOOL: { printf("%d%s", ((bool *) sym->buf)[i], comma); } break;
+        case _kI32:  { printf("%d%s", ((int32_t *) sym->buf)[i], comma); } break;
+        case _kF32:  { printf("%f%s", ((float *) sym->buf)[i], comma); } break;
+        }
+    }
+
+    if (sym->array_len > 1) {
+        printf(" }");
+    }
+
+    printf("\n");
 }
 
 static int32_t _var_get_kI32(char *lexeme, int32_t index)

@@ -73,6 +73,7 @@ enum DPCC_TYPE {
     TYPE_F32,
     TYPE_I32_ARRAY,
     TYPE_F32_ARRAY,
+    TYPE_STR,
 };
 
 typedef struct {

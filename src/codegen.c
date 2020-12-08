@@ -269,10 +269,15 @@ static void typecheck_print(ast_node_t *n)
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
     assert(c0 && c0->md.type);
 
-    if (!((c0->md.type == TYPE_I32) || (c0->md.type == TYPE_F32) || (c0->md.type == TYPE_BOOL))) {
+    bool is_valid_print = ((c0->md.type == TYPE_I32) || (c0->md.type == TYPE_F32) || (c0->md.type == TYPE_BOOL)
+        || (c0->md.type == TYPE_I32_ARRAY) || (c0->md.type == TYPE_F32_ARRAY)
+        || (c0->md.type == TYPE_STR));
+
+    if (!is_valid_print) {
         ERR(c0, "The provided element type (%s) is not printable", c0->tok->lexeme);
-        INFO(c0, "Valid printable types are: %s %s %s ", dpcc_type_as_str(TYPE_I32), dpcc_type_as_str(TYPE_F32), dpcc_type_as_str(TYPE_BOOL));
+        INFO(c0, "Valid printable types are: %s %s %s %s", dpcc_type_as_str(TYPE_I32), dpcc_type_as_str(TYPE_F32), dpcc_type_as_str(TYPE_BOOL), dpcc_type_as_str(TYPE_STR));
     }
+
     n->md.type = c0->md.type;
 }
 
@@ -293,6 +298,8 @@ static void typecheck(ast_node_t *n)
         n->md.type = TYPE_F32;
     } else if (n->kind == TOK_BOOL_LIT) {
         n->md.type = TYPE_BOOL;
+    } else if (n->kind == TOK_STRING_LIT) {
+        n->md.type = TYPE_STR;
     } else if (n->kind == TOK_ID) {
         if (n->decl) {
             n->md.type = n->decl->md.type;
@@ -324,20 +331,22 @@ static char *gen_sym(ast_node_t *n)
     str_t s = { 0 };
 
     if (n->md.sym) {
-        sfcat(&G_allctx, &s, "%s", n->md.sym);
+        return n->md.sym;
     } else if (n->kind == TOK_ID && !n->md.sym && (n->md.type == TYPE_I32_ARRAY || n->md.type == TYPE_F32_ARRAY)) {
         sfcat(&G_allctx, &s, "%s", n->tok->lexeme);
     } else if (n->kind == TOK_ID && !n->md.sym) {
         assert(n->decl);
         assert(n->md.type == TYPE_I32 || n->md.type == TYPE_F32 || n->md.type == TYPE_BOOL);
         sfcat(&G_allctx, &s, "_var_get%s(\"%s\", 0)", get_type_label(n->md.type), n->tok->lexeme);
-    } else if (n->kind == TOK_I32_LIT || n->kind == TOK_F32_LIT || n->kind == TOK_CHAR_LIT || n->kind == TOK_BOOL_LIT) {
+    } else if (n->kind == TOK_I32_LIT || n->kind == TOK_F32_LIT || n->kind == TOK_CHAR_LIT || n->kind == TOK_BOOL_LIT || n->kind == TOK_STRING_LIT) {
         if (n->md.type == TYPE_I32) {
             sfcat(&G_allctx, &s, "%d", n->val.as_i32);
         } else if (n->md.type == TYPE_F32) {
             sfcat(&G_allctx, &s, "%f", n->val.as_f32);
         } else if (n->md.type == TYPE_BOOL) {
             sfcat(&G_allctx, &s, "%i", n->val.as_bool);
+        } else if (n->md.type == TYPE_STR) {
+            sfcat(&G_allctx, &s, "%s", n->tok->lexeme);
         } else {
             invalid_code_path();
         }
@@ -650,17 +659,24 @@ static void emit_print(ast_node_t *n)
 
     assert(n->md.type == c0->md.type);
 
-    switch (n->md.type) {
-    default: {
-        invalid_code_path();
-    } break;
-    case TYPE_BOOL:
-    case TYPE_I32: {
-        EMIT("printf(\"%%d\\n\", %s);\n", c0->md.sym);
-    } break;
-    case TYPE_F32: {
-        EMIT("printf(\"%%f\\n\", %s);\n", c0->md.sym);
-    } break;
+    if (c0->kind == TOK_ID) {
+        EMIT("print_sym(\"%s\");\n", c0->tok->lexeme);
+    } else {
+        switch (n->md.type) {
+        default: {
+            invalid_code_path();
+        } break;
+        case TYPE_BOOL:
+        case TYPE_I32: {
+            EMIT("printf(\"%%d\\n\", %s);\n", c0->md.sym);
+        } break;
+        case TYPE_F32: {
+            EMIT("printf(\"%%f\\n\", %s);\n", c0->md.sym);
+        } break;
+        case TYPE_STR: {
+            EMIT("printf(\"%%s\\n\", %s);\n", c0->tok->lexeme);
+        } break;
+        }
     }
 }
 
