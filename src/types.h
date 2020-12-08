@@ -77,7 +77,8 @@ enum DPCC_TYPE {
 };
 
 typedef enum ast_node_kind {
-    InvalidAstNodeKind = 0,
+    NullAstNodeKind = 0,
+    RootNode = 1,
 
     Ident,
     I32Lit,
@@ -86,6 +87,7 @@ typedef enum ast_node_kind {
     BoolLit,
     StringLit,
 
+    MainFn,
     CodeBlock,
 
     Stmt,
@@ -102,7 +104,7 @@ typedef enum ast_node_kind {
     ExprCast,
     ExprAssign,
 
-    EpxrNeg,
+    ExprNeg,
     ExprAdd,
     ExprSub,
     ExprMul,
@@ -151,8 +153,7 @@ typedef struct {
 typedef struct ast_node {
     token_t *tok;
 
-    loc_t loc;
-    i32 kind;
+    ast_node_kind_t kind;
     char *skind;
 
     codegen_metadata_t md;

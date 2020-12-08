@@ -87,10 +87,10 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
     } while (0)
 
 #define NEW_NODE(TOKEN_PTR, KIND) \
-    new_node(TOKEN_PTR, TOK_##KIND, #KIND)
+    new_node(TOKEN_PTR, KIND, #KIND)
 
 #define NODE_KIND(node, KIND) \
-    node_set_kind(node, TOK_##KIND, (#KIND))
+    node_set_kind(node, KIND, (#KIND))
 
 #define PARSE_ERROR() \
     do {              \
@@ -103,7 +103,7 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         if (!yacc_from_str_to_i32(node)) { \
             PARSE_ERROR();                 \
         }                                  \
-        NODE_KIND(node, I32_LIT);          \
+        NODE_KIND(node, I32Lit);           \
     } while (0)
 
 #define INIT_F32(node)                     \
@@ -111,7 +111,7 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         if (!yacc_from_str_to_f32(node)) { \
             PARSE_ERROR();                 \
         }                                  \
-        NODE_KIND(node, F32_LIT);          \
+        NODE_KIND(node, F32Lit);           \
     } while (0)
 
 #define INIT_CHAR(node)                     \
@@ -119,7 +119,7 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         if (!yacc_from_str_to_char(node)) { \
             PARSE_ERROR();                  \
         }                                   \
-        NODE_KIND(node, I32_LIT);           \
+        NODE_KIND(node, I32Lit);            \
     } while (0)
 
 #define INIT_BOOL(node)                     \
@@ -127,7 +127,7 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         if (!yacc_from_str_to_bool(node)) { \
             PARSE_ERROR();                  \
         }                                   \
-        NODE_KIND(node, BOOL_LIT);          \
+        NODE_KIND(node, BoolLit);           \
     } while (0)
 
 static inline bool var_decl(ast_node_t *var_decl_node)
