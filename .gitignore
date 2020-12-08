@@ -4,7 +4,6 @@ logs
 cache
 .gdb_history
 .log
-out
 report
 org
 tmp
