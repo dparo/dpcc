@@ -8,9 +8,9 @@ os:
   - osx
 
 before_install:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then; sudo apt-get -y install bison flex cmake dpkg; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then; wget 'https://launchpad.net/ubuntu/+source/bison/2:3.7+dfsg-1/+build/19640339/+files/bison_3.7+dfsg-1_amd64.deb'; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then; sudo dpkg -i ./bison_3.7+dfsg-1_amd64.deb; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get -y install bison flex cmake dpkg; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then wget 'https://launchpad.net/ubuntu/+source/bison/2:3.7+dfsg-1/+build/19640339/+files/bison_3.7+dfsg-1_amd64.deb'; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo dpkg -i ./bison_3.7+dfsg-1_amd64.deb; fi
 
 
 addons:
