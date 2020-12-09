@@ -196,7 +196,7 @@ static void check_initializer_list(ast_node_t *n, enum DPCC_TYPE expected_type, 
     ast_node_t *c0 = (n->num_childs >= 1) ? n->childs[0] : NULL;
     ast_node_t *c2 = (n->num_childs >= 3) ? n->childs[2] : NULL;
 
-    if ((c0->childs[1] && init_list_len != array_type_len)) {
+    if (c0->num_childs >= 1 && c0->childs[1] && init_list_len != array_type_len) {
         ERR(c2, "Number of elements in initializer list do not match");
         INFO(c0->childs[1], "Expected number of elements: `%d`", array_type_len);
         INFO(c2, "Number of elements got: `%d`", init_list_len);
@@ -224,12 +224,11 @@ static void typecheck_array(ast_node_t *n)
     (void)c0, (void)c1, (void)c2;
 
     // Deduce type of array variable declarations
-    assert((c0->childs[1] == NULL) || (c0->childs[1]->kind == IntLit && c0->childs[1]->md.type == TYPE_I32));
-    int32_t array_type_len = c0->childs[1] ? c0->childs[1]->val.as_i32 : 0;
+    int32_t array_type_len = (c0->num_childs >= 1 && c0->childs[1]) ? c0->childs[1]->val.as_i32 : 0;
     int32_t init_list_len = c2 != NULL ? c2->num_childs : 0;
 
     n->md.array_len = array_type_len;
-    if (c0->childs[1] && array_type_len <= 0) {
+    if (c0->num_childs >= 1 && c0->childs[1] && array_type_len <= 0) {
         ERR(c0->childs[1], "The number of elements in an array must be a positive integer");
         INFO(c0->childs[1], "Got `%d`", array_type_len);
     } else if (c2) {
@@ -321,20 +320,24 @@ static void typecheck_vardecl(ast_node_t *n)
     if (array_var_decl) {
 
         if (var_decl_with_user_listed_type) {
-
-            switch (c0->childs[0]->kind) {
-            case TypeInfoBool: {
-                n->md.type = TYPE_BOOL_ARRAY;
-            } break;
-            default: {
-                invalid_code_path();
-            } break;
-            case TypeInfoInt: {
+            if (c0->num_childs == 0 || c0->childs[0] == NULL) {
+                // Assume integer array
                 n->md.type = TYPE_I32_ARRAY;
-            } break;
-            case TypeInfoFloat: {
-                n->md.type = TYPE_F32_ARRAY;
-            } break;
+            } else {
+                switch (c0->childs[0]->kind) {
+                case TypeInfoBool: {
+                    n->md.type = TYPE_BOOL_ARRAY;
+                } break;
+                default: {
+                    invalid_code_path();
+                } break;
+                case TypeInfoInt: {
+                    n->md.type = TYPE_I32_ARRAY;
+                } break;
+                case TypeInfoFloat: {
+                    n->md.type = TYPE_F32_ARRAY;
+                } break;
+                }
             }
 
             typecheck_array(n);

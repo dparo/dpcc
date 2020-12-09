@@ -215,7 +215,7 @@ ident: ID { $$ = $1; NODE_KIND($$, Ident); }
 pident: ID  {
         $$ = $1;
         NODE_KIND($$, Ident);
-        ast_node_t *decl = symtable_lookup($$->tok);
+        YYSTYPE decl = symtable_lookup($$->tok);
         if (!decl) {
                 dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Use of undeclared identifier `%s`", $$->tok->lexeme);
                 PARSE_ERROR();
@@ -307,6 +307,7 @@ integral_var_decl: "let"[op] ident[id]                                          
 
 array_var_decl:  "let"[op] ident[id] ":" array_type[t]                                  { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {$t, $id, NULL}); }
         |        "let"[op] ident[id] ":" array_type[t] "=" list_init[il]                { $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {$t, $id, $il}); }
+        |        "let"[op] ident[id] "=" list_init[il]                                  { YYSTYPE t = NEW_NODE($op->tok, TypeInfoArray); $$ = NEW_NODE($op->tok, VarDeclStmt); push_childs($$, 3, YYANARRAY {t, $id, $il}); }
         ;
 
 integral_type:  "int"      { $$ = $1; NODE_KIND($$, TypeInfoInt); }

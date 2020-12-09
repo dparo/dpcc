@@ -70,8 +70,8 @@ print("\n\nArray var decl\n");
 
 ///////////////////////////////////////////////////////////////////////////////
 //@ Integer array type deduction
-//@ a = { 10, 20, 30, 40, 50}
-//@ a = { 10, 20, 30, 40, 100}
+//@ a = { 10, 20, 30, 40, 50 }
+//@ a = { 10, 20, 30, 40, 100 }
 
 print("\n\nInteger array type deduction\n");
 {
@@ -344,8 +344,8 @@ print("\n\nBitwise operator test\n");
 
 print("\n\nDot product computation with integers\n");
 {
-    let a: int[] = { 0, 1, 2, 3, 4 };
-    let b: int[] = { 7, 14 + 2 * 3, 21, 28, 35 };
+    let a = { 0, 1, 2, 3, 4 };
+    let b = { 7, 14 + 2 * 3, 21, 28, 35 };
     let dot = 0;
 
     for (let i = 0; i < 5; i++) {
@@ -392,7 +392,7 @@ print("\n\nDot product computation with floats\n");
 print("\n\nBubble sort\n");
 {
     // 32 elements random array between [0, 100]
-    let array: int[] = {
+    let array = {
         15, 59, 61, 75, 12, 71,  5, 35, 44,
         6, 98, 17, 81, 56, 53, 31, 20, 11,
         45, 80,  8, 34, 71, 83, 64, 28,  3,
@@ -406,7 +406,7 @@ print("\n\nBubble sort\n");
 
     for (let i = 0; i < len; i++) {
         for (let k = i; k < len; k++) {
-            let s: int;
+            let s = 0;
             if (array[i] > array[k]) {
                 s = array[i];
                 array[i] = array[k];
@@ -430,7 +430,7 @@ print("\n\nBubble sort\n");
 
 print("\n\nIterative Merge sort\n");
 {
-    let array: int[] = {
+    let array = {
         15, 59, 61, 75, 12, 71,  5, 35, 44,
         6, 98, 17, 81, 56, 53, 31, 20, 11,
         45, 80,  8, 34, 71, 83, 64, 28,  3,
