@@ -9,14 +9,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/run_tree/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/run_tree/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/run_tree/bin")
 
-find_package(BISON REQUIRED)
-find_package(FLEX REQUIRED)
-
-
-
 if(UNIX AND NOT APPLE)
   set(LINUX TRUE)
 endif()
+
 
 
 if(MSVC)
@@ -24,6 +20,35 @@ if(MSVC)
 else()
   add_compile_options(-Wall -Wextra -Wno-unused-function)
 endif()
+
+
+# Code Coverage Configuration
+add_library(coverage_config INTERFACE)
+
+option(CODE_COVERAGE "Enable coverage reporting" OFF)
+
+if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  # Add required flags (GCC & LLVM/Clang)
+  target_compile_options(coverage_config INTERFACE
+    -O0        # no optimization
+    -g         # generate debug info
+    --coverage # sets all required flags
+  )
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+    target_link_options(coverage_config INTERFACE --coverage)
+  else()
+    target_link_libraries(coverage_config INTERFACE --coverage)
+  endif()
+endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+
+
+
+
+
+
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
+
 
 
 set(BISON_FLAGS "")
