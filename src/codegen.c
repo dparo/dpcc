@@ -188,6 +188,8 @@ static void typecheck_array_subscript(ast_node_t *n)
         INFO(n->childs[0]->decl, "As specified from declaration index should be in [%d, %d)", 0, array_len);
         INFO(n->childs[1], "Got `%d` instead", subscript_idx);
     }
+
+    n->md.type = deref_type(n->childs[0]->md.type);
 }
 
 static void typecheck_vardecl(ast_node_t *n)
@@ -431,7 +433,7 @@ static void emit_array_subscript(ast_node_t *n)
     assert(rhs->md.type != TYPE_NONE);
 
     assert(lhs->decl);
-    assert(unref_type(lhs->md.type) == n->md.type);
+    assert(deref_type(lhs->md.type) == n->md.type);
 
     EMIT("%s = _var_get(\"%s\", %s, %s);\n",
         n->md.sym,
