@@ -1,4 +1,4 @@
-name: linux-build-test
+name: macos-build-test
 
 on: [push]
 
