@@ -221,7 +221,7 @@ productions:
        ;
 
 
-main:    "fn" "main"[op] "(" ")" code_block[cb]              { $$ = NEW_NODE($op->tok, MainFn); push_child($$, $cb); }
+main:    "fn" "main"[op] "(" ")" stmts[s]                    { $$ = NEW_NODE($op->tok, MainFn); push_child($$, $s); }
         ;
 
 stmts:          stmts[car] stmt[self]                        { $$ = $car; push_child($car, $self); }
