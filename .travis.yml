@@ -1,6 +1,14 @@
 git:
   depth: 3
 
+# safelist
+branches:
+  only:
+  - master
+  - main
+  - stable
+
+
 dist: bionic
 
 os:
