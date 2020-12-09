@@ -13,6 +13,12 @@ find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
 
+
+if(UNIX AND NOT APPLE)
+  set(LINUX TRUE)
+endif()
+
+
 if(MSVC)
   add_compile_options(/W4 /WX)
 else()
@@ -20,9 +26,16 @@ else()
 endif()
 
 
+set(BISON_FLAGS "")
+
+if (LINUX)
+  set(BISON_FLAGS "--no-lines -fcaret -ffixit -Wdangling-alias -Wdeprecated -Wempty-rule -Wmidrule-values -Wother")
+endif()
+
+
 BISON_TARGET(parser src/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.c
   DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.h
-  COMPILE_FLAGS "--no-lines -fcaret -ffixit -Wdangling-alias -Wdeprecated -Wempty-rule -Wmidrule-values -Wother"
+  COMPILE_FLAGS "${BISON_FLAGS}"
   )
 
 FLEX_TARGET(lexer  src/lexer.l ${CMAKE_CURRENT_BINARY_DIR}/lexer.c
