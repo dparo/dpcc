@@ -131,7 +131,7 @@ static void print_sym(char *lexeme)
 
     printf("%s = ", lexeme);
     if (sym->array_len > 1) {
-        printf("{ ");
+        printf("[ ");
     }
 
     for (int32_t i = 0; i < sym->array_len; i++) {
@@ -153,7 +153,7 @@ static void print_sym(char *lexeme)
     }
 
     if (sym->array_len > 1) {
-        printf(" }");
+        printf(" ]");
     }
 
     printf("\n");
