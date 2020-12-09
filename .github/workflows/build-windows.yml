@@ -13,7 +13,9 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Download Bison>=3.6
-        run: wget 'https://launchpad.net/ubuntu/+source/bison/2:3.7+dfsg-1/+build/19640339/+files/bison_3.7+dfsg-1_amd64.deb' && sudo apt install ./bison_3.7+dfsg-1_amd64.deb
+        run: |
+          curl.exe 'https://launchpad.net/ubuntu/+source/bison/2:3.7+dfsg-1/+build/19640339/+files/bison_3.7+dfsg-1_amd64.deb' --output ./bison_3.7+dfsg-1_amd64.deb
+          sudo dpkg -i ./bison_3.7+dfsg-1_amd64.deb
 
       - name: Install Dependencies
         run: sudo apt install flex bison
