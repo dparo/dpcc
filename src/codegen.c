@@ -205,9 +205,8 @@ static void typecheck_vardecl(ast_node_t *n)
 
     bool var_decl_with_user_listed_type = c0;
     bool var_decl_no_user_listed_type = !c0;
-    bool integral_var_decl = (!c0 || c0->kind != InitializerList);
     bool var_decl_with_rhs = c2;
-    bool array_var_decl = c0 && c0->kind == InitializerList;
+    bool array_var_decl = (c2 && c2->kind == InitializerList) || (c0 && c0->kind == TypeInfoArray);
 
     if (array_var_decl) {
 
@@ -232,7 +231,7 @@ static void typecheck_vardecl(ast_node_t *n)
             invalid_code_path();
         }
 
-    } else if (integral_var_decl) {
+    } else {
 
         if (var_decl_no_user_listed_type && !var_decl_with_rhs) {
             n->md.type = TYPE_I32;
@@ -264,9 +263,6 @@ static void typecheck_vardecl(ast_node_t *n)
         }
 
         n->md.array_len = 1;
-
-    } else {
-        invalid_code_path();
     }
 }
 

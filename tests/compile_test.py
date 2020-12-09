@@ -30,7 +30,18 @@ def check_test(input, exit_code, output, expected_output):
     if len(output) == 0 or output.isspace():
         output = None
 
-    if (exit_code == 0 and expected_output is None):
+    if exit_code < 0 or exit_code >= 128:
+        eprint("\n\n")
+        eprint(f"(exit_code = {exit_code}) :: Program aborted !!!!! ")
+        eprint("-------- INPUT:")
+        eprint(input)
+        eprint("-------- EXPECTED OUTPUT:")
+        eprint(expected_output)
+        eprint("--------")
+        eprint("\n\n")
+        exit(1)
+    elif (exit_code == 0 and expected_output is None):
+        eprint("\n\n")
         eprint(f"(exit_code = {exit_code}) :: Expected this test to fail but successed instead")
         eprint("-------- INPUT:")
         eprint(input)
@@ -39,8 +50,10 @@ def check_test(input, exit_code, output, expected_output):
         eprint("-------- EXPECTED OUTPUT:")
         eprint(expected_output)
         eprint("--------")
+        eprint("\n\n")
         exit(1)
     elif (output != expected_output):
+        eprint("\n\n")
         eprint(f"(exit_code = {exit_code}) :: Wrong output obtained from the following test")
         eprint("-------- INPUT:")
         eprint(input)
@@ -49,6 +62,7 @@ def check_test(input, exit_code, output, expected_output):
         eprint("-------- EXPECTED OUTPUT:")
         eprint(expected_output)
         eprint("--------")
+        eprint("\n\n")
         exit(1)
 
 

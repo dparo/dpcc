@@ -58,6 +58,7 @@ void parse_cmdline(int argc, char **argv)
     }
 }
 
+#include <assert.h>
 int main(int argc, char **argv)
 {
     parse_cmdline(argc, argv);
@@ -71,7 +72,7 @@ int main(int argc, char **argv)
     if (0 == strcmp(S_cmdargs.mode, "lex")) {
         bool lexsuccess = dpcc_lex(S_cmdargs.input_filepath, input_stream);
         if (!lexsuccess) {
-            return -1;
+            return EXIT_FAILURE;
         }
 
         FILE *output_stream = dpcc_xfopen_w(S_cmdargs.output_filepath);
@@ -83,7 +84,7 @@ int main(int argc, char **argv)
     } else if (0 == strcmp(S_cmdargs.mode, "parse")) {
         bool parsesuccess = dpcc_parse(S_cmdargs.input_filepath, input_stream);
         if (!parsesuccess) {
-            return -1;
+            return EXIT_FAILURE;
         }
         ast_traversal_t att = { 0 };
         ast_traversal_begin(&att, &G_root_node);
@@ -100,34 +101,46 @@ int main(int argc, char **argv)
     } else if ((0 == strcmp(S_cmdargs.mode, "3ac"))) {
         char *generated_code = dpcc_3ac(S_cmdargs.input_filepath, input_stream);
         if (!generated_code) {
-            return -1;
+            return EXIT_FAILURE;
         }
         FILE *output_stream = dpcc_xfopen_w(S_cmdargs.output_filepath);
         fprintf(output_stream, "%s", generated_code);
+
+        ast_traversal_t att = { 0 };
+        ast_traversal_begin(&att, &G_root_node);
+        ast_node_t *n = NULL;
+        int32_t match_idx = 0;
+
+        while ((n = ast_traverse_next(&att, &match_idx)) != NULL) {
+            if (match_idx == 0) {
+                dbg_print_node(output_stream, n, att.stack_cnt - 1);
+            }
+        }
+
     } else if ((0 == strcmp(S_cmdargs.mode, "c"))) {
         bool compile_success = dpcc_c(S_cmdargs.input_filepath, input_stream, S_cmdargs.output_filepath);
         if (!compile_success) {
-            return -1;
+            return EXIT_FAILURE;
         }
     } else if ((0 == strcmp(S_cmdargs.mode, "gcc"))) {
         bool gcc_success = dpcc_gcc(S_cmdargs.input_filepath, input_stream, S_cmdargs.output_filepath);
         if (gcc_success == false) {
-            return -1;
+            return EXIT_FAILURE;
         }
     } else if ((0 == strcmp(S_cmdargs.mode, "run"))) {
         bool run_success = dpcc_run(S_cmdargs.input_filepath, input_stream);
         if (!run_success) {
-            return -1;
+            return EXIT_FAILURE;
         }
     } else {
         fprintf(stderr, "Invalid code path\n");
         fflush(stderr);
-        return -1;
+        return EXIT_FAILURE;
     }
 
     dpcc_reset();
     dallclr(&G_allctx);
 
     fflush(stderr);
-    return 0;
+    return EXIT_SUCCESS;
 }
