@@ -61,6 +61,7 @@ jobs:
         shell: pwsh
         run: |
           curl.exe -L -o ubuntu-1604.appx https://aka.ms/wsl-ubuntu-2004
+          Import-Module Appx
           Add-AppxPackage .\app_name.appx
           
       - uses: actions/checkout@v2
