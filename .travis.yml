@@ -1,6 +1,9 @@
 git:
   depth: 3
 
+notifications:
+  email: false
+
 # safelist
 branches:
   only:
