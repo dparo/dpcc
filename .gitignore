@@ -9,6 +9,7 @@ a.out.c
 
 /tmp
 /build
+/travis_build
 /logs
 /org
 /report
