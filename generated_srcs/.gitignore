@@ -1,4 +1,5 @@
 __pycache__
 dist
 node_modules
-./last_gen.txt
+
+/last_gen.txt

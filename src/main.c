@@ -104,18 +104,6 @@ int main(int argc, char **argv)
         }
         FILE *output_stream = dpcc_xfopen_w(S_cmdargs.output_filepath);
         fprintf(output_stream, "%s", generated_code);
-
-        ast_traversal_t att = { 0 };
-        ast_traversal_begin(&att, &G_root_node);
-        ast_node_t *n = NULL;
-        int32_t match_idx = 0;
-
-        while ((n = ast_traverse_next(&att, &match_idx)) != NULL) {
-            if (match_idx == 0) {
-                dbg_print_node(output_stream, n, att.stack_cnt - 1);
-            }
-        }
-
     } else if ((0 == strcmp(S_cmdargs.mode, "c"))) {
         bool compile_success = dpcc_c(S_cmdargs.input_filepath, input_stream, S_cmdargs.output_filepath);
         if (!compile_success) {
