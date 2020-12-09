@@ -81,8 +81,8 @@ typedef enum ast_node_kind {
     RootNode = 1,
 
     Ident,
-    I32Lit,
-    F32Lit,
+    IntLit,
+    FloatLit,
     CharLit,
     BoolLit,
     StringLit,

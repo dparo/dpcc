@@ -357,9 +357,9 @@ pID: ID  {
 }
 
 
-pI32_LIT:    I32_LIT                                            { NODE_KIND($$, I32Lit); INIT_I32($$); }
-pF32_LIT:    F32_LIT                                            { NODE_KIND($$, F32Lit); INIT_F32($$); }
-pCHAR_LIT:   CHAR_LIT                                           { NODE_KIND($$, I32Lit); INIT_CHAR($$); }
+pI32_LIT:    I32_LIT                                            { NODE_KIND($$, IntLit); INIT_I32($$); }
+pF32_LIT:    F32_LIT                                            { NODE_KIND($$, FloatLit); INIT_F32($$); }
+pCHAR_LIT:   CHAR_LIT                                           { NODE_KIND($$, IntLit); INIT_CHAR($$); }
 pBOOL_LIT:   BOOL_LIT                                           { NODE_KIND($$, BoolLit); INIT_BOOL($$); }
 pSTRING_LIT: STRING_LIT                                         { NODE_KIND($$, StringLit); }
 

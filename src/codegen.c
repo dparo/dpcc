@@ -119,7 +119,7 @@ static void typecheck_array(ast_node_t *n)
     (void)c0, (void)c1, (void)c2;
 
     // Deduce type of array variable declarations
-    assert((c0->childs[1] == NULL) || (c0->childs[1]->kind == I32Lit && c0->childs[1]->md.type == TYPE_I32));
+    assert((c0->childs[1] == NULL) || (c0->childs[1]->kind == IntLit && c0->childs[1]->md.type == TYPE_I32));
     int32_t array_type_len = c0->childs[1] ? c0->childs[1]->val.as_i32 : 0;
     int32_t init_list_len = c2 != NULL ? c2->num_childs : 0;
 
@@ -144,7 +144,7 @@ static void typecheck_array(ast_node_t *n)
 
         check_initializer_list(n, expected_type, array_type_len, init_list_len);
         n->md.array_len = init_list_len;
-    } else if ((c0 == NULL || c0->childs[1] == NULL || c0->childs[1]->kind != I32Lit || c0->childs[1]->md.type != TYPE_I32)) {
+    } else if ((c0 == NULL || c0->childs[1] == NULL || c0->childs[1]->kind != IntLit || c0->childs[1]->md.type != TYPE_I32)) {
         ERR(c0, "Size of the array must be specified");
         INFO(c0, "Either specify the size inside the square brackets, or provide an initializer list");
     }
@@ -286,14 +286,14 @@ static void typecheck(ast_node_t *n)
     bool is_casting_operator = ((n->kind == ExprCastInt) || (n->kind == ExprCastFloat) || (n->kind == ExprCastBool)) && (n->num_childs == 1);
     bool var_decl = n->kind == VarDeclStmt;
     bool is_typable_identifier = n->kind == Ident && n->parent && !(n->parent->kind == VarDeclStmt);
-    bool is_array_subscript = n->kind == ExprArraySubscript && n->childs[1]->kind == I32Lit && n->childs[1]->md.type == TYPE_I32;
+    bool is_array_subscript = n->kind == ExprArraySubscript && n->childs[1]->kind == IntLit && n->childs[1]->md.type == TYPE_I32;
     bool is_print = n->kind == PrintStmt;
 
     if (n->kind == CharLit) {
         n->md.type = TYPE_I32;
-    } else if (n->kind == I32Lit) {
+    } else if (n->kind == IntLit) {
         n->md.type = TYPE_I32;
-    } else if (n->kind == F32Lit) {
+    } else if (n->kind == FloatLit) {
         n->md.type = TYPE_F32;
     } else if (n->kind == BoolLit) {
         n->md.type = TYPE_BOOL;
@@ -346,7 +346,7 @@ static char *gen_sym(ast_node_t *n)
         assert(n->decl);
         assert(n->md.type == TYPE_I32 || n->md.type == TYPE_F32 || n->md.type == TYPE_BOOL);
         sfcat(&G_allctx, &s, "_var_get%s(\"%s\", 0)", get_type_label(n->md.type), n->tok->lexeme);
-    } else if (n->kind == I32Lit || n->kind == F32Lit || n->kind == CharLit || n->kind == BoolLit || n->kind == StringLit) {
+    } else if (n->kind == IntLit || n->kind == FloatLit || n->kind == CharLit || n->kind == BoolLit || n->kind == StringLit) {
         if (n->md.type == TYPE_I32) {
             sfcat(&G_allctx, &s, "%d", n->val.as_i32);
         } else if (n->md.type == TYPE_F32) {
@@ -364,7 +364,7 @@ static char *gen_sym(ast_node_t *n)
 
 static void setup_addrs_and_jmp_tables(ast_node_t *n)
 {
-    bool is_casting_operator = ((n->kind == I32Lit) || (n->kind == F32Lit) || (n->kind == BoolLit) || (n->kind == CharLit))
+    bool is_casting_operator = ((n->kind == IntLit) || (n->kind == FloatLit) || (n->kind == BoolLit) || (n->kind == CharLit))
         && (n->num_childs == 1) && n->md.type != TYPE_NONE;
     bool is_expr = (n->md.type != TYPE_NONE && is_expr_node(n));
     if (!n->md.sym && (is_expr || is_casting_operator)) {
@@ -529,7 +529,7 @@ static void emit_expr(ast_node_t *n)
 
     (void)c0, (void)c1, (void)c2, (void)c3;
 
-    bool is_casting_op = n->md.type && (n->kind == BoolLit || n->kind == I32Lit || n->kind == F32Lit) && (n->num_childs == 1) && n->md.type != TYPE_NONE && n->md.sym;
+    bool is_casting_op = n->md.type && (n->kind == BoolLit || n->kind == IntLit || n->kind == FloatLit) && (n->num_childs == 1) && n->md.type != TYPE_NONE && n->md.sym;
 
     assert(n->md.sym);
 

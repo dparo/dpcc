@@ -103,7 +103,7 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         if (!yacc_from_str_to_i32(node)) { \
             PARSE_ERROR();                 \
         }                                  \
-        NODE_KIND(node, I32Lit);           \
+        NODE_KIND(node, IntLit);           \
     } while (0)
 
 #define INIT_F32(node)                     \
@@ -111,7 +111,7 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         if (!yacc_from_str_to_f32(node)) { \
             PARSE_ERROR();                 \
         }                                  \
-        NODE_KIND(node, F32Lit);           \
+        NODE_KIND(node, FloatLit);         \
     } while (0)
 
 #define INIT_CHAR(node)                     \
@@ -119,7 +119,7 @@ static bool yacc_from_str_to_bool(ast_node_t *node)
         if (!yacc_from_str_to_char(node)) { \
             PARSE_ERROR();                  \
         }                                   \
-        NODE_KIND(node, I32Lit);            \
+        NODE_KIND(node, IntLit);            \
     } while (0)
 
 #define INIT_BOOL(node)                     \
