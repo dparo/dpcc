@@ -1,0 +1,31 @@
+git:
+  depth: 3
+
+# Install for Ubuntu 18.04
+dist: bionic
+
+before_install:
+  - sudo apt-get -y install bison flex cmake dpkg
+  - wget 'https://launchpad.net/ubuntu/+source/bison/2:3.7+dfsg-1/+build/19640339/+files/bison_3.7+dfsg-1_amd64.deb'
+  - sudo dpkg -i ./bison_3.7+dfsg-1_amd64.deb
+
+# Install for MACOS
+addons:
+  apt:
+    update: true
+  homebrew:
+    update: true
+    packages:
+    - bison
+    - flex
+
+language: c
+
+compiler:
+  - clang
+  - gcc
+
+script:
+  - cmake .
+  - cmake --build . -- -j 2
+  - ctest --force-new-ctest-process --output-on-failure -j 2
