@@ -99,6 +99,7 @@ typedef enum ast_node_kind {
     WhileStmt,
     DoWhileStmt,
 
+    TypeInfoArray,
     TypeInfoInt,
     TypeInfoFloat,
     TypeInfoBool,

@@ -319,12 +319,10 @@ array_type:  sized_array_type    { $$ = $1; }
         ;
 
 
-sized_array_type:     "int"[t] "["[op] i32lit[n] "]"      { $$ = NEW_NODE($op->tok, TypeInfoInt); push_childs($$, 2, YYANARRAY {$t, $n}); }
-        |             "float"[t] "["[op] i32lit[n] "]"    { $$ = NEW_NODE($op->tok, TypeInfoFloat); push_childs($$, 2, YYANARRAY {$t, $n}); }
+sized_array_type:     integral_type[t] "["[op] i32lit[n] "]"      { $$ = NEW_NODE($op->tok, TypeInfoArray); push_childs($$, 2, YYANARRAY {$t, $n}); }
         ;
 
-unsized_array_type:   "int"[t] "["[op] "]"      { $$ = NEW_NODE($op->tok, TypeInfoInt); push_childs($$, 2, YYANARRAY { $t, NULL}); }
-        |             "float"[t] "["[op] "]"    { $$ = NEW_NODE($op->tok, TypeInfoFloat); push_childs($$, 2, YYANARRAY { $t, NULL}); }
+unsized_array_type:   integral_type[t] "["[op] "]"      { $$ = NEW_NODE($op->tok, TypeInfoArray); push_childs($$, 2, YYANARRAY { $t, NULL}); }
         ;
 
 code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                          {
