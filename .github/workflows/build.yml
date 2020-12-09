@@ -58,6 +58,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Install Ubuntu Linux Subsystem
+        shell: pwsh
         run: |
           curl.exe -L -o ubuntu-1604.appx https://aka.ms/wsl-ubuntu-2004
           Add-AppxPackage .\app_name.appx
