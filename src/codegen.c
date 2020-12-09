@@ -371,8 +371,7 @@ static char *gen_sym(ast_node_t *n)
 
 static void setup_addrs_and_jmp_tables(ast_node_t *n)
 {
-    bool is_casting_operator = ((n->kind == IntLit) || (n->kind == FloatLit) || (n->kind == BoolLit) || (n->kind == CharLit))
-        && (n->num_childs == 1) && n->md.type != TYPE_NONE;
+    bool is_casting_operator = (n->kind == ExprCast && n->md.type != TYPE_NONE && n->num_childs == 2);
     bool is_expr = (n->md.type != TYPE_NONE && is_expr_node(n));
     if (!n->md.sym && (is_expr || is_casting_operator)) {
 
@@ -536,7 +535,7 @@ static void emit_expr(ast_node_t *n)
 
     (void)c0, (void)c1, (void)c2, (void)c3;
 
-    bool is_casting_op = n->md.type && (n->kind == BoolLit || n->kind == IntLit || n->kind == FloatLit) && (n->num_childs == 1) && n->md.type != TYPE_NONE && n->md.sym;
+    bool is_casting_op = n->kind == ExprCast && n->md.type != TYPE_NONE && n->num_childs == 2;
 
     assert(n->md.sym);
 
@@ -550,9 +549,9 @@ static void emit_expr(ast_node_t *n)
     } else if (n->kind == ExprInc || n->kind == ExprDec) {
         emit_pre_inc_dec(n);
     } else if (is_casting_op) {
-        char *cast = n->tok->lexeme;
+        char *cast = n->childs[0]->tok->lexeme;
         EMIT("%s = (%s) %s;\n", n->md.sym,
-            cast, n->childs[0]->md.sym);
+            cast, n->childs[1]->md.sym);
     } else if (is_expr_node(n)) {
 
         if (n->num_childs == 1) {
