@@ -62,6 +62,111 @@ static void _emit(bool indent, char *fmt, ...)
 #define EMIT(...) _emit(true, __VA_ARGS__)
 #define EMITN(...) _emit(false, __VA_ARGS__)
 
+char *new_tmp_var(ast_node_t *n)
+{
+    str_t s = { 0 };
+
+    switch (n->md.type) {
+    default: {
+        invalid_code_path();
+    } break;
+    case TYPE_I32: {
+        sfcat(&G_allctx, &s, "_vi%d", G_codegen_i32_cnt++);
+    } break;
+    case TYPE_F32: {
+        sfcat(&G_allctx, &s, "_vf%d", G_codegen_f32_cnt++);
+    } break;
+    case TYPE_BOOL: {
+        sfcat(&G_allctx, &s, "_vb%d", G_codegen_bool_cnt++);
+    } break;
+    }
+
+    return s.cstr;
+}
+
+char *new_tmp_label(void)
+{
+    str_t s = { 0 };
+    sfcat(&G_allctx, &s, "_lbl%d", G_codegen_jmp_cnt++);
+    return s.cstr;
+}
+
+char *get_type_label(enum DPCC_TYPE t)
+{
+    char *result = 0;
+
+    switch (t) {
+
+    default: {
+        invalid_code_path();
+    } break;
+
+    case TYPE_I32:
+    case TYPE_I32_ARRAY: {
+        result = "_kI32";
+    } break;
+
+    case TYPE_F32:
+    case TYPE_F32_ARRAY: {
+        result = "_kF32";
+    } break;
+
+    case TYPE_BOOL:
+    case TYPE_BOOL_ARRAY: {
+        result = "_kBOOL";
+    } break;
+    }
+
+    return result;
+}
+
+enum DPCC_TYPE deref_type(enum DPCC_TYPE in)
+{
+    enum DPCC_TYPE result = TYPE_NONE;
+
+    switch (in) {
+    default: {
+        invalid_code_path();
+    } break;
+    case TYPE_BOOL_ARRAY: {
+        result = TYPE_BOOL;
+    } break;
+    case TYPE_I32_ARRAY: {
+        result = TYPE_I32;
+    } break;
+    case TYPE_F32_ARRAY: {
+        result = TYPE_F32;
+    } break;
+    }
+
+    assert(result != TYPE_NONE);
+    return result;
+}
+
+enum DPCC_TYPE unref_type(enum DPCC_TYPE in)
+{
+    enum DPCC_TYPE result = TYPE_NONE;
+
+    switch (in) {
+    default: {
+        invalid_code_path();
+    } break;
+
+    case TYPE_BOOL: {
+        result = TYPE_BOOL_ARRAY;
+    } break;
+    case TYPE_I32: {
+        result = TYPE_I32_ARRAY;
+    } break;
+    case TYPE_F32: {
+        result = TYPE_F32_ARRAY;
+    } break;
+    }
+
+    assert(result != TYPE_NONE);
+    return result;
+}
+
 static void emit_scope_begin(void)
 {
     assert(S_indentation >= 0);
@@ -134,6 +239,9 @@ static void typecheck_array(ast_node_t *n)
         default: {
             invalid_code_path();
         } break;
+        case TYPE_BOOL: {
+            c0->md.type = TYPE_BOOL_ARRAY;
+        } break;
         case TYPE_I32: {
             c0->md.type = TYPE_I32_ARRAY;
         } break;
@@ -180,7 +288,7 @@ static void typecheck_array_subscript(ast_node_t *n)
     int32_t subscript_idx = n->childs[1]->val.as_i32;
     int32_t array_len = n->childs[0]->decl->md.array_len;
 
-    if (n->childs[0]->md.type != TYPE_I32_ARRAY && n->childs[0]->md.type != TYPE_F32_ARRAY) {
+    if (n->childs[0]->md.type != TYPE_BOOL_ARRAY && n->childs[0]->md.type != TYPE_I32_ARRAY && n->childs[0]->md.type != TYPE_F32_ARRAY) {
         ERR(n->childs[0], "Identifier is not an array");
         INFO(n->childs[0]->decl, "Previous declaration was here (type: %s)", dpcc_type_as_str(n->childs[0]->md.type));
     } else if (subscript_idx < 0 || (subscript_idx >= array_len)) {
@@ -215,6 +323,9 @@ static void typecheck_vardecl(ast_node_t *n)
         if (var_decl_with_user_listed_type) {
 
             switch (c0->childs[0]->kind) {
+            case TypeInfoBool: {
+                n->md.type = TYPE_BOOL_ARRAY;
+            } break;
             default: {
                 invalid_code_path();
             } break;
@@ -274,7 +385,7 @@ static void typecheck_print(ast_node_t *n)
     if (c0->md.type) {
 
         bool is_valid_print = ((c0->md.type == TYPE_I32) || (c0->md.type == TYPE_F32) || (c0->md.type == TYPE_BOOL)
-            || (c0->md.type == TYPE_I32_ARRAY) || (c0->md.type == TYPE_F32_ARRAY)
+            || (c0->md.type == TYPE_BOOL_ARRAY) || (c0->md.type == TYPE_I32_ARRAY) || (c0->md.type == TYPE_F32_ARRAY)
             || (c0->md.type == TYPE_STR));
 
         if (!is_valid_print) {
@@ -345,7 +456,7 @@ static char *gen_sym(ast_node_t *n)
 
     if (n->md.sym) {
         return n->md.sym;
-    } else if (n->kind == Ident && !n->md.sym && (n->md.type == TYPE_I32_ARRAY || n->md.type == TYPE_F32_ARRAY)) {
+    } else if (n->kind == Ident && !n->md.sym && (n->md.type == TYPE_BOOL_ARRAY || n->md.type == TYPE_I32_ARRAY || n->md.type == TYPE_F32_ARRAY)) {
         sfcat(&G_allctx, &s, "%s", n->tok->lexeme);
     } else if (n->kind == Ident && !n->md.sym) {
         assert(n->decl);
@@ -428,17 +539,17 @@ static void emit_array_subscript(ast_node_t *n)
     ast_node_t *lhs = n->childs[0];
     ast_node_t *rhs = n->childs[1];
 
-    assert(lhs->kind == Ident || lhs->kind == ExprArraySubscript);
+    assert(lhs->kind == Ident);
     assert(lhs->md.type != TYPE_NONE);
     assert(rhs->md.type != TYPE_NONE);
 
     assert(lhs->decl);
     assert(deref_type(lhs->md.type) == n->md.type);
 
-    EMIT("%s = _var_get(\"%s\", %s, %s);\n",
+    EMIT("%s = _var_get%s(\"%s\", %s);\n",
         n->md.sym,
-        lhs->tok->lexeme,
         get_type_label(lhs->md.type),
+        lhs->tok->lexeme,
         rhs->md.sym);
 }
 
@@ -611,14 +722,14 @@ static void emit_var_init(ast_node_t *n)
     assert(c1);
     (void)c0, (void)c1, (void)c2;
 
-    bool is_array = n->md.type == TYPE_I32_ARRAY || n->md.type == TYPE_F32_ARRAY;
+    bool is_array = n->md.type == TYPE_BOOL_ARRAY || n->md.type == TYPE_I32_ARRAY || n->md.type == TYPE_F32_ARRAY;
     bool has_rhs = c2 != NULL;
 
     if (has_rhs) {
         char *ctype = "int32_t";
         if (n->md.type == TYPE_F32 || n->md.type == TYPE_F32_ARRAY) {
             ctype = "float";
-        } else if (n->md.type == TYPE_BOOL) {
+        } else if ( n->md.type == TYPE_BOOL || n->md.type == TYPE_BOOL_ARRAY) {
             ctype = "bool";
         }
 

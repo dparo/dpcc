@@ -9,6 +9,7 @@ namespace Utils {
             "int": "TYPE_I32",
             "float": "TYPE_F32",
             "bool": "TYPE_BOOL",
+            "bool[]": "TYPE_BOOL_ARRAY",
             "int[]": "TYPE_I32_ARRAY",
             "float[]": "TYPE_F32_ARRAY",
         };
@@ -411,6 +412,7 @@ namespace DPCC {
                 "ExprArraySubscript",
             ],
             [
+                new ExprTypeRule("bool", ["bool[]", "int"]),
                 new ExprTypeRule("int", ["int[]", "int"]),
                 new ExprTypeRule("float", ["float[]", "int"]),
             ],
@@ -472,40 +474,6 @@ function info(node: string, fmt: string, ...args: string[]) {
 
 
 namespace DPCC_Gen {
-
-    export function new_tmp_var() {
-        Gen.fn('char *new_tmp_var(ast_node_t *n)', () => {
-            Gen.print('str_t s = {0};')
-            Gen.switchd('n->md.type', {
-                "TYPE_I32": 'sfcat(&G_allctx, &s, "_vi%d", G_codegen_i32_cnt++);',
-                "TYPE_F32": 'sfcat(&G_allctx, &s, "_vf%d", G_codegen_f32_cnt++);',
-                "TYPE_BOOL": 'sfcat(&G_allctx, &s, "_vb%d", G_codegen_bool_cnt++);',
-            })
-            Gen.print('return s.cstr;')
-        })
-    }
-
-    export function new_tmp_label() {
-        Gen.fn('char *new_tmp_label(void)', () => {
-            Gen.print('str_t s = {0};')
-            Gen.print('sfcat(&G_allctx, &s, "_lbl%d", G_codegen_jmp_cnt++);')
-            Gen.print('return s.cstr;')
-        })
-    }
-
-    export function get_type_label() {
-        Gen.fn('char *get_type_label(enum DPCC_TYPE t)', () => {
-            Gen.print('char *result = 0;')
-            Gen.map('t', 'result', {
-                "TYPE_I32": '"_kI32"',
-                "TYPE_F32": '"_kF32"',
-                "TYPE_BOOL": '"_kBOOL"',
-                "TYPE_I32_ARRAY": '"_kI32"',
-                "TYPE_F32_ARRAY": '"_kF32"',
-            })
-            Gen.print('return result;')
-        })
-    }
 
     export function is_expr_node() {
         Gen.fn('bool is_expr_node(ast_node_t *n)', () => {
@@ -569,29 +537,6 @@ namespace DPCC_Gen {
     }
 
 
-    export function deref_type() {
-        Gen.fn('enum DPCC_TYPE deref_type(enum DPCC_TYPE in)', () => {
-            Gen.print('enum DPCC_TYPE result = TYPE_NONE;')
-            Gen.map("in", "result", {
-                'TYPE_I32_ARRAY': 'TYPE_I32;',
-                'TYPE_F32_ARRAY': 'TYPE_F32;',
-            })
-            Gen.print('assert(result != TYPE_NONE);')
-            Gen.print('return result;')
-        })
-    }
-
-    export function unref_type() {
-        Gen.fn('enum DPCC_TYPE unref_type(enum DPCC_TYPE in)', () => {
-            Gen.print('enum DPCC_TYPE result = TYPE_NONE;')
-            Gen.map("in", "result", {
-                'TYPE_I32': 'TYPE_I32_ARRAY;',
-                'TYPE_F32': 'TYPE_F32_ARRAY;',
-            })
-            Gen.print('assert(result != TYPE_NONE);')
-            Gen.print('return result;')
-        })
-    }
 }
 
 
@@ -608,30 +553,18 @@ function generate_src_file() {
 
     DPCC_Gen.is_prefix_op();
     DPCC_Gen.is_postfix_op();
-    DPCC_Gen.is_expr_node()
+    DPCC_Gen.is_expr_node();
 
-    DPCC_Gen.new_tmp_var()
-    DPCC_Gen.new_tmp_label()
-    DPCC_Gen.get_type_label()
-
-    DPCC_Gen.deref_type();
-    DPCC_Gen.unref_type();
     DPCC_Gen.typecheck_expr_and_operators()
 }
 
 
 function generate_hdr_file() {
     Gen.print(DPCC.COMMON_BOILERPLATE);
-    Gen.print("char *new_tmp_var(ast_node_t *n);")
-    Gen.print("char *new_tmp_label(void);")
-    Gen.print('char *get_type_label(enum DPCC_TYPE t);');
-
     Gen.print()
     Gen.print("bool is_prefix_op(ast_node_t *n);")
     Gen.print("bool is_postfix_op(ast_node_t *n);")
     Gen.print("bool is_expr_node(ast_node_t *n);")
-    Gen.print('enum DPCC_TYPE deref_type(enum DPCC_TYPE in);')
-    Gen.print('enum DPCC_TYPE unref_type(enum DPCC_TYPE in);')
     Gen.print()
     Gen.print('void typecheck_expr_and_operators(ast_node_t *n);')
 }

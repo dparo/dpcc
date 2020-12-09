@@ -36,6 +36,9 @@ char *dpcc_type_as_str(enum DPCC_TYPE t)
     case TYPE_F32: {
         return "float";
     } break;
+    case TYPE_BOOL_ARRAY: {
+        return "bool[]";
+    } break;
     case TYPE_BOOL: {
         return "bool";
     } break;

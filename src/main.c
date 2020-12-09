@@ -58,7 +58,6 @@ void parse_cmdline(int argc, char **argv)
     }
 }
 
-#include <assert.h>
 int main(int argc, char **argv)
 {
     parse_cmdline(argc, argv);

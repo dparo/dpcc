@@ -192,9 +192,11 @@ char *dpcc_3ac(char *filepath, FILE *input_stream)
     extern int yynerrs;
     char *generated_code = NULL;
     generated_code = codegen();
+
     if (yynerrs != 0) {
         return NULL;
     }
+
     return generated_code;
 }
 
@@ -217,6 +219,7 @@ static bool fdpcc_c(char *filepath, FILE *input_stream, FILE *output_stream)
         fwrite(THREEAC_POSTAMBLE, 1, THREEAC_POSTAMBLE_len, output_stream);
         return true;
     }
+
     return false;
 }
 

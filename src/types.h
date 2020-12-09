@@ -71,8 +71,11 @@ enum DPCC_TYPE {
     TYPE_BOOL,
     TYPE_I32,
     TYPE_F32,
+
+    TYPE_BOOL_ARRAY,
     TYPE_I32_ARRAY,
     TYPE_F32_ARRAY,
+
     TYPE_STR,
 };
 

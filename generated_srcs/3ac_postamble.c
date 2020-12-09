@@ -97,7 +97,7 @@ static size_t sym_bufsize(enum TYPE t, int32_t array_len)
 static void _var_decl(char *lexeme, enum TYPE t, int32_t array_len)
 {
     sym_t sym = { 0 };
-    sym.buf = malloc(sym_bufsize(t, array_len));
+    sym.buf = calloc(1, sym_bufsize(t, array_len));
     sym.lexeme = lexeme;
     sym.type = t;
     sym.array_len = array_len;
@@ -137,10 +137,18 @@ static void print_sym(char *lexeme)
     for (int32_t i = 0; i < sym->array_len; i++) {
         char *comma = i == sym->array_len - 1 ? "" : ", ";
         switch (sym->type) {
-        default: { INVALID_CODE_PATH(); } break;
-        case _kBOOL: { printf("%d%s", ((bool *) sym->buf)[i], comma); } break;
-        case _kI32:  { printf("%d%s", ((int32_t *) sym->buf)[i], comma); } break;
-        case _kF32:  { printf("%f%s", ((float *) sym->buf)[i], comma); } break;
+        default: {
+            INVALID_CODE_PATH();
+        } break;
+        case _kBOOL: {
+            printf("%d%s", ((bool *)sym->buf)[i], comma);
+        } break;
+        case _kI32: {
+            printf("%d%s", ((int32_t *)sym->buf)[i], comma);
+        } break;
+        case _kF32: {
+            printf("%f%s", ((float *)sym->buf)[i], comma);
+        } break;
         }
     }
 

@@ -44,144 +44,6 @@ bool is_expr_node(ast_node_t *n)
 }
 
 
-char *new_tmp_var(ast_node_t *n)
-{
-    str_t s = {0};
-
-    switch (n->md.type)
-    {
-        default:
-        {
-            invalid_code_path();
-        }
-        break;
-        case TYPE_I32:
-        {
-            sfcat(&G_allctx, &s, "_vi%d", G_codegen_i32_cnt++);
-        }
-        break;
-        case TYPE_F32:
-        {
-            sfcat(&G_allctx, &s, "_vf%d", G_codegen_f32_cnt++);
-        }
-        break;
-        case TYPE_BOOL:
-        {
-            sfcat(&G_allctx, &s, "_vb%d", G_codegen_bool_cnt++);
-        }
-        break;
-    }
-
-    return s.cstr;
-}
-
-
-char *new_tmp_label(void)
-{
-    str_t s = {0};
-    sfcat(&G_allctx, &s, "_lbl%d", G_codegen_jmp_cnt++);
-    return s.cstr;
-}
-
-
-char *get_type_label(enum DPCC_TYPE t)
-{
-    char *result = 0;
-
-    switch (t)
-    {
-        default:
-        {
-            invalid_code_path();
-        }
-        break;
-        case TYPE_I32:
-        {
-            result = "_kI32";
-        }
-        break;
-        case TYPE_F32:
-        {
-            result = "_kF32";
-        }
-        break;
-        case TYPE_BOOL:
-        {
-            result = "_kBOOL";
-        }
-        break;
-        case TYPE_I32_ARRAY:
-        {
-            result = "_kI32";
-        }
-        break;
-        case TYPE_F32_ARRAY:
-        {
-            result = "_kF32";
-        }
-        break;
-    }
-
-    return result;
-}
-
-
-enum DPCC_TYPE deref_type(enum DPCC_TYPE in)
-{
-    enum DPCC_TYPE result = TYPE_NONE;
-
-    switch (in)
-    {
-        default:
-        {
-            invalid_code_path();
-        }
-        break;
-        case TYPE_I32_ARRAY:
-        {
-            result = TYPE_I32;;
-        }
-        break;
-        case TYPE_F32_ARRAY:
-        {
-            result = TYPE_F32;;
-        }
-        break;
-    }
-
-    assert(result != TYPE_NONE);
-    return result;
-}
-
-
-enum DPCC_TYPE unref_type(enum DPCC_TYPE in)
-{
-    enum DPCC_TYPE result = TYPE_NONE;
-
-    switch (in)
-    {
-        default:
-        {
-            invalid_code_path();
-        }
-        break;
-        case TYPE_I32:
-        {
-            result = TYPE_I32_ARRAY;;
-        }
-        break;
-        case TYPE_F32:
-        {
-            result = TYPE_F32_ARRAY;;
-        }
-        break;
-    }
-
-    assert(result != TYPE_NONE);
-    return result;
-}
-
-
 void typecheck_expr_and_operators(ast_node_t *n)
 {
 
@@ -323,7 +185,11 @@ void typecheck_expr_and_operators(ast_node_t *n)
         if (((n->kind == ExprArraySubscript)))
         {
 
-            if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_I32_ARRAY) && (n->childs[1]->md.type == TYPE_I32)))
+            if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_BOOL_ARRAY) && (n->childs[1]->md.type == TYPE_I32)))
+            {
+                n->md.type = TYPE_BOOL;
+            }
+            else if ((n->num_childs == 2) && ((n->childs[0]->md.type == TYPE_I32_ARRAY) && (n->childs[1]->md.type == TYPE_I32)))
             {
                 n->md.type = TYPE_I32;
             }
