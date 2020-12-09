@@ -1,5 +1,6 @@
 ![build](https://github.com/dparo/dpcc/workflows/build/badge.svg)
-![Travis (.org)](https://img.shields.io/travis/dparo/dpcc?label=Travis%20CI%20Build&style=plastic)
+
+![Travis (.org)](https://img.shields.io/travis/dparo/dpcc?label=Travis%20CI%20build)
 
 # dpcc: DParo's own C-alike Compiler frontend
 
