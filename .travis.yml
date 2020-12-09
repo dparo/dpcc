@@ -17,7 +17,7 @@ addons:
   apt:
     update: true
   homebrew:
-    update: false
+    update: true
     packages:
     - bison@3.7.4
     - flex
