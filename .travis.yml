@@ -19,7 +19,7 @@ addons:
   homebrew:
     update: true
     packages:
-    - bison@3.7.4
+    - bison
     - flex
 
 language: c
