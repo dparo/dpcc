@@ -12,13 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Download Bison>=3.6
+      - name: Install Chocolatey
+        shell: cmd
         run: |
-          curl.exe 'https://launchpad.net/ubuntu/+source/bison/2:3.7+dfsg-1/+build/19640339/+files/bison_3.7+dfsg-1_amd64.deb' --output ./bison_3.7+dfsg-1_amd64.deb
-          sudo dpkg -i ./bison_3.7+dfsg-1_amd64.deb
+          @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
 
-      - name: Install Dependencies
-        run: sudo apt install flex bison
+      - name: Install Bison and Flex using Chocolatey
+        shell: cmd
+        run: |
+          choco install winflexbison3
 
       - name: Checkout submodules
         uses: textbook/git-checkout-submodule-action@2.1.1
