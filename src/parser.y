@@ -209,7 +209,40 @@
 
 %%
 
+
+
+ident: ID { $$ = $1; NODE_KIND($$, Ident); }
+pident: ID  {
+        $$ = $1;
+        NODE_KIND($$, Ident);
+        ast_node_t *decl = symtable_lookup($$->tok);
+        if (!decl) {
+                dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Use of undeclared identifier `%s`", $$->tok->lexeme);
+                PARSE_ERROR();
+        } else {
+                $$->decl = decl;
+        }
+}
+
+i32lit:    I32_LIT                                            { $$ = $1; NODE_KIND($$, IntLit); INIT_I32($$); }
+f32lit:    F32_LIT                                            { $$ = $1; NODE_KIND($$, FloatLit); INIT_F32($$); }
+charlit:   CHAR_LIT                                           { $$ = $1; NODE_KIND($$, IntLit); INIT_CHAR($$); }
+boollit:   BOOL_LIT                                           { $$ = $1; NODE_KIND($$, BoolLit); INIT_BOOL($$); }
+stringlit: STRING_LIT                                         { $$ = $1; NODE_KIND($$, StringLit); }
+
+expr_terminal: pident
+    |          i32lit
+    |          f32lit
+    |          charlit
+    |          boollit
+    |          stringlit
+    ;
+
+
+
       // Bison MANUAL says to prefer left recursion where possible. Better memory footprint (bounded stack space)
+
+
 
 root: { symtable_begin_block(); } productions { symtable_end_block(); }
         ;
@@ -286,15 +319,13 @@ array_type:  sized_array_type    { $$ = $1; }
         ;
 
 
-sized_array_type:     "int"[t] "["[op] pI32_LIT[n] "]"      { $$ = NEW_NODE($op->tok, TypeInfoInt); push_childs($$, 2, YYANARRAY {$t, $n}); }
-        |             "float"[t] "["[op] pI32_LIT[n] "]"    { $$ = NEW_NODE($op->tok, TypeInfoFloat); push_childs($$, 2, YYANARRAY {$t, $n}); }
+sized_array_type:     "int"[t] "["[op] i32lit[n] "]"      { $$ = NEW_NODE($op->tok, TypeInfoInt); push_childs($$, 2, YYANARRAY {$t, $n}); }
+        |             "float"[t] "["[op] i32lit[n] "]"    { $$ = NEW_NODE($op->tok, TypeInfoFloat); push_childs($$, 2, YYANARRAY {$t, $n}); }
         ;
 
 unsized_array_type:   "int"[t] "["[op] "]"      { $$ = NEW_NODE($op->tok, TypeInfoInt); push_childs($$, 2, YYANARRAY { $t, NULL}); }
         |             "float"[t] "["[op] "]"    { $$ = NEW_NODE($op->tok, TypeInfoFloat); push_childs($$, 2, YYANARRAY { $t, NULL}); }
         ;
-
-
 
 code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                          {
                         $$ = NEW_NODE($op->tok, CodeBlock);
@@ -343,28 +374,6 @@ do_while_stmt:  "do"[op] code_block[cb] "while" "(" expr[e] ")" ";"  { $$ = NEW_
         ;
 
 
-ident: ID { $$ = $1; NODE_KIND($$, Ident); }
-pID: ID  {
-        $$ = $1;
-        NODE_KIND($$, Ident);
-        ast_node_t *decl = symtable_lookup($$->tok);
-        if (!decl) {
-                dpcc_log(DPCC_SEVERITY_ERROR, &$$->tok->loc, "Use of undeclared identifier `%s`", $$->tok->lexeme);
-                PARSE_ERROR();
-        } else {
-                $$->decl = decl;
-        }
-}
-
-
-pI32_LIT:    I32_LIT                                            { NODE_KIND($$, IntLit); INIT_I32($$); }
-pF32_LIT:    F32_LIT                                            { NODE_KIND($$, FloatLit); INIT_F32($$); }
-pCHAR_LIT:   CHAR_LIT                                           { NODE_KIND($$, IntLit); INIT_CHAR($$); }
-pBOOL_LIT:   BOOL_LIT                                           { NODE_KIND($$, BoolLit); INIT_BOOL($$); }
-pSTRING_LIT: STRING_LIT                                         { NODE_KIND($$, StringLit); }
-
-
-
 expr:          "(" error ")"                                       {  }
         |      "(" expr[e] ")"                                     { $$ = $e; }
         |       "+"[op] expr[rhs]                 %prec POS        { $$ = $rhs; }
@@ -390,19 +399,13 @@ expr:          "(" error ")"                                       {  }
         |       expr[lhs] ">"[op] expr[rhs]       %prec GT         { $$ = NEW_NODE($op->tok, ExprGt); push_childs($$, 2, YYANARRAY {$lhs, $rhs}); }
         |       expr[lhs] ">="[op] expr[rhs]      %prec GTEQ       { $$ = NEW_NODE($op->tok, ExprGtEq); push_childs($$, 2, YYANARRAY {$lhs, $rhs}); }
         |       expr[lhs] "**"[op] expr[rhs]      %prec POW        { $$ = NEW_NODE($op->tok, ExprPow); push_childs($$, 2, YYANARRAY {$lhs, $rhs}); }
-        |       pID[lhs] "++"[op]                 %prec INC        { $$ = NEW_NODE($op->tok, ExprInc); push_child($$, $lhs); }
-        |       pID[lhs] "--"[op]                 %prec DEC        { $$ = NEW_NODE($op->tok, ExprDec); push_child($$, $lhs); }
+        |       pident[lhs] "++"[op]              %prec INC        { $$ = NEW_NODE($op->tok, ExprInc); push_child($$, $lhs); }
+        |       pident[lhs] "--"[op]              %prec DEC        { $$ = NEW_NODE($op->tok, ExprDec); push_child($$, $lhs); }
+        |       pident[lhs] "["[op] expr[rhs] "]" %prec AR_SUBSCR  { $$ = NEW_NODE($op->tok, ExprArraySubscript); push_childs($$, 2, YYANARRAY {$lhs, $rhs}); }
+        |       integral_type[cast] "(" expr[e] ")"                { $$ = NEW_NODE($cast->tok, ExprCast); push_childs($$, 2, YYANARRAY { $cast, $e }); }
         |       assignment                        %prec ASSIGN     { $$ = $1; }
-        |       pI32_LIT                                           { $$ = $1; }
-        |       pF32_LIT                                           { $$ = $1; }
-        |       pCHAR_LIT                                          { $$ = $1; }
-        |       pBOOL_LIT                                          { $$ = $1; }
-        |       pID                                                { $$ = $1; }
-        |       pSTRING_LIT                                        { $$ = $1; }
-        |       pID[lhs] "["[op] expr[rhs] "]" %prec AR_SUBSCR     { $$ = NEW_NODE($op->tok, ExprArraySubscript); push_childs($$, 2, YYANARRAY {$lhs, $rhs}); }
-        |       "int"[op] "(" expr[e] ")"                          { $$ = NEW_NODE($op->tok, ExprCastInt); push_child($$, $e); }
-        |       "float"[op] "(" expr[e] ")"                        { $$ = NEW_NODE($op->tok, ExprCastFloat); push_child($$, $e); }
-        |       "bool"[op] "(" expr[e] ")"                         { $$ = NEW_NODE($op->tok, ExprCastBool); push_child($$, $e); }
+        |       expr_terminal
+        
         ;
 
 %%

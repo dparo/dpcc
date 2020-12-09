@@ -18,6 +18,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/generated_srcs/dist/main.js")
     DEPENDS "${CMAKE_SOURCE_DIR}/generated_srcs/dist/main.js"
     BYPRODUCTS "${CMAKE_SOURCE_DIR}/generated_srcs/last_gen.txt"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/generated_srcs"
+    SOURCES "${CMAKE_SOURCE_DIR}/generated_srcs/dist/main.js" "${CMAKE_SOURCE_DIR}/generated_srcs/last_gen.txt"
     )
 
 

@@ -105,10 +105,7 @@ typedef enum ast_node_kind {
 
     InitializerList,
 
-    ExprCastInt,
-    ExprCastFloat,
-    ExprCastBool,
-
+    ExprCast,
     ExprAssign,
 
     ExprPos,

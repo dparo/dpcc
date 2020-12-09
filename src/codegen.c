@@ -152,17 +152,24 @@ static void typecheck_array(ast_node_t *n)
 
 static void typecheck_casting_operator(ast_node_t *n)
 {
-    switch (n->kind) {
+    if (n->md.type) {
+        return;
+    }
+
+    assert(n->kind == ExprCast);
+    assert(n->num_childs == 2);
+
+    switch (n->childs[0]->kind) {
     default: {
         invalid_code_path();
     } break;
-    case ExprCastInt: {
+    case TypeInfoInt: {
         n->md.type = TYPE_I32;
     } break;
-    case ExprCastFloat: {
+    case TypeInfoFloat: {
         n->md.type = TYPE_F32;
     } break;
-    case ExprCastBool: {
+    case TypeInfoBool: {
         n->md.type = TYPE_BOOL;
     } break;
     }
@@ -283,7 +290,7 @@ static void typecheck_print(ast_node_t *n)
 
 static void typecheck(ast_node_t *n)
 {
-    bool is_casting_operator = ((n->kind == ExprCastInt) || (n->kind == ExprCastFloat) || (n->kind == ExprCastBool)) && (n->num_childs == 1);
+    bool is_casting_operator = (n->kind == ExprCast) && (n->num_childs == 2);
     bool var_decl = n->kind == VarDeclStmt;
     bool is_typable_identifier = n->kind == Ident && n->parent && !(n->parent->kind == VarDeclStmt);
     bool is_array_subscript = n->kind == ExprArraySubscript && n->childs[1]->kind == IntLit && n->childs[1]->md.type == TYPE_I32;
