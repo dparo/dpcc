@@ -1,0 +1,223 @@
+% You should not modify anything from here ... -------------
+\documentclass[a4paper]{article}
+\usepackage[english]{babel}
+\usepackage{microtype,etex,listings,color,parskip}
+\usepackage[margin=2cm]{geometry}
+\usepackage{hyperref}
+\lstset{
+  language=C,
+  tabsize=2,
+  showstringspaces=false,
+  breaklines=true,
+  basicstyle=\ttfamily,
+  keywordstyle=\color[rgb]{0.1,0.3,0.7}\ttfamily,
+  stringstyle=\color[rgb]{0.7,0.1,0.3}\ttfamily,
+  commentstyle=\color[rgb]{0.3,0.4,0.3}\ttfamily,
+  columns=fixed,
+  numberstyle=\sffamily\scriptsize,
+  backgroundcolor=\color[rgb]{0.95,0.95,0.95},
+  frame=lines,
+  framexleftmargin=5pt,
+  numbers = left,
+  numberstyle = \footnotesize
+}
+
+\lstdefinelanguage{DPCC}{
+  keywords={ print, int, float, bool, var, typeof, new, true, false, catch,
+             function, return, null, catch, switch, let, var, if, of, in,
+             for, while, do, else, case, break },
+  keywordstyle=\color{blue}\bfseries,
+  ndkeywords={class, export, boolean, throw, implements, import, this},
+  ndkeywordstyle=\color{darkgray}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{purple}\ttfamily,
+  stringstyle=\color{red}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
+
+\lstset{
+  language=DPCC,
+  extendedchars=true,
+  basicstyle=\footnotesize\ttfamily,
+  showstringspaces=false,
+  showspaces=false,
+  numbers=left,
+  columns=flexible,
+  numberstyle=\tiny,
+  numbersep=9pt,
+  tabsize=2,
+  breaklines=true,
+  showtabs=false,
+  captionpos=b,
+}
+% ... until here -------------------------------------------
+
+\begin{document}
+
+% replace X and XXX with the number and title of the assignment:
+\title{DPCC: DParo's Own C-Alike Compiler}
+% DO NOT ADD YOUR NAME, only your student numbers:
+\author{Davide Paro}
+\date{December 2020}
+
+\maketitle
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% NOTE: You MUST read and follow Appendix E of the lecture notes! %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{Project Description}
+This project is the implementation of an assignment for a course on compilers
+of Computer Engineering at Padua.
+
+The project consists in an implmenetation of a toy compiler for a toy language for
+which we are free to desing the syntax however we like.
+
+
+\begin{itemize}
+\item \textbf{Lettura del sorgente}. In particolare si può supporre una tradizionale lettura da
+  un file.
+\item Un \textbf{Lexer/Scanner} per la tokenizzazione del sorgente da caratteri a tipi di dati strutturati. La scelta ricade su \textbf{Flex} per la gestione dell'analisi lessicale
+\item Un \textbf{Parser} per implementare la sintassi del linguaggio e gestire l'analisi sintattica. La scelta ricade su \textbf{Bison} per la gestione di questa componente
+\item Un semplice \textbf{generator di codice intermedio}. Il progetto provede di generare un ibrido Assembly/C/3AC come semplice esempio di gestione di generazione
+\end{itemize}
+
+For the specification of the Intermdiate Code that is generated please refer to \hyperref[appendix_a]{appendix A}
+
+\subsection*{Intermediate Code Generation: 3AC}
+
+\section*{Problem analysis}
+
+...
+
+\section*{Program design}
+
+...
+
+\section*{Evaluation of the program}
+
+...
+
+% \section*{Evaluation of the program} % Optional
+%
+% ...
+
+\section*{Process description}
+
+...
+
+\section*{Conclusions}
+
+...
+
+\section*{Appendix A: Structure of the Intermediate Code}
+\label{appendix_a}
+
+\section*{Appendix: program text}
+
+% Here you should include the program text.
+% Do NOT use screenshots or similar methods.
+% Below you can see how to use \lstinputlisting{}.
+
+
+
+\begin{lstlisting}[language=DPCC]
+let a: int[] = 10;
+let s = "Hello world";
+{
+
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C]
+int main() {
+
+}
+char **argv;
+\end{lstlisting}
+
+
+\clearpage
+\section*{Appendix B: Example Program Iterative Merge Sort}
+
+\begin{lstlisting}[language=DPCC]
+let array = [
+  15, 59, 61, 75, 12, 71,  5, 35, 44,
+  6, 98, 17, 81, 56, 53, 31, 20, 11,
+  45, 80,  8, 34, 71, 83, 64, 28,  3,
+  88, 50, 48, 80,  5
+];
+
+
+for (let curr_size = 1; curr_size < len; curr_size = 2 * curr_size) {
+  for (let left_start = 0; left_start < len - 1; left_start = left_start + 2 * curr_size) {
+      let mid = len - 1;
+
+      if ((left_start + curr_size - 1) < len - 1) {
+        mid = left_start + curr_size - 1;
+      }
+
+      let right_end = len - 1;
+
+      if ((left_start + 2 * curr_size - 1) < len - 1) {
+        right_end = left_start + 2 * curr_size - 1;
+      }
+
+      {
+        let l = left_start;
+        let m = mid;
+        let r = right_end;
+        let n1 = m - l + 1;
+        let n2 = r - m;
+
+        let L: int[1024];
+        let R: int[1024];
+
+        for (let i = 0; i < n1; i++) {
+          L[i] = array[l + i];
+        }
+        for (let i = 0; i < n2; i++) {
+          R[i] = array[m + 1 + i];
+        }
+
+
+        let i = 0;
+        let j = 0;
+        let k = l;
+        while (i < n1 && j < n2) {
+          if (!(L[i] > R[j])) {
+              array[k++] = L[i++];
+          } else {
+              array[k++] = R[j++];
+          }
+        }
+
+        while (i < n1) {
+          array[k++] = L[i++];
+        }
+        while (j < n2) {
+          array[k++] = R[j++];
+        }
+      }
+  }
+}
+
+print("Sorted array\n");
+print(array);
+\end{lstlisting}
+
+
+% \section*{Appendix: test cases} % Optional
+%
+% ...
+
+% \section*{Appendix: Extensions} % Optional
+%
+% ...
+
+\end{document}
