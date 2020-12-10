@@ -328,19 +328,10 @@ unsized_array_type:   integral_type[t] "["[op] "]"      { $$ = NEW_NODE($op->tok
 
 code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                          {
                         $$ = NEW_NODE($op->tok, CodeBlock);
-                        // Keep bison LEFT recursive (faster) and reverse the order of the childs,
-                        // only when needed
-                        if (0) {
-                                for (int32_t i = 0; i < $ss->num_childs / 2; i++) {
-                                    YYSTYPE temp = $ss->childs[0];
-                                    $ss->childs[0] = $ss->childs[$ss->num_childs - 1 - i];
-                                    $ss->childs[$ss->num_childs - 1 - i] = temp;
-                                }
-                        }
                         push_childs($$, $ss->num_childs, $ss->childs);
                         symtable_end_block();
                 }
-        |      "{"[op] "}"                                        { $$ = NEW_NODE($op->tok, CodeBlock); }
+        |      "{"[op] "}" { $$ = NEW_NODE($op->tok, CodeBlock); }
         ;
 
 for_1: decl
@@ -404,7 +395,7 @@ expr:          "(" error ")"                                       {  }
         |       integral_type[cast] "(" expr[e] ")"                { $$ = NEW_NODE($cast->tok, ExprCast); push_childs($$, 2, YYANARRAY { $cast, $e }); }
         |       assignment                        %prec ASSIGN     { $$ = $1; }
         |       expr_terminal
-        
+
         ;
 
 %%
