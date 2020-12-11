@@ -2,8 +2,8 @@
 \usepackage[english]{babel}
 \usepackage{microtype,etex,listings,color,parskip}
 \usepackage[margin=2cm]{geometry}
-%\usepackage[hidelinks]{hyperref}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
+%\usepackage{hyperref}
 
 \newcommand{\secref}[3][green]{\href{#2}{\color{#1}{#3}}}%
 \newcommand{\urlref}[3][blue]{\href{#2}{\color{#1}{#3}}}%
@@ -333,9 +333,7 @@ extensions and some hard coded unix syscalls.
 In short words \textbf{dpcc} can be only compiled with either GCC or CLANG compilers
 and executed in a Unix/Posix compatible operating system.
 
-If you would like to build the compiler yourself from scratch please refer to this \urlref{https://github.com/dparo/dpcc/blob/main/README.md}{README} file
-present in the project \urlref{https://github.com/dparo/dpcc}{Github Repo}
-
+If you would like to build the compiler yourself from scratch please refer to the \urlref{https://github.com/dparo/dpcc/wiki}{Project WIKI}\footnote{\urlref{https://github.com/dparo/dpcc}{Github Repo Link}}
 
 The compiler can and should be invoked from the commandline. The \textbf{dpcc} executable
 is self contained and doesn't reach for any implicit external asset and thus can be placed
