@@ -1,3 +1,15 @@
+//@ Full UTF-8 Support (Emojis)
+//@ 😜 = 69
+
+print("\n\nFull UTF-8 Support (Emojis)\n");
+{
+    let fun = 69;
+    let 😜 = fun;
+    print(😜);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 //@ Fn Test
 //@ a = 100

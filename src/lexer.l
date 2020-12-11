@@ -42,7 +42,6 @@ bool_lit        true|false
 string_lit      ["](([\\]["])|([^"]))*["]
 
 
-id       {alpha}{alnum}*
 
 
 /* Handling utf-8 characters: specifying illegal chars */
@@ -60,11 +59,13 @@ UTF8_H4     [\xf0-\xf4]{UTF8_P}{UTF8_P}{UTF8_P}
 NASCII      {UTF8_H2}|{UTF8_H3}|{UTF8_H4}
 
 
+
+id       ({alpha}|{NASCII})({alnum}|{NASCII})*
+
 %%
 
 
-NASCII           { LEX_FWD(YYUNDEF); }
-EOF              { LEX_FWD(YYEOF); }   /* Must return YYEOF upon EOF in order for bison to work */
+EOF               { LEX_FWD(YYEOF); }   /* Must return YYEOF upon EOF in order for bison to work */
 
 {eol}             { yylloc.first_line += 1; yylloc.first_column =  yylloc.last_column = 1; }
 {ws}              { LEX_STRIP(); }
