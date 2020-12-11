@@ -34,7 +34,7 @@
     sensitive=false,
     comment=[l]{//},
     morecomment=[s]{/*}{*/},
-    commentstyle=\color{purple}\ttfamily,
+    commentstyle=\color[rgb]{0.3,0.4,0.3}\ttfamily,
     stringstyle=\color{red}\ttfamily,
     morestring=[b]',
     morestring=[b]"
@@ -65,16 +65,16 @@
 \maketitle
 
 
-\section*{Project Description}
+\section*{Assignment Description}
 This project is the implementation of an assignment for a course on \textbf{Compilers}
 at the department of Computer Engineering Master Degree Padova (ITA).
 
 
-The assignment consists in implementing a toy compiler (mostly the frontend side) for a toy language
-at our liking.
+The assignment consists in implementing a toy compiler (mostly the frontend side) for a toy language.
+We are free to design the syntax of this toy language however we like.
 
 The assignment specs out the how the compiler should be composed.
-We can in fact distinguish these macro components.
+We can in fact distinguish these macro components:
 
 \begin{itemize}
 \item \textbf{Input Stage} deals with the input byte stream that composes
@@ -84,15 +84,15 @@ We can in fact distinguish these macro components.
     structures (called tokens). For the project assignment we can use \textbf{Flex} to aid in
     the code generation for the scanner.
 \item \textbf{Parser} for performing the syntax analysis. It is what defines the look \& fell
-    (grammar) of the language. For the project assignment we can use \textbf{Bison} to ad in the
+    (grammar) of the language. For the project assignment we can use \textbf{Bison} to aid in the
     implementation of a good parser.
 \item \textbf{Intermediate Code Generator}. The ultimate purpose of a compiler is to produce something
     useful. In this project assignment we are not requested to implement a proper backend. Thus,
     we need to emit a 3AC representation of our input program. More in this later.
 \end{itemize}
 
-In particular the final Intermediate representation that we need to emit is based on Three Address Code (3AC), that
-is each statement can only have 1 operand at the left hand side of the assignment, and 2 operands at the left hand side
+In particular the final Intermediate representation that we need to emit is based on Three Address Code (3AC),
+that is, each statement can only have 1 operand at the left hand side of the assignment, and 2 operands at the right hand side
 of the assignment, and an operator driving the operation that should be performed.
 
 You can view more about 3AC at the following \href{https://en.wikipedia.org/wiki/Three-address_code}{wikipedia link}.
@@ -122,8 +122,94 @@ The assignment requires the following features from the programming langugage th
 
 \clearpage
 
-\subsection*{Intermediate Code Generation: 3AC}
-\section*{The prospsoed implementation}
+\section*{A quick peak at the language and at the compiler}
+
+This section is concerned with showing the reader, what the final language, compiler proposed
+in this implementation will look like. All the internal details are instead deferred to later sections.
+
+It is best to show a simple example
+
+\subsection*{Structure of the language}
+
+The proposed language is very similar to a C and JavaScript Hybrid. Most of the syntax is derived
+from C-alike lannguage, and some keyword concepts are instead taken from Javascript. That is newlines
+and spaces mostly do not matter, they simply introduce token boundaries.
+
+\begin{lstlisting}[language=DPCC]
+// C style Multi-line comments like /* ... */  pair are not supported
+
+// Print statement with immediate C-style strings. C-style strings are not
+// a valid type and can only be passed to print
+print("Hello world\n");
+
+// Variable declaration and initialization
+let a = 10;          // Integer Type deduced
+let f = 10.0;        // Float type deduced
+let b = false;       // Boolean type deduced
+
+// Explicit types
+let i: int = 0xffff & ~0xb00111;
+let f: float = 10.0 + 20.0 ** 2;
+
+// Variables can be printed
+print(i);       // Print integer
+print(f);       // Print float
+
+// Scoping and restricting variable declarations to the current scope
+{
+    // Simple single dimension arrays declaration
+    let buf_i: int[100];            // Known size integer array
+    let buf_f: float[100];          // Known size float array
+
+    // Integer array with deduced size from the RHS initializer list
+    let buf = [ 10, 20, 30, 40, 50 ];
+
+    // Arrays can be printed
+    print(buf);
+}
+
+let buf: int[100];
+
+// Control flow
+for (let i = 0; i < 100; i++) {
+    buf[i] = i ** 2;
+
+    if (buf[i] == 10) {
+        print("buf[i] is 10!!!\n")
+    }
+    else if (buf[i] == 20) {
+        print("buf[i] is 20!!!\n");
+    }
+    else {
+        print("None of above\n");
+    }
+}
+\end{lstlisting}
+
+
+So as the reader can see from above there's not much fancy stuff about the syntax, it is mostly
+C-alike. The cool thing though about this implementation is that we can mostly declare variables
+with a simple `let` keyword like in Javascript, but unlike Javascript the compiler has a way
+to deduce types whenever possible and still provides strong type semantics to each indentifier
+like in C (or any other strongly typed language).
+
+For now only 5 types are implemented: \textbf{bool, int, float, string, bool[], int[], float[]}.
+Only single dimensions array are for now supported. So arrays do not generalize to any dimensions.
+
+Most of these types have full on semantics, that is the compiler can deduce
+a type of an expression starting from the type of its operand. In some cases it can reject
+the code maybe because an operator is used with invalid typed operands.
+
+String for now is kind of a quirk type, meaning that it doesn't have a full type tracking inside
+the compiler. The compiler still knows what a string is, but strings cannot be assigned to any
+variables and they can instead be used only as a parameter to the print statement.
+
+
+\subsection*{Calling the compiler}
+
+
+\section*{The proposed implementation}
+In the following sections it is described how the proposed
 \begin{itemize}
 \item \textbf{Input Stage}. The compiler only supports file. The input stream is implemented
     in the following way. The file is loaded and entirely copied into a memory buffer. This is more
@@ -135,7 +221,33 @@ The assignment requires the following features from the programming langugage th
 
 
 
-\subsection*{Hello world: More hello world}
+
+\section*{Implementation Details}
+\subsection*{Custom log is implemented to override default bison behaviour}
+
+\subsection*{Common types used withing the compiler}
+
+
+\subsection*{Most notable functions used in the compiler}
+
+\subsection*{How the AST is traversed}
+
+\subsection*{How type checking and type deduction is implemented}
+
+\subsection*{A brief introduction at the code implementing the compiler}
+
+\begin{itemize}
+    \item The order of the childs in each node \textbf{is very important} and it drives
+        the correctness of the final output. In this way we can use simple printf to generate
+        the code each time we find something while traversing the tree
+\end{itemize}
+
+\subsection*{Typescript used for code generation of some part of the compiler}
+
+\subsection*{Encountered problems}
+
+\subsection*{Testing framework}
+
 
 \section*{Problem analysis}
 
