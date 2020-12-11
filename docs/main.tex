@@ -24,10 +24,10 @@
     numberstyle = \footnotesize,
 }
 
-\lstdefinelanguage{DPCC}{
-    keywords={ print, int, float, bool, var, typeof, new, true, false, catch,
+\lstdefinelanguage{JS}{
+    keywords={ var, typeof, new, true, false, catch,
         function, return, null, catch, switch, let, var, if, of, in,
-    for, while, do, else, case, break },
+    for, while, do, else, case, break, const},
     keywordstyle=\color{blue}\bfseries,
     ndkeywords={class, export, boolean, throw, implements, import, this},
     ndkeywordstyle=\color{darkgray}\bfseries,
@@ -42,7 +42,40 @@
 }
 
 \lstset{
-    language=DPCC,
+    language=JS,
+    extendedchars=true,
+    basicstyle=\footnotesize\ttfamily,
+    showstringspaces=false,
+    showspaces=false,
+    numbers=left,
+    columns=flexible,
+    numberstyle=\tiny,
+    numbersep=9pt,
+    tabsize=2,
+    breaklines=true,
+    showtabs=false,
+    captionpos=b,
+}
+
+\lstdefinelanguage{DPL}{
+    keywords={ print, int, float, bool, var, typeof, new, true, false, catch,
+        function, return, null, catch, switch, let, var, if, of, in,
+    for, while, do, else, case, break, const},
+    keywordstyle=\color{blue}\bfseries,
+    ndkeywords={class, export, boolean, throw, implements, import, this},
+    ndkeywordstyle=\color{darkgray}\bfseries,
+    identifierstyle=\color{black},
+    sensitive=false,
+    comment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    commentstyle=\color[rgb]{0.3,0.4,0.3}\ttfamily,
+    stringstyle=\color{red}\ttfamily,
+    morestring=[b]',
+    morestring=[b]"
+}
+
+\lstset{
+    language=DPL,
     extendedchars=true,
     basicstyle=\footnotesize\ttfamily,
     showstringspaces=false,
@@ -127,27 +160,55 @@ The assignment requires the following features from the programming langugage th
 
 \clearpage
 
-\section{DPL and DPCC: A quick peak at the language and at the compiler}
+\section{DPL and dpcc: A quick peak at the language and at the compiler}
 
 After describing the project assignment, from now on the following sections will describe the proposed language
 and the proposed compiler.
 
-\textbf{DPL} and \textbf{DPCC} are respectively the \textbf{name of the implemented language} and the \textbf{name of the implemented compiler}.
-They are named after their author.
+\textbf{DPL} and \textbf{DPCC} are respectively the \textbf{name of the language} and the
+\textbf{name of the implemented compiler}. They are named after their author.
 
-From now on \textbf{DPL} and \textbf{DPCC} will be used for brevity for refering to the language and to the compiler
+From now on \textbf{DPL} and \textbf{DPCC} will be used for brevity for refering to the language and to the compiler.
+We will use \textbf{dpcc} (all lowercase) instead, to refer to the actual executable where the compiler lives.
+
+That being said \textbf{DPCC} (all UPPERCASE) \& \textbf{dpcc} (all lowercase) are mostly used interchangeably to refer to the same thing.
 
 
 \subsection{DPL: Structure of the language}
 
-DPL is mostly a C-alike compatible language. It borrows some syntax also from Rust/JS especially
-in the variable delcarations (usage of the keyword \textbf{let})
-Spaces and newlines mostly do not matter, they simply introduce token boundaries.
+\textbf{DPL} is mostly a C-alike compatible language. It borrows some syntax also from \textbf{Rust} \&
+\textbf{JS} especially in the variable declaration syntax (usage of the keyword \textbf{let}).
 
-Comments start with the double forward slash `\emph{//}', and C-style multiline comments are
-instead not supported.
+\textbf{Rust} is a modern system programming language with strong typing guarantees.
+Among all the interesting features that Rust provides one of them is type deduction.
+Thanks to Rust's strong typing guarantees and thanks to strong type deduction rules implemented
+inside the \textbf{rustc} compiler, Rust
+allows one to declare variables with a very low-weight syntax, similar
+to a syntax provided from a typical dynamic language (for example JS).
 
-\begin{lstlisting}[language=DPCC]
+\textbf{DPL}, like Rust, also have a very simple form of a type deduction system.
+It is not even remotely close to the Rust type deduction system, but still it
+allows the user of the language to not always need to specify the type of each variable in a declaration.
+
+Here follows some demonstration \textbf{DPL} to show of the concepts and the syntax of the language:
+
+We will see briefly in later sections how this is implemented in the \textbf{dpcc} compiler.
+
+
+In \textbf{DPL}:
+
+\begin{itemize}
+\item Spaces and newlines mostly do not matter, they simply introduce token boundaries.
+\item Comments start with the double forward slash `\emph{//}', and C-style multiline comments are
+instead not supported (at the time of writing).
+\end{itemize}
+
+
+
+
+Here follows some chunks of \textbf{DPL} code to show off the language concepts and syntax:
+
+\begin{lstlisting}[laguage=DPL]
 // Print statement with immediate C-style strings. C-style strings can only be used inside print statement
 print("Hello world\n");
 
@@ -159,6 +220,10 @@ let b = false;       // Boolean type deduced
 // Explicit types
 let i: int = 0xffff & ~0xb00111;
 let f: float = 10.0 + 20.0 ** 2;
+
+// Immediate values can be printed
+print(10);
+print(30 + 4);
 
 // Variables can be printed
 print(i);       // Print integer
@@ -203,12 +268,41 @@ for (let i = 0; i < 100; i++) {
 }
 \end{lstlisting}
 
+The cool thing about \textbf{DPL}, is that it is \textbf{almost a Javascript subset}.
+That is one can simply copy the \textbf{DPL} code, strip the type information (if they're used
+anywhere) by manual editing or automatically, and paste the same code into a browser console to evaluate as JS code.
+With a couple modifications here and there (arrays with no RHS initalizer list must be converted into valid
+JS array), and the definition of the function `print', one can
+test if the compiler \textbf{dpcc} is producing the correct output by simply
+evaluating the same code in a browser console.
 
-So as the reader can see from above there's not much fancy stuff about the syntax, it is mostly
-C-alike. The cool thing though about this implementation is that we can mostly declare variables
-with a simple `let` keyword like in Javascript, but unlike Javascript the compiler has a way
-to deduce types whenever possible and still provides strong type semantics to each indentifier
-like in C (or any other strongly typed language).
+This example shows how to convert \textbf{DPL} into \textbf{JS} by manual editing:
+
+\begin{lstlisting}[language=DPL]
+let a = 10;                  // This is also valid JS code
+let b = [ 10, 20, 30, 40 ];  // This is also valid JS code
+let c: int = 10;             // Mostly valid JS code, remove the type info and the colon
+let d: int[1024];            // Js arrays grow on demand automatically when touching elements.
+                             // No need to specify neither type nor number of elements
+
+print(d);                    // Valid JS code if function print were to be defined
+\end{lstlisting}
+
+Here's the equivalent JS code:
+
+\begin{lstlisting}[language=JS]
+const print = console.log;      // Define it once at the top of the script
+
+let a = 10;                     // Same as before
+let b = [ 10, 20, 30, 40 ];     // Same as before
+let c = 10;                     // Just strip the int type
+let d = [];                     // Just initalize with empty array is enough
+
+print(d);                       // Works because print is defined
+\end{lstlisting}
+
+Most other \textbf{DPL} syntax and features, like code blocks, conditionals, loops \dots etc are valid JS code
+thanks on how the grammar for \textbf{DPL} was defined.
 
 For now only 5 types are implemented: \textbf{bool, int, float, string, bool[], int[], float[]}.
 Only single dimensions array are for now supported. So arrays do not generalize to any number of dimensions.
@@ -216,7 +310,6 @@ Only single dimensions array are for now supported. So arrays do not generalize 
 Most of these types have full on semantics, meaning that the compiler can deduce
 a type of an expression given the types of its operand. In some cases it can reject
 the code if the operands of an expression have invalid types.
-
 At the current time of writing this report, \textbf{string} types are quirky, meaning that
 they don't have a full type tracking inside
 the compiler like other types do.
@@ -306,7 +399,7 @@ In the following sections it is described how the proposed
 
 
 
-\begin{lstlisting}[language=DPCC]
+\begin{lstlisting}[laguage=DPL]
 let a: int[] = 10;
 let s = "Hello world";
 {
@@ -326,7 +419,7 @@ char **argv;
 \section{Appendix B: Example Program Iterative Merge Sort}
 \label{appendix_b}
 
-\begin{lstlisting}[language=DPCC]
+\begin{lstlisting}[laguage=DPL]
 let array = [
     15, 59, 61, 75, 12, 71,  5, 35, 44,
     6, 98, 17, 81, 56, 53, 31, 20, 11,
