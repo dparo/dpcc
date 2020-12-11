@@ -333,37 +333,41 @@ and executed in a Unix/Posix compatible operating system.
 
 
 The compiler can and should be invoked from the commandline. The \textbf{dpcc} executable
-is self contained and doesn't reach for external assets file and thus can be placed
-anywhere in the system and invoked from anywhere in the system.
+is self contained and doesn't reach for external assets that it needs and thus can be placed
+anywhere in the system and invoked from anywhere.
 
 From now on we assume the user has a fired up shell correctly \textbf{cd}-ed to the directory
 holding the \textbf{dpcc} executable:
 
-To call the compiler invoke, which will print it's usage help message:
+To call the compiler run the following command, which will print it's usage help message:
 
 \begin{lstlisting}[language=Bash]
 ./dpcc
 \end{lstlisting}
 
-The \texttt{-o} flag is mostly used to override the location of where output files/stream are generated if any.
+The \textbf{dpcc} compiler supports the specification of the \texttt{-o} flag
+which were applicable it allows the program to override the default locations where
+the compiler would produce it's output.
 
 \textbf{dpcc} can work in 6 different modes: \textbf{lex, parse, 3ac, c, gcc, run}:
 
 \begin{itemize}
-    \item \texttt{./dpcc lex <input> [-o <out>]}: Lex the input and show list of tokens in either stdout or in the given file
-    \item \texttt{./dpcc parse <input> [-o <out>]}: Parse the program and produce a text representation of the AST in either stdout or in the given file.
-    \item \texttt{./dpcc 3ac <input> [-o <out>]}: Parse the program and perform additional type validations and type checking. If the program is still valid emit 3AC in either stdout or in the given file
-    \item \texttt{./dpcc c <input> [-o <out>]}: Same as 3AC but also emit preamble and postamble required to produce a semantically valid C program that can be compiled. The output is emitted in either stdout or in the given file
+    \item \texttt{./dpcc lex <input> [-o <out>]}: Lex the input and show the list of tokens composing the \textbf{DPL} source in either stdout or in the given file.
+ 1   \item \texttt{./dpcc parse <input> [-o <out>]}: Parse the program and produce a text representation of the AST (Abstract Syntax Tree) in either stdout or in the given file.
+    \item \texttt{./dpcc 3ac <input> [-o <out>]}: Parse the program and perform additional type validations and type checking. If the program is still valid emit 3AC in either stdout or in the given file.
+    \item \texttt{./dpcc c <input> [-o <out>]}: Same as 3AC but also emit preamble and postamble required  to promote 3AC to a  valid C program that can be compiled. The output is emitted in either stdout or in the given file.
     \item \texttt{./dpcc gcc <input> [-o <out>]}: Same as \texttt{`dpcc c'} but the generated C program is piped into GCC standard input and the final executable is either compiled in \texttt{a.out} or in the given filepath. This requires GCC to be in the path.
-    \item \texttt{./dpcc run <input>}: Parse, typecheck, emit the C code, compile it and run it in one single command. The executable produced by GCC is outputted in a temp file (\texttt{/tmp}), the temp executable is executed right away and the removed. The \texttt{-o} flag is ignored. This requires GCC to be in the path.
+    \item \texttt{./dpcc run <input>}: Parse, typecheck, emit the C code, compile it and run it in one single command. The executable produced by GCC is outputted in a temp file (under \texttt{/tmp}), the temp executable is executed right away and then removed. The \texttt{-o} flag is ignored. This requires GCC to be in the path.
 \end{itemize}
 
-\texttt{Lex} and \texttt{parse} mode are mostly used for debugging the produced tokens and the AST. The \texttt{run} mode
+\texttt{Lex} and \texttt{parse} modes are mostly used for debugging and are not really that useful.
+The \texttt{run} mode
 is the most convenient mode since it takes care of everything. If the input program is valid and
-you call \texttt{dpcc run} you will see the output generated from you \textbf{DPL} program.
+you call \texttt{`./dpcc run'} on it you will see the output generated from you \textbf{DPL} program.
 
+\clearpage
 
-\section{The proposed implementation}
+\section{Implementation details of the DPL language}
 In the following sections it is described how the proposed
 \begin{itemize}
 \item \textbf{Input Stage}. The compiler only supports file. The input stream is implemented
@@ -377,7 +381,7 @@ In the following sections it is described how the proposed
 
 
 
-\section{Implementation Details}
+\section{Implementation Details of the DPCC compiler}
 \subsection{Custom log is implemented to override default bison behaviour}
 
 \subsection{Common types used withing the compiler}
@@ -460,6 +464,8 @@ char **argv;
 \label{appendix_b}
 
 \begin{lstlisting}[language=DPL]
+let len = 32;
+
 let array = [
     15, 59, 61, 75, 12, 71,  5, 35, 44,
     6, 98, 17, 81, 56, 53, 31, 20, 11,
