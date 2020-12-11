@@ -1,9 +1,12 @@
-% You should not modify anything from here ... -------------
 \documentclass[a4paper]{article}
 \usepackage[english]{babel}
-\usepackage{microtype,etex,listings,color,parskip,hyperref}
+\usepackage{microtype,etex,listings,color,parskip}
 \usepackage[margin=2cm]{geometry}
+%\usepackage[hidelinks]{hyperref}
 \usepackage{hyperref}
+
+\newcommand{\secref}[3][green]{\href{#2}{\color{#1}{#3}}}%
+\newcommand{\urlref}[3][blue]{\href{#2}{\color{#1}{#3}}}%
 
 
 \lstset{
@@ -100,15 +103,15 @@
 
 \maketitle
 
-
 \section{Assignment Description}
-This project is the implementation of an assignment for a course on \textbf{Compilers}
+This project is about an assignment for a course on \textbf{Compilers}
 at the department of Computer Engineering Master Degree Padova (ITA).
 
 
-The assignment consists in implementing a toy compiler for a toy language.
-Mostly we are required to design the frontend side (input, lexing, parsing, type checking) and
-simply emitting a very simple theoretical Intermediate Code (3AC)
+The assignment consists in implementing a toy compiler for a toy language. More emphasis
+is put on the implementation for the frontend side (input, lexing, parsing, type checking), while
+the backend side is stubbed out by a simple 3AC \footnote{3AC: Three Address Code} Intermediate Code
+generator.
 We are free to design the syntax of this toy language however we like.
 
 The assignment specs out the how the compiler should be composed.
@@ -133,7 +136,7 @@ In particular the final Intermediate representation that we need to emit is base
 that is, each statement can only have 1 operand at the left hand side of the assignment, and 2 operands at the right hand side
 of the assignment, and an operator driving the operation that should be performed.
 
-You can view more about 3AC at the following \href{https://en.wikipedia.org/wiki/Three-address_code}{wikipedia link}.
+You can view more about 3AC at the following \urlref{https://en.wikipedia.org/wiki/Three-address_code}{wikipedia link}.
 
 In practice the emitted 3AC code is on itself a partially valid C program, it's only missing variable
 declarations at the top for the temporary variables.
@@ -162,8 +165,8 @@ The assignment requires the following features from the programming langugage th
 
 \section{DPL and dpcc: A quick peak at the language and at the compiler}
 
-After describing the project assignment, from now on the following sections will describe the proposed language
-and the proposed compiler.
+After describing the project assignment, from now on, the following sections will describe the proposed language
+and the implemented compiler.
 
 \textbf{DPL} and \textbf{DPCC} are respectively the \textbf{name of the language} and the
 \textbf{name of the implemented compiler}. They are named after their author.
@@ -171,13 +174,14 @@ and the proposed compiler.
 From now on \textbf{DPL} and \textbf{DPCC} will be used for brevity for refering to the language and to the compiler.
 We will use \textbf{dpcc} (all lowercase) instead, to refer to the actual executable where the compiler lives.
 
-That being said \textbf{DPCC} (all UPPERCASE) \& \textbf{dpcc} (all lowercase) are mostly used interchangeably to refer to the same thing.
+That being said \textbf{DPCC} (all UPPERCASE) and \textbf{dpcc} (all lowercase) are mostly used interchangeably to refer to the same thing.
 
 
 \subsection{DPL: Structure of the language}
 
-\textbf{DPL} is mostly a C-alike compatible language. It borrows some syntax also from \textbf{Rust} \&
-\textbf{JS} especially in the variable declaration syntax (usage of the keyword \textbf{let}).
+\textbf{DPL} is mostly a C-alike compatible language, since it borrows most of its syntax and semantics.
+It also borrows some syntax from \textbf{Rust} \&
+\textbf{JS} especially in how the variables are declared (usage of the keyword \textbf{let}).
 
 \textbf{Rust} is a modern system programming language with strong typing guarantees.
 Among all the interesting features that Rust provides one of them is type deduction.
@@ -189,11 +193,7 @@ to a syntax provided from a typical dynamic language (for example JS).
 \textbf{DPL}, like Rust, also have a very simple form of a type deduction system.
 It is not even remotely close to the Rust type deduction system, but still it
 allows the user of the language to not always need to specify the type of each variable in a declaration.
-
-Here follows some demonstration \textbf{DPL} to show of the concepts and the syntax of the language:
-
-We will see briefly in later sections how this is implemented in the \textbf{dpcc} compiler.
-
+How this is achieved will be described in later sections.
 
 In \textbf{DPL}:
 
@@ -271,14 +271,15 @@ for (let i = 0; i < 100; i++) {
 The cool thing about \textbf{DPL}, is that it is \textbf{almost a Javascript subset}.
 That is one can simply copy the \textbf{DPL} code, strip the type information (if they're used
 anywhere) by manual editing or automatically, and paste the same code into a browser console to evaluate as JS code.
-With a couple modifications here and there (arrays with no RHS initalizer list must be converted into valid
-JS array), and the definition of the function `print', one can
+With a couple modifications here and there (for example arrays with no initalizer list must be converted into a valid
+JS array), one can
 test if the compiler \textbf{dpcc} is producing the correct output by simply
 evaluating the same code in a browser console.
 
 This example shows how to convert \textbf{DPL} into \textbf{JS} by manual editing:
 
 \begin{lstlisting}[language=DPL]
+// This is a chunk of DPLL code
 let a = 10;                     // This is also valid JS code
 let b = [ 10, 20, 30, 40 ];     // This is also valid JS code
 let c: int = 10;                // Mostly valid JS code, remove the type info and the colon
@@ -291,6 +292,7 @@ print(d);                       // Valid JS code if function print were to be de
 Here's the equivalent JS code:
 
 \begin{lstlisting}[language=JS]
+// This is the equivalent Javascript
 const print = console.log;      // Define it once at the top of the script
 
 let a = 10;                     // Same as before
@@ -304,26 +306,26 @@ print(d);                       // Works because print is defined at the top
 Most other \textbf{DPL} syntax and features, like code blocks, conditionals, loops \dots etc are valid JS code
 thanks on how the grammar for \textbf{DPL} was defined.
 
-For now only 5 types are implemented: \textbf{bool, int, float, string, bool[], int[], float[]}.
+For now \textbf{dpcc} supports only 5 types: \texttt{bool, int, float, string, bool[], int[], float[]}.
 Only single dimensions array are for now supported. So arrays do not generalize to any number of dimensions.
 
 Most of these types have full on semantics, meaning that the compiler can deduce
 a type of an expression given the types of its operand. In some cases it can reject
 the code if the operands of an expression have invalid types.
-At the current time of writing this report, \textbf{string} types are quirky, meaning that
+At the current time of writing this report, \texttt{string} types are quirky, meaning that
 they don't have a full type tracking inside
 the compiler like other types do.
-The compiler still knows what a string is, and in fact a string literal is marked
-with the \textbf{string} type, but strings undergo different semantics.
+The compiler still knows what a string is, and in it marks correctly \textbf{string literals} as
+a \texttt{string} type, but strings undergo different semantics.
 They cannot be assigned or operated on like a variable, but instead,
 they can only be used as a parameter to the print statement.
 
 
 \subsection{DPCC: Using the compiler}
 
-The \textbf{dpcc} is written in the \textbf{C} language. Unfortunately at the current time
-of writing \textbf{dpcc} works only Unix like operatins systems. The compiler has
-been both tested under Ubuntu 20.10, Ubuntu 20.04, and macOS 10.15. The
+The \textbf{dpcc} compiler is written in the \textbf{C} language. Unfortunately at the current time
+of writing \textbf{dpcc} works only under Unix like operatins systems. The compiler has
+been tested under Ubuntu 20.10, Ubuntu 20.04, and macOS 10.15. The
 compiler was developed by his author using an Ubuntu 20.10 machine, while the other distro/OS
 were tested thanks to Github Actions automated build-check cycles. Windows builds
 failed due to MSVC rejecting the source code of \textbf{dpcc} cause it contains some GCC
@@ -331,9 +333,12 @@ extensions and some hard coded unix syscalls.
 In short words \textbf{dpcc} can be only compiled with either GCC or CLANG compilers
 and executed in a Unix/Posix compatible operating system.
 
+If you would like to build the compiler yourself from scratch please refer to this \urlref{https://github.com/dparo/dpcc/blob/main/README.md}{README} file
+present in the project \urlref{https://github.com/dparo/dpcc}{Github Repo}
+
 
 The compiler can and should be invoked from the commandline. The \textbf{dpcc} executable
-is self contained and doesn't reach for external assets that it needs and thus can be placed
+is self contained and doesn't reach for any implicit external asset and thus can be placed
 anywhere in the system and invoked from anywhere.
 
 From now on we assume the user has a fired up shell correctly \textbf{cd}-ed to the directory
@@ -346,14 +351,14 @@ To call the compiler run the following command, which will print it's usage help
 \end{lstlisting}
 
 The \textbf{dpcc} compiler supports the specification of the \texttt{-o} flag
-which were applicable it allows the program to override the default locations where
+where applicable. This flag allows to override the default locations where
 the compiler would produce it's output.
 
 \textbf{dpcc} can work in 6 different modes: \textbf{lex, parse, 3ac, c, gcc, run}:
 
 \begin{itemize}
     \item \texttt{./dpcc lex <input> [-o <out>]}: Lex the input and show the list of tokens composing the \textbf{DPL} source in either stdout or in the given file.
- 1   \item \texttt{./dpcc parse <input> [-o <out>]}: Parse the program and produce a text representation of the AST (Abstract Syntax Tree) in either stdout or in the given file.
+    \item \texttt{./dpcc parse <input> [-o <out>]}: Parse the program and produce a text representation of the AST (Abstract Syntax Tree) in either stdout or in the given file.
     \item \texttt{./dpcc 3ac <input> [-o <out>]}: Parse the program and perform additional type validations and type checking. If the program is still valid emit 3AC in either stdout or in the given file.
     \item \texttt{./dpcc c <input> [-o <out>]}: Same as 3AC but also emit preamble and postamble required  to promote 3AC to a  valid C program that can be compiled. The output is emitted in either stdout or in the given file.
     \item \texttt{./dpcc gcc <input> [-o <out>]}: Same as \texttt{`dpcc c'} but the generated C program is piped into GCC standard input and the final executable is either compiled in \texttt{a.out} or in the given filepath. This requires GCC to be in the path.
@@ -363,7 +368,8 @@ the compiler would produce it's output.
 \texttt{Lex} and \texttt{parse} modes are mostly used for debugging and are not really that useful.
 The \texttt{run} mode
 is the most convenient mode since it takes care of everything. If the input program is valid and
-you call \texttt{`./dpcc run'} on it you will see the output generated from you \textbf{DPL} program.
+you call \texttt{`./dpcc run'} on it you will see the output generated from you \textbf{DPL} program,
+otherwise the compiler will complain with either warnings or errors.
 
 \clearpage
 
@@ -382,6 +388,9 @@ In the following sections it is described how the proposed
 
 
 \section{Implementation Details of the DPCC compiler}
+
+\subsection{Input stream based in read entire file into memory and then proceed. No realtime streaming, nor socket, etc...}
+
 \subsection{Custom log is implemented to override default bison behaviour}
 
 \subsection{Common types used withing the compiler}
@@ -474,57 +483,52 @@ let array = [
 ];
 
 
-for (let curr_size = 1; curr_size < len; curr_size = 2 * curr_size) {
-    for (let left_start = 0; left_start < len - 1; left_start = left_start + 2 * curr_size) {
-        let mid = len - 1;
+for (let cs = 1; cs < len; cs = 2 * cs) {
+    for (let l = 0; l < len - 1; l = l + 2 * cs) {
+        let m = len - 1;
 
-        if ((left_start + curr_size - 1) < len - 1) {
-            mid = left_start + curr_size - 1;
+        if ((l + cs - 1) < len - 1) {
+            m = l + cs - 1;
         }
 
-        let right_end = len - 1;
+        let r = len - 1;
 
-        if ((left_start + 2 * curr_size - 1) < len - 1) {
-            right_end = left_start + 2 * curr_size - 1;
+        if ((l + 2 * cs - 1) < len - 1) {
+            r = l + 2 * cs - 1;
         }
 
-        {
-            let l = left_start;
-            let m = mid;
-            let r = right_end;
-            let n1 = m - l + 1;
-            let n2 = r - m;
+        let n1 = m - l + 1;
+        let n2 = r - m;
 
-            let L: int[1024];
-            let R: int[1024];
+        let L: int[1024];
+        let R: int[1024];
 
-            for (let i = 0; i < n1; i++) {
-                L[i] = array[l + i];
-            }
+        for (let i = 0; i < n1; i++) {
+            L[i] = array[l + i];
+        }
 
-            for (let i = 0; i < n2; i++) {
-                R[i] = array[m + 1 + i];
-            }
+        for (let i = 0; i < n2; i++) {
+            R[i] = array[m + 1 + i];
+        }
 
 
-            let i = 0;
-            let j = 0;
-            let k = l;
+        let i = 0;
+        let j = 0;
+        let k = l;
 
-            while (i < n1 && j < n2) {
-                if (L[i] <= R[j]) {
-                    array[k++] = L[i++];
-                } else {
-                    array[k++] = R[j++];
-                }
-            }
-
-            while (i < n1) {
+        while (i < n1 && j < n2) {
+            if (L[i] <= R[j]) {
                 array[k++] = L[i++];
-            }
-            while (j < n2) {
+            } else {
                 array[k++] = R[j++];
             }
+        }
+
+        while (i < n1) {
+            array[k++] = L[i++];
+        }
+        while (j < n2) {
+            array[k++] = R[j++];
         }
     }
 }
