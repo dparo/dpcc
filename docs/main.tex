@@ -140,15 +140,15 @@ From now on \textbf{DPL} and \textbf{DPCC} will be used for brevity for refering
 
 \subsection{DPL: Structure of the language}
 
-The proposed language is very similar to a C and JavaScript Hybrid. Most of the syntax is derived
-from C-alike lannguage, and some keyword concepts are instead taken from Javascript. That is newlines
-and spaces mostly do not matter, they simply introduce token boundaries.
+DPL is mostly a C-alike compatible language. It borrows some syntax also from Rust/JS especially
+in the variable delcarations (usage of the keyword \textbf{let})
+Spaces and newlines mostly do not matter, they simply introduce token boundaries.
+
+Comments start with the double forward slash `\emph{//}', and C-style multiline comments are
+instead not supported.
 
 \begin{lstlisting}[language=DPCC]
-// C style Multi-line comments like /* ... */  pair are not supported
-
-// Print statement with immediate C-style strings. C-style strings are not
-// a valid type and can only be passed to print
+// Print statement with immediate C-style strings. C-style strings can only be used inside print statement
 print("Hello world\n");
 
 // Variable declaration and initialization

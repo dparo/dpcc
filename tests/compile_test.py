@@ -110,5 +110,5 @@ def test_file(filepath, is_valid=True):
 
 
 
-test_file('tests/valid_progs.txt', True)
-test_file('tests/invalid_progs.txt', False)
+test_file('tests/valid.dpl', True)
+test_file('tests/invalid.dpl', False)
