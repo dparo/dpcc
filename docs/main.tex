@@ -5,6 +5,7 @@
 \usepackage[margin=2cm]{geometry}
 \usepackage{hyperref}
 
+
 \lstset{
     language=C,
     tabsize=2,
@@ -57,6 +58,8 @@
 }
 
 \begin{document}
+\tableofcontents
+
 
 \title{DPCC: DParo's Own C-Alike Compiler}
 \author{Davide Paro}
@@ -65,12 +68,14 @@
 \maketitle
 
 
-\section*{Assignment Description}
+\section{Assignment Description}
 This project is the implementation of an assignment for a course on \textbf{Compilers}
 at the department of Computer Engineering Master Degree Padova (ITA).
 
 
-The assignment consists in implementing a toy compiler (mostly the frontend side) for a toy language.
+The assignment consists in implementing a toy compiler for a toy language.
+Mostly we are required to design the frontend side (input, lexing, parsing, type checking) and
+simply emitting a very simple theoretical Intermediate Code (3AC)
 We are free to design the syntax of this toy language however we like.
 
 The assignment specs out the how the compiler should be composed.
@@ -82,12 +87,12 @@ We can in fact distinguish these macro components:
 \item \textbf{Lexer/Scanner} has the purpose of grouping characters (lexical analysis)
     together to compose compunded
     structures (called tokens). For the project assignment we can use \textbf{Flex} to aid in
-    the code generation for the scanner.
+    the implementation of the scanner.
 \item \textbf{Parser} for performing the syntax analysis. It is what defines the look \& fell
     (grammar) of the language. For the project assignment we can use \textbf{Bison} to aid in the
-    implementation of a good parser.
+    implementation of an LR parser.
 \item \textbf{Intermediate Code Generator}. The ultimate purpose of a compiler is to produce something
-    useful. In this project assignment we are not requested to implement a proper backend. Thus,
+    useful. In this project assignment we are not asked to implement a proper backend. Instead,
     we need to emit a 3AC representation of our input program. More in this later.
 \end{itemize}
 
@@ -111,25 +116,29 @@ The assignment requires the following features from the programming langugage th
 
 \begin{itemize}
     \item Variables declaration, initialization and assignment
-    \item Handling of variable scopes. Variable names can be reused if out of scope. Variable
+    \item Scoping. Variable names are reusable in different scopes. Variable
         shadowing may or may not warn/fail/pass depending on the design choices.
     \item Only 2 types of variables: integers, booleans
-    \item Assignment statements, print statemnts, if statements, and at least 1 loop statement at will (while, for, \dots)
+    \item Assignment statements, print statements, if statements, and at least 1 loop statement at our liking
     \item Handling of simple mathematical expressions that we can encounter in common programming
-        languages, addition, subtraction, multiplication, division, modulo, etc \dots
+        languages: addition, subtraction, multiplication, division, modulo, etc \dots
     \item \textbf{Function definition, function calls, and custom user definable types are not required}
 \end{itemize}
 
 \clearpage
 
-\section*{A quick peak at the language and at the compiler}
+\section{DPL and DPCC: A quick peak at the language and at the compiler}
 
-This section is concerned with showing the reader, what the final language, compiler proposed
-in this implementation will look like. All the internal details are instead deferred to later sections.
+After describing the project assignment, from now on the following sections will describe the proposed language
+and the proposed compiler.
 
-It is best to show a simple example
+\textbf{DPL} and \textbf{DPCC} are respectively the \textbf{name of the implemented language} and the \textbf{name of the implemented compiler}.
+They are named after their author.
 
-\subsection*{Structure of the language}
+From now on \textbf{DPL} and \textbf{DPCC} will be used for brevity for refering to the language and to the compiler
+
+
+\subsection{DPL: Structure of the language}
 
 The proposed language is very similar to a C and JavaScript Hybrid. Most of the syntax is derived
 from C-alike lannguage, and some keyword concepts are instead taken from Javascript. That is newlines
@@ -154,6 +163,14 @@ let f: float = 10.0 + 20.0 ** 2;
 // Variables can be printed
 print(i);       // Print integer
 print(f);       // Print float
+
+// Casting can be used to enforce type conversion
+let myInt: int = int(10.00f);
+let myFloat = float(0xFF);
+
+// Type deduction
+let b = (10 < 20);   // Boolean type is deduced
+let f = 1 + 2.0f;    // Float type is deduced (the 1 is upcasted to a float)
 
 // Scoping and restricting variable declarations to the current scope
 {
@@ -194,21 +211,26 @@ to deduce types whenever possible and still provides strong type semantics to ea
 like in C (or any other strongly typed language).
 
 For now only 5 types are implemented: \textbf{bool, int, float, string, bool[], int[], float[]}.
-Only single dimensions array are for now supported. So arrays do not generalize to any dimensions.
+Only single dimensions array are for now supported. So arrays do not generalize to any number of dimensions.
 
-Most of these types have full on semantics, that is the compiler can deduce
-a type of an expression starting from the type of its operand. In some cases it can reject
-the code maybe because an operator is used with invalid typed operands.
+Most of these types have full on semantics, meaning that the compiler can deduce
+a type of an expression given the types of its operand. In some cases it can reject
+the code if the operands of an expression have invalid types.
 
-String for now is kind of a quirk type, meaning that it doesn't have a full type tracking inside
-the compiler. The compiler still knows what a string is, but strings cannot be assigned to any
-variables and they can instead be used only as a parameter to the print statement.
+At the current time of writing this report, \textbf{string} types are quirky, meaning that
+they don't have a full type tracking inside
+the compiler like other types do.
+The compiler still knows what a string is, and in fact a string literal is marked
+with the \textbf{string} type, but strings undergo different semantics.
+They cannot be assigned or operated on like a variable, but instead,
+they can only be used as a parameter to the print statement.
 
 
-\subsection*{Calling the compiler}
+\subsection{DPCC: Using the compiler}
+This section shows an high level of an user calling a built compiler to run and or test
 
 
-\section*{The proposed implementation}
+\section{The proposed implementation}
 In the following sections it is described how the proposed
 \begin{itemize}
 \item \textbf{Input Stage}. The compiler only supports file. The input stream is implemented
@@ -222,19 +244,19 @@ In the following sections it is described how the proposed
 
 
 
-\section*{Implementation Details}
-\subsection*{Custom log is implemented to override default bison behaviour}
+\section{Implementation Details}
+\subsection{Custom log is implemented to override default bison behaviour}
 
-\subsection*{Common types used withing the compiler}
+\subsection{Common types used withing the compiler}
 
 
-\subsection*{Most notable functions used in the compiler}
+\subsection{Most notable functions used in the compiler}
 
-\subsection*{How the AST is traversed}
+\subsection{How the AST is traversed}
 
-\subsection*{How type checking and type deduction is implemented}
+\subsection{How type checking and type deduction is implemented}
 
-\subsection*{A brief introduction at the code implementing the compiler}
+\subsection{A brief introduction at the code implementing the compiler}
 
 \begin{itemize}
     \item The order of the childs in each node \textbf{is very important} and it drives
@@ -242,41 +264,41 @@ In the following sections it is described how the proposed
         the code each time we find something while traversing the tree
 \end{itemize}
 
-\subsection*{Typescript used for code generation of some part of the compiler}
+\subsection{Typescript used for code generation of some part of the compiler}
 
-\subsection*{Encountered problems}
+\subsection{Encountered problems}
 
-\subsection*{Testing framework}
+\subsection{Testing framework}
 
 
-\section*{Problem analysis}
-
-...
-
-\section*{Program design}
+\section{Problem analysis}
 
 ...
 
-\section*{Evaluation of the program}
+\section{Program design}
 
 ...
 
-% \section*{Evaluation of the program} % Optional
+\section{Evaluation of the program}
+
+...
+
+% \section{Evaluation of the program} % Optional
 %
 % ...
 
-\section*{Process description}
+\section{Process description}
 
 ...
 
-\section*{Conclusions}
+\section{Conclusions}
 
 ...
 
-\section*{Appendix A: Structure of the Intermediate Code}
+\section{Appendix A: Structure of the Intermediate Code}
 \label{appendix_a}
 
-\section*{Appendix: program text}
+\section{Appendix: program text}
 
 % Here you should include the program text.
 % Do NOT use screenshots or similar methods.
@@ -301,7 +323,7 @@ char **argv;
 
 
 \clearpage
-\section*{Appendix B: Example Program Iterative Merge Sort}
+\section{Appendix B: Example Program Iterative Merge Sort}
 \label{appendix_b}
 
 \begin{lstlisting}[language=DPCC]
@@ -373,11 +395,11 @@ print(array);
 \end{lstlisting}
 
 
-% \section*{Appendix: test cases} % Optional
+% \section{Appendix: test cases} % Optional
 %
 % ...
 
-% \section*{Appendix: Extensions} % Optional
+% \section{Appendix: Extensions} % Optional
 %
 % ...
 
