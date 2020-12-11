@@ -208,7 +208,7 @@ instead not supported (at the time of writing).
 
 Here follows some chunks of \textbf{DPL} code to show off the language concepts and syntax:
 
-\begin{lstlisting}[laguage=DPL]
+\begin{lstlisting}[language=DPL]
 // Print statement with immediate C-style strings. C-style strings can only be used inside print statement
 print("Hello world\n");
 
@@ -279,13 +279,13 @@ evaluating the same code in a browser console.
 This example shows how to convert \textbf{DPL} into \textbf{JS} by manual editing:
 
 \begin{lstlisting}[language=DPL]
-let a = 10;                  // This is also valid JS code
-let b = [ 10, 20, 30, 40 ];  // This is also valid JS code
-let c: int = 10;             // Mostly valid JS code, remove the type info and the colon
-let d: int[1024];            // Js arrays grow on demand automatically when touching elements.
-                             // No need to specify neither type nor number of elements
+let a = 10;                     // This is also valid JS code
+let b = [ 10, 20, 30, 40 ];     // This is also valid JS code
+let c: int = 10;                // Mostly valid JS code, remove the type info and the colon
+let d: int[1024];               // Js arrays grow on demand automatically when touching elements.
+                                // No need to specify neither type nor number of elements
 
-print(d);                    // Valid JS code if function print were to be defined
+print(d);                       // Valid JS code if function print were to be defined
 \end{lstlisting}
 
 Here's the equivalent JS code:
@@ -298,7 +298,7 @@ let b = [ 10, 20, 30, 40 ];     // Same as before
 let c = 10;                     // Just strip the int type
 let d = [];                     // Just initalize with empty array is enough
 
-print(d);                       // Works because print is defined
+print(d);                       // Works because print is defined at the top
 \end{lstlisting}
 
 Most other \textbf{DPL} syntax and features, like code blocks, conditionals, loops \dots etc are valid JS code
@@ -399,7 +399,7 @@ In the following sections it is described how the proposed
 
 
 
-\begin{lstlisting}[laguage=DPL]
+\begin{lstlisting}[language=DPL]
 let a: int[] = 10;
 let s = "Hello world";
 {
@@ -419,7 +419,7 @@ char **argv;
 \section{Appendix B: Example Program Iterative Merge Sort}
 \label{appendix_b}
 
-\begin{lstlisting}[laguage=DPL]
+\begin{lstlisting}[language=DPL]
 let array = [
     15, 59, 61, 75, 12, 71,  5, 35, 44,
     6, 98, 17, 81, 56, 53, 31, 20, 11,
