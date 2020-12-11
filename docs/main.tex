@@ -1,13 +1,16 @@
 \documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{microtype,etex,listings,color,parskip, graphicx, float}
 \usepackage[margin=2cm]{geometry}
 \usepackage[hidelinks]{hyperref}
-%\usepackage{hyperref}
 
 \newcommand{\secref}[3][green]{\href{#2}{\color{#1}{#3}}}%
 \newcommand{\urlref}[3][blue]{\href{#2}{\color{#1}{#3}}}%
 
+
+
+\usepackage{wasysym}
 
 \lstset{
     language=C,
@@ -26,6 +29,8 @@
     numbers = left,
     numberstyle = \footnotesize,
 }
+
+
 
 \lstdefinelanguage{JS}{
     keywords={ var, typeof, new, true, false, catch,
@@ -136,7 +141,7 @@ In particular the final Intermediate representation that we need to emit is base
 that is, each statement can only have 1 operand at the left hand side of the assignment, and 2 operands at the right hand side
 of the assignment, and an operator driving the operation that should be performed.
 
-You can view more about 3AC at the following \urlref{https://en.wikipedia.org/wiki/Three-address_code}{wikipedia link}.
+You can view more about 3AC at the following \urlref{https://en.wikipedia.org/wiki/Three-address_code}{Wikipedia link}.
 
 In practice the emitted 3AC code is on itself a partially valid C program, it's only missing variable
 declarations at the top for the temporary variables.
@@ -202,7 +207,6 @@ In \textbf{DPL}:
 \item Comments start with the double forward slash `\emph{//}', and C-style multiline comments are
 instead not supported (at the time of writing).
 \end{itemize}
-
 
 
 
@@ -371,21 +375,36 @@ otherwise the compiler will complain with either warnings or errors.
 
 \clearpage
 
-\section{Implementation details of the DPL language}
-In the following sections it is described how the proposed
-\begin{itemize}
-\item \textbf{Input Stage}. The compiler only supports file. The input stream is implemented
-    in the following way. The file is loaded and entirely copied into a memory buffer. This is more
-    than adequate for what it's necessary to do for the project assignment.
-\item Un \textbf{Lexer/Scanner} per la tokenizzazione del sorgente da caratteri a tipi di dati strutturati. La scelta ricade su \textbf{Flex} per la gestione dell'analisi lessicale
-\item Un \textbf{Parser} per implementare la sintassi del linguaggio e gestire l'analisi sintattica. La scelta ricade su \textbf{Bison} per la gestione di questa componente
-\item Un semplice \textbf{generator di codice intermedio}. Il progetto provede di generare un ibrido Assembly/C/3AC come semplice esempio di gestione di generazione
-\end{itemize}
+\section{DPLL Language}
 
-
-
+Lezzo
 
 \section{Implementation Details of the DPCC compiler}
+
+In this section is briefly described the input stage, the lexer stage, and the syntax analysis stage (parser).
+
+\subsection{The input stage of the compiler}
+This is the simplest part of the compiler. At the time of writing the \textbf{dpcc} compiler
+allows only loading of files. In particular it reads an entire file into memory before continuining
+with the rest of the piepeline. The input stage does not support URI, file downloads, any type of protocol
+that would require realtime on stream code generation, and linux sockets. That is the
+parser can open anything that looks like a file that has a finite determinable start, an end,
+and a finite number of bytes.
+
+\subsection{Lexer}
+
+\urlref{https://github.com/westes/flex/}{Flex} is used to implement the lexer/tokenizer. Lexers are pretty simple to understand and
+are particulary easy to develop if easing a tool like Flex. One can read the \urlref{https://www.cs.virginia.edu/~cr4bd/flex-manual/}{Flex Manual}.
+
+The things that are worth noting about the \textbf{dpcc} tokenizer are:
+
+\begin{itemize}
+\item The lexer is completely UTF-8 aware, and UTF-8 symbols can be used to declare identifiers.UTF-8 aware and has particular
+rules to match the variable encoding of UTF-8 \textbf{This allows variable names to include emojis}. Why? Cause it's cool \smiley
+
+
+\end{itemize}
+
 
 \subsection{Input stream based in read entire file into memory and then proceed. No realtime streaming, nor socket, etc...}
 
