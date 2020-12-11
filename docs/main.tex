@@ -1,6 +1,6 @@
 \documentclass[a4paper]{article}
 \usepackage[english]{babel}
-\usepackage{microtype,etex,listings,color,parskip}
+\usepackage{microtype,etex,listings,color,parskip, graphicx, float}
 \usepackage[margin=2cm]{geometry}
 \usepackage[hidelinks]{hyperref}
 %\usepackage{hyperref}
@@ -414,6 +414,29 @@ In the following sections it is described how the proposed
 
 \subsection{Testing framework}
 
+\section{Performance results}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{imgs/dallrsz_performance_issue.png}
+    \caption{Performance issue in \texttt{dallrsz} utility function}
+  \end{figure}
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics{imgs/dallrsz_code_usage.png}
+    \caption{Performance issue in \texttt{dallrsz} utility function}
+  \end{figure}
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics{imgs/dallrsz_callgraph.png}
+    \caption{Performance issue in \texttt{dallrsz} utility function}
+\end{figure}
 
 \section{Problem analysis}
 
