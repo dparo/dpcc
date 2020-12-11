@@ -320,7 +320,47 @@ they can only be used as a parameter to the print statement.
 
 
 \subsection{DPCC: Using the compiler}
-This section shows an high level of an user calling a built compiler to run and or test
+
+The \textbf{dpcc} is written in the \textbf{C} language. Unfortunately at the current time
+of writing \textbf{dpcc} works only Unix like operatins systems. The compiler has
+been both tested under Ubuntu 20.10, Ubuntu 20.04, and macOS 10.15. The
+compiler was developed by his author using an Ubuntu 20.10 machine, while the other distro/OS
+were tested thanks to Github Actions automated build-check cycles. Windows builds
+failed due to MSVC rejecting the source code of \textbf{dpcc} cause it contains some GCC
+extensions and some hard coded unix syscalls.
+In short words \textbf{dpcc} can be only compiled with either GCC or CLANG compilers
+and executed in a Unix/Posix compatible operating system.
+
+
+The compiler can and should be invoked from the commandline. The \textbf{dpcc} executable
+is self contained and doesn't reach for external assets file and thus can be placed
+anywhere in the system and invoked from anywhere in the system.
+
+From now on we assume the user has a fired up shell correctly \textbf{cd}-ed to the directory
+holding the \textbf{dpcc} executable:
+
+To call the compiler invoke, which will print it's usage help message:
+
+\begin{lstlisting}[language=Bash]
+./dpcc
+\end{lstlisting}
+
+The \texttt{-o} flag is mostly used to override the location of where output files/stream are generated if any.
+
+\textbf{dpcc} can work in 6 different modes: \textbf{lex, parse, 3ac, c, gcc, run}:
+
+\begin{itemize}
+    \item \texttt{./dpcc lex <input> [-o <out>]}: Lex the input and show list of tokens in either stdout or in the given file
+    \item \texttt{./dpcc parse <input> [-o <out>]}: Parse the program and produce a text representation of the AST in either stdout or in the given file.
+    \item \texttt{./dpcc 3ac <input> [-o <out>]}: Parse the program and perform additional type validations and type checking. If the program is still valid emit 3AC in either stdout or in the given file
+    \item \texttt{./dpcc c <input> [-o <out>]}: Same as 3AC but also emit preamble and postamble required to produce a semantically valid C program that can be compiled. The output is emitted in either stdout or in the given file
+    \item \texttt{./dpcc gcc <input> [-o <out>]}: Same as \texttt{`dpcc c'} but the generated C program is piped into GCC standard input and the final executable is either compiled in \texttt{a.out} or in the given filepath. This requires GCC to be in the path.
+    \item \texttt{./dpcc run <input>}: Parse, typecheck, emit the C code, compile it and run it in one single command. The executable produced by GCC is outputted in a temp file (\texttt{/tmp}), the temp executable is executed right away and the removed. The \texttt{-o} flag is ignored. This requires GCC to be in the path.
+\end{itemize}
+
+\texttt{Lex} and \texttt{parse} mode are mostly used for debugging the produced tokens and the AST. The \texttt{run} mode
+is the most convenient mode since it takes care of everything. If the input program is valid and
+you call \texttt{dpcc run} you will see the output generated from you \textbf{DPL} program.
 
 
 \section{The proposed implementation}
