@@ -392,7 +392,7 @@ otherwise the compiler will complain with either warnings or errors.
 
 In this section is briefly described the input stage, the lexer stage, and the syntax analysis stage (parser).
 
-Talk about common types: ast_node_t, token_t and how they are mapped to the bison, flex equivalent.
+Talk about common types: \texttt{ast\_node\_t}, \texttt{token\_t} and how they are mapped to the bison, flex equivalent.
 How they are used and how they flow in the system. Explain that Bison is mostly used as a syntax
 checker + symtable analysis, each node is defined and the pushed. Most complex type checking and
 code generation steps are instead implemented somewhere else. Explain why you didn't implement
@@ -448,6 +448,28 @@ So upon encountering a new token the following things happen:
 \item It allocates a \texttt{ast\_node\_t} and attaches the token to it. The \texttt{ast\_node\_t} is what will be
     used by Bison and later stages to generate the AST and to perform the analysis and the code generation.
 \item It signals to bison the new lexeme kind by simply \texttt{return}-ing from the \texttt{lex()} procedure (Bison calls flex in a coroutine mode)
+\end{itemize}
+
+
+\subsection{Parser}
+
+
+\subsection{Code Generation}
+
+\subsection{Utilities and Misc}
+\begin{itemize}
+    \item Custom logging with colorized output and display of location where error occured, similar to GCC.
+        \begin{lstlisting}[language=DPL]
+let array: int[2];
+print(array[4]);
+print(4.0 && 2.0);
+        \end{lstlisting}
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=\linewidth]{imgs/log.png}
+            \caption{\texttt{dpcc} custom logging showoff}
+        \end{figure}
+
 \end{itemize}
 
 \subsection{Input stream based in read entire file into memory and then proceed. No realtime streaming, nor socket, etc...}
