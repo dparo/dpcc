@@ -495,6 +495,12 @@ print(3.5 << 8);
 
 \subsubsection{Typescript code generation}
 
+Mostly overkill, but allows to generate C code for checking the type of the expressions.
+It allows to quickly generate bake the preamble and postamble C code required by the compiler
+to be emitted when called with \texttt{`./dpcc c <input>'} mode. The preamble and postamble
+are read from this script as a normal C files, and are converted into C arrays, dumped
+into a file so that they can finally be embedded at compilation in the final executable.
+
 \subsubsection{Ast traversal functions}
 
 \subsection{Testing framework}
