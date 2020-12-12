@@ -425,23 +425,30 @@ rules to match the variable encoding of UTF-8 \textbf{This allows variable names
 \item All the remaining tokens are pretty standard and uninstering.
 \end{itemize}
 
-So flex is mainly used as a token recognizer. Apart for some logic for updating the location tracking
-in the file it doesn't do much else.
+This module is mostly un-interesting. Flex is used mainly as a token recognizer since most of the logic is implemented outside the flex
+file anyway. One of the most notable feature that is implemented outside the lex file and used,
+is what's called \textbf{String interning}\footnote{\urlref{https://en.wikipedia.org/wiki/String_interning}{String Interning Wikipedia Article}}.
+\textbf{String iterning} is a common technique used in compilers design that allows the compiler to
+store and cache lexemes in a common place. Since in typical source files
+the same lexemes tend to repeat and appear multiple times, it is common to store each lexeme only once. Whenever
+a lexeme is found it is looked up in a string to string hashmap. If it's not found, it allocates
+the new lexeme and returns the pointer to the new allocation. If it's found instead, it simply just returns the pointer to the interned lexeme. This allows to save
+memory, but even more cooler is the fact that now if two strings are identical and they are interned correctly,
+we can compare the two strings for equality by simply just comparing their respective pointers. In fact
+thanks to string interning strings are uniquely identified by the memory address they live in.
+This feature is then used in the parser
+to quickly lookup the identifiers in the symbol table.
 
-Since Bison is used, the \textt{lex()} function of flex must be run in a couritine mode, that is after
-each token is found, the \textt{lex()} must return a valid Token Identifier that is declared inside
-the Bison grammar file.
+So upon encountering a new token the following things happen:
 
-The only interesting thing that is worth noting is that there is custom code implemented in
-the compiled which is then included in both Flex and Bison to handle data types. In particular,
-upon encountering a new token the flex code creates a new struct \texttt{token\_t} and a new struct
-\texttt{ast\_node\_t} which points to this token.
-
-A technique called string interning\footnote{\urlref{https://en.wikipedia.org/wiki/String_interning}{String Interning Wikipedia Article}}
-is used for lookin up the lexemes of each tokens and reduce memory
-consumption (common technique used in compiler design). It can be trivially implemented with a hashmap
-from string to string.
-
+\begin{itemize}
+\item It updates correctly the state required in order to track the location of each token in the source file.
+\item The lexeme is interned, and the old lexeme pointer is stomped in favour of the interned one.
+\item It allocates a new \texttt{token\_t} and set's up the lexeme pointer, it's location and some other metadata
+\item It allocates a \texttt{ast\_node\_t} and attaches the token to it. The \texttt{ast\_node\_t} is what will be
+    used by Bison and later stages to generate the AST and to perform the analysis and the code generation.
+\item It signals to bison the new lexeme kind by simply \texttt{return}-ing from the \texttt{lex()} procedure (Bison calls flex in a coroutine mode)
+\end{itemize}
 
 \subsection{Input stream based in read entire file into memory and then proceed. No realtime streaming, nor socket, etc...}
 

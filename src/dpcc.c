@@ -42,7 +42,7 @@ void symtable_clear(void)
 
 /// NOTE: the token lexeme is considered to be corretly interned.
 ///       This will allows us to do string matching by a simple pointer comparison
-///       isntead of using a full blown strcmp (which requires to iterate all characters)
+///       instead of using a full blown strcmp (which requires to iterate all characters)
 ast_node_t *symtable_lookup(token_t *tok)
 {
     // Walk the stack backward. Lasts created symbols have higher precedence
@@ -50,7 +50,7 @@ ast_node_t *symtable_lookup(token_t *tok)
         for (int32_t record_idx = 0; record_idx < G_symtable.lists[list_idx].num_records; record_idx++) {
 
             // NOTE: Child number 1 is the actual ID provided in the declaration
-
+            // Since both lexeme are string interned. 2 Strings are equal if they have identical pointers
             if (G_symtable.lists[list_idx].records[record_idx].node->childs[1]->tok->lexeme == tok->lexeme) {
                 G_symtable.lists[list_idx].records[record_idx].num_usages += 1;
                 return G_symtable.lists[list_idx].records[record_idx].node;
