@@ -285,7 +285,7 @@ evaluating the same code in a browser console.
 This example shows how to convert \textbf{DPL} into \textbf{JS} by manual editing:
 
 \begin{lstlisting}[language=DPL]
-// This is a chunk of DPLL code
+// This is a chunk of DPL code
 let a = 10;                     // This is also valid JS code
 let b = [ 10, 20, 30, 40 ];     // This is also valid JS code
 let c: int = 10;                // Mostly valid JS code, remove the type info and the colon
@@ -377,7 +377,7 @@ otherwise the compiler will complain with either warnings or errors.
 
 \clearpage
 
-\section{DPLL Language}
+\section{DPL Language}
 
 
 \dots \dots
@@ -386,6 +386,16 @@ otherwise the compiler will complain with either warnings or errors.
 
 \dots \dots
 
+
+\begin{itemize}
+    \item Typical tokens, identifiers, comments, stuff
+    \item Talk about grammar (C-inspired)
+    \item Talk about semantics of the language (can print anything)
+    \item Talk about the supported types
+    \item Talk about the MAIN function
+    \item Talk about variable shadowing, and scope of variables. Variables cannot be redeclared with the same name in the same scope.
+    \item Variables can be declared and initialized inline in the for loop
+\end{itemize}
 
 \clearpage
 \section{Implementation Details of the DPCC compiler}
@@ -453,51 +463,43 @@ So upon encountering a new token the following things happen:
 
 \subsection{Parser}
 
+The Ast marks each node with an \texttt{ast\_node\_kind\_t} so that we can disambiguage easier in later
+stages what code should be generated for this node
 
 \subsection{Code Generation}
 
+Order of the childs of each node \textbf{Matters} a lot.
+The order of the childs in each node \textbf{is very important} and it drives
+the correctness of the final output. In this way we can use simple printf to generate
+the code each time we find something while traversing the tree
+
 \subsection{Utilities and Misc}
-\begin{itemize}
-    \item Custom logging with colorized output and display of location where error occured, similar to GCC.
-        \begin{lstlisting}[language=DPL]
+\subsubsection{Custom logging}
+Custom logging is implemented to override the default Bison logging, and is used also manually in the type checking
+stage of the compiler to complain abot possible misuses.
+Custom logging with colorized output and display of location where error occured, similar to \textbf{GCC}. Here it follows an example program that makes the \texttt{dpcc} compiler complain:
+\begin{lstlisting}[language=DPL]
 let array: int[2];
 print(array[4]);
 print(4.0 && 2.0);
-        \end{lstlisting}
-        \begin{figure}[H]
-            \centering
-            \includegraphics[width=\linewidth]{imgs/log.png}
-            \caption{\texttt{dpcc} custom logging showoff}
-        \end{figure}
+\end{lstlisting}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\linewidth]{imgs/log.png}
+        \caption{\texttt{dpcc} custom logging showoff}
+    \end{figure}
 
-\end{itemize}
+\subsubsection{Custom allocator wrapper used internally}
 
-\subsection{Input stream based in read entire file into memory and then proceed. No realtime streaming, nor socket, etc...}
+\subsubsection{Typescript code generation used internally}
 
-\subsection{Custom log is implemented to override default bison behaviour}
-
-\subsection{Common types used withing the compiler}
-
-
-\subsection{Most notable functions used in the compiler}
-
-\subsection{How the AST is traversed}
-
-\subsection{How type checking and type deduction is implemented}
-
-\subsection{A brief introduction at the code implementing the compiler}
-
-\begin{itemize}
-    \item The order of the childs in each node \textbf{is very important} and it drives
-        the correctness of the final output. In this way we can use simple printf to generate
-        the code each time we find something while traversing the tree
-\end{itemize}
-
-\subsection{Typescript used for code generation of some part of the compiler}
-
-\subsection{Encountered problems}
+\subsubsection{Ast traversal functions used internally}
 
 \subsection{Testing framework}
+
+
+\section{Encountered problems}
+
 
 \section{Performance results}
 
@@ -522,30 +524,13 @@ print(4.0 && 2.0);
     \caption{Performance issue in \texttt{dallrsz} utility function}
 \end{figure}
 
-\section{Problem analysis}
-
-...
-
-\section{Program design}
-
-...
-
-\section{Evaluation of the program}
-
-...
-
-% \section{Evaluation of the program} % Optional
-%
-% ...
-
-\section{Process description}
-
-...
 
 \section{Conclusions}
 
 ...
 
+
+\clearpage
 \section{Appendix A: Structure of the Intermediate Code}
 \label{appendix_a}
 
