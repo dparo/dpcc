@@ -68,7 +68,7 @@
 }
 
 \lstdefinelanguage{DPL}{
-    keywords={ print, int, float, bool, var, typeof, new, true, false, catch,
+    keywords={ fn, print, int, float, bool, var, typeof, new, true, false, catch,
         function, return, null, catch, switch, let, var, if, of, in,
     for, while, do, else, case, break, const},
     keywordstyle=\color{blue}\bfseries,
@@ -172,9 +172,6 @@ The assignment requires the following features from the programming langugage th
 
 \section{DPL and dpcc: A quick peak at the language and at the compiler}
 
-After describing the project assignment, from now on, the following sections will describe the proposed language
-and the implemented compiler.
-
 \textbf{DPL} and \textbf{DPCC} are respectively the \textbf{name of the language} and the
 \textbf{name of the implemented compiler}. They are named after their author.
 
@@ -206,13 +203,13 @@ In \textbf{DPL}:
 
 \begin{itemize}
 \item Spaces and newlines mostly do not matter, they simply introduce token boundaries.
-\item Comments start with the double forward slash `\emph{//}', and C-style multiline comments are
+\item Comments start with the double forward slash `\texttt{//}', and C-style multiline comments are
 instead not supported (at the time of writing).
 \end{itemize}
 
 
 
-Here follows some chunks of \textbf{DPL} code to show off the language concepts and syntax:
+Here follows a chunk of \textbf{DPL} code to show off the syntax and some of the language features:
 
 \begin{lstlisting}[language=DPL]
 // Print statement with immediate C-style strings. C-style strings can only be used inside print statement
@@ -251,6 +248,7 @@ let f = 1 + 2.0f;    // Float type is deduced (the 1 is upcasted to a float)
 
     // Integer array with deduced size from the RHS initializer list
     let buf = [ 10, 20, 30, 40, 50 ];
+    let fs: float[] = [ 0.1, 0.2, 0.3, 0.4, 0.5 ];
 
     // Arrays can be printed
     print(buf);
@@ -304,7 +302,7 @@ const print = console.log;      // Define it once at the top of the script
 let a = 10;                     // Same as before
 let b = [ 10, 20, 30, 40 ];     // Same as before
 let c = 10;                     // Just strip the int type
-let d = [];                     // Just initalize with empty array is enough
+let d = [];                     // Just initalizing with an empty array is enough
 
 print(d);                       // Works because print is defined at the top
 \end{lstlisting}
@@ -318,7 +316,7 @@ Only single dimensions array are for now supported. So arrays do not generalize 
 Most of these types have full on semantics, meaning that the compiler can deduce
 a type of an expression given the types of its operand. In some cases it can reject
 the code if the operands of an expression have invalid types.
-At the current time of writing this report, \texttt{string} types are quirky, meaning that
+At the current time of writing, \texttt{string} types are quirky, meaning that
 they don't have a full type tracking inside
 the compiler like other types do.
 The compiler still knows what a string is, and in it marks correctly \textbf{string literals} as
@@ -355,8 +353,7 @@ To call the compiler run the following command, which will print it's usage help
 \end{lstlisting}
 
 The \textbf{dpcc} compiler supports the specification of the \texttt{-o} flag
-where applicable. This flag allows to override the default locations where
-the compiler would produce it's output.
+where applicable. This flag allows to override the default output location.
 
 \textbf{dpcc} can work in 6 different modes: \textbf{lex, parse, 3ac, c, gcc, run}:
 
@@ -377,30 +374,56 @@ otherwise the compiler will complain with either warnings or errors.
 
 \clearpage
 
-\section{DPL Language}
-
-
-\dots \dots
-
-\dots \dots Talk about how cool is this language \dots \dots
-
-\dots \dots
-
-
+\section{DPL Language Details}
 \begin{itemize}
-    \item Typical tokens, identifiers, comments, stuff
-    \item Talk about grammar (C-inspired)
-    \item Talk about semantics of the language (can print anything)
-    \item Talk about the supported types
-    \item Talk about the MAIN function
-    \item Code Blocks are always required in control flow statements. WHY?
-    \item Talk about precedence table and changes that i did. Why these changes?
-    \item Talk about variable shadowing, and scope of variables. Variables cannot be redeclared with the same name in the same scope.
-    \item Variables can be declared and initialized inline in the for loop
+    \item Comments start with `\texttt{//}'
+    \item Identifiers start with a letter, an underscore or an extened non ASCII UTF-8 character. After the first
+        character an identifier can contain any alphanumerical character excluding spaces and any punctuation character.
+    \item Strings are enclosed in \texttt{"} (double quotes) and can contain valid ASCII escape sequences like
+        in any traditional C-derived language
+    \item Print statement unlike in C are allowed to print any variable, and can deduce what should be printed
+        based on the type of the variable that is passed.
+    \item Most of the rest of the grammar is C-inspired, and in fact all control flow statements have
+        the same syntax of any C derived language.
+    \item The precedence of the operators are taken directly from the \urlref{https://en.cppreference.com/w/c/language/operator_precedence}{C precedence table}.
+        The only \textbf{modification that DPL does respect to C} is that bitwise operators (\texttt{&, |, \^})
+        have higher precedence to the compare operators (\texttt{==, !=, \dots}). Most modern languages
+        adopt this convenient change, because it makes the precedence of the bitwise operators behave in the same
+        way that normal mathematical operators work (\texttt{=, +, -, <<, >>}).
+        In fact also \textbf{the Rust language employes this same modification}.
+    \item A \textbf{DPL} program starts either in 2 ways. The first more idiomatic way is to just start
+        writing statements directly like dynamic languages do:
+        \begin{lstlisting}[language=DPL]
+let a = 10;
+print(a + 20);
+        \end{lstlisting}
+
+        The other way is to wrap all the statements inside a main function.
+
+        \begin{lstlisting}[language=DPL]
+fn main() {
+    let = 10;
+    print(a + 20);
+}
+        \end{lstlisting}
+
+    \textbf{Since DPL does not support functions yet} the main function is mostly ignored but it is still
+    added in the grammar of the language for consistency reason if functions where ever be implemented.
+    \item \textbf{DPL} is a strongly typed language. Currently only 5 types are supported: \texttt{bool, int, float, string, bool[], int[], float[]}. Which
+        as we talked about in previous sections \texttt{string} types behave a little bit different way.
+
+
+    \item Code blocks are enclosed in braces `\texttt{\{ \dots \ \}}'. Each code blocks define a new scope where variables can
+        be defined.
+    \item \textbf{Braces in control flow statements} (\texttt{if, while, for, \dots}) \textbf{are always mandatory}. This is different from C where the braces are not mandatory. This change was done to simplify the grammar but also to avoid ambiguity and to make the code more robust to future changes.
+        \textbf{Rust also imposes mandatory braces}.
+
+    \item Variables can be declared with the keyword \texttt{let} and type deduction rules inside the compiler avoids the need to specify a type in most cases. A variable name must be a valid identifier. Variable declaration with the same variable name \textbf{can't} appear twice or more in the same code block. Reusage of variables names within nested blocks are instead allowed, event with different types: \textbf{variable shadowing}. Currently the reference compiler does not emit any warning in a case a variable is shadowed.
+
 \end{itemize}
 
 \clearpage
-\section{Implementation Details of the DPCC compiler}
+\section{DPCC compiler Implementation Details}
 
 In this section is briefly described the input stage, the lexer stage, and the syntax analysis stage (parser).
 
