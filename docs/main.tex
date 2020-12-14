@@ -375,6 +375,15 @@ otherwise the compiler will complain with either warnings or errors.
 \clearpage
 
 \section{DPL Language Details}
+
+Providing a full language specification is beyond the scope of this project report. In particular
+this section will not list the entire grammar of the language. Thus, it is assumed
+that the reader has a common basic programming language knowledge. It is also assumeed that he/she has some experience
+with at least one C-alike language. If the reader satisfies these requirements, he/she can use
+basic reasoning and code examples to deduce the specification of the language. Thus the purpose
+of this section is to characterize some core major concepts that are distinguish
+\textbf{DPL} from other languages and that not easily inferable:
+
 \begin{itemize}
     \item Comments start with `\texttt{//}'
     \item Identifiers start with a letter, an underscore or an extened non ASCII UTF-8 character. After the first
@@ -383,22 +392,22 @@ otherwise the compiler will complain with either warnings or errors.
         in any traditional C-derived language
     \item Print statement unlike in C are allowed to print any variable, and can deduce what should be printed
         based on the type of the variable that is passed.
-    \item Most of the rest of the grammar is C-inspired, and in fact all control flow statements have
+    \item Most of the grammar is C-inspired, and in fact all control flow statements have
         the same syntax of any C derived language.
     \item The precedence of the operators are taken directly from the \urlref{https://en.cppreference.com/w/c/language/operator_precedence}{C precedence table}.
-        The only \textbf{modification that DPL does respect to C} is that bitwise operators (\texttt{&, |, \^})
-        have higher precedence to the compare operators (\texttt{==, !=, \dots}). Most modern languages
+        The only \textbf{modification that DPL does differently than C} is that bitwise operators (\texttt{\&, |, \^})
+        have higher precedence than the compare operators (\texttt{==, !=, \dots}). Most modern languages
         adopt this convenient change, because it makes the precedence of the bitwise operators behave in the same
         way that normal mathematical operators work (\texttt{=, +, -, <<, >>}).
         In fact also \textbf{the Rust language employes this same modification}.
     \item A \textbf{DPL} program starts either in 2 ways. The first more idiomatic way is to just start
-        writing statements directly like dynamic languages do:
+        writing statements directly:
         \begin{lstlisting}[language=DPL]
 let a = 10;
 print(a + 20);
         \end{lstlisting}
 
-        The other way is to wrap all the statements inside a main function.
+        The other way is to wrap \textbf{all} the statements inside a main function.
 
         \begin{lstlisting}[language=DPL]
 fn main() {
@@ -408,30 +417,60 @@ fn main() {
         \end{lstlisting}
 
     \textbf{Since DPL does not support functions yet} the main function is mostly ignored but it is still
-    added in the grammar of the language for consistency reason if functions where ever be implemented.
+    part of the grammar for consistency reason.
     \item \textbf{DPL} is a strongly typed language. Currently only 5 types are supported: \texttt{bool, int, float, string, bool[], int[], float[]}. Which
         as we talked about in previous sections \texttt{string} types behave a little bit different way.
 
 
-    \item Code blocks are enclosed in braces `\texttt{\{ \dots \ \}}'. Each code blocks define a new scope where variables can
+    \item Code blocks are enclosed in braces `\texttt{\{ \dots \ \}}'. Each code block define a new scope where variables can
         be defined.
     \item \textbf{Braces in control flow statements} (\texttt{if, while, for, \dots}) \textbf{are always mandatory}. This is different from C where the braces are not mandatory. This change was done to simplify the grammar but also to avoid ambiguity and to make the code more robust to future changes.
         \textbf{Rust also imposes mandatory braces}.
 
-    \item Variables can be declared with the keyword \texttt{let} and type deduction rules inside the compiler avoids the need to specify a type in most cases. A variable name must be a valid identifier. Variable declaration with the same variable name \textbf{can't} appear twice or more in the same code block. Reusage of variables names within nested blocks are instead allowed, event with different types: \textbf{variable shadowing}. Currently the reference compiler does not emit any warning in a case a variable is shadowed.
+    \item Variables can be declared with the keyword \texttt{let} and type deduction rules inside the compiler avoids the need to specify a type in most cases. A variable name must be a valid identifier. Variable declaration with the same variable name \textbf{can't} appear twice or more in the same code block. Reusage of variables names within nested blocks are instead allowed, even with different types: \textbf{variable shadowing}. Currently the reference compiler does not emit any warning in case a variable is shadowed.
 
 \end{itemize}
 
 \clearpage
 \section{DPCC compiler Implementation Details}
 
-In this section is briefly described the input stage, the lexer stage, and the syntax analysis stage (parser).
+In this section it is briefly described the input stage, the lexer stage, and the syntax analysis stage (parser).
+\textbf{Flex} and \textbf{Bison} are used as tools for aiding in the boilerplate code generation of respectively the lexer and the parser.
+
+The compiler internally used 2 main types to model the source code of the input program: \texttt{token\_t}, \texttt{ast\_node\_t}.
+
+
+\begin{itemize}
+    \item \texttt{token\_t} is basically a book-keeping type. It is meant to store metadata for each token. The most fundamental
+        fields that it stores are the \texttt{lexeme}, and the kind of each token (comment, identifier, string literal, \dots). It also stores the location of each token within the file \texttt{(line:column)}
+    \item \texttt{ast\_node\_t} is instead the core type of the compiler. Multiple \texttt{ast\_node\_t}'s consitutes an AST node. When parsing
+        with \textbf{Bison}, nodes are chained together in a parent/child relationship. Each node has the following fields:
+        \begin{itemize}
+            \item A pointer to a token.
+            \item The node kind. The node kind is used to disambiguate the kind of the node (\texttt{Stmt, VarDeclStmt, Expr, \dots}). It's one of the most important fields used in the code generation phase.
+            \item The codegen metadata. The codegen metadata is filled and used only in the last code generation phase of the compiler.
+            \item A list of pointers to child nodes (if any).
+            \item A backpointer to the parent node (if any).
+            \item A pointer to the declaration node, used only for identifiers to lookup where they were declared.
+            \item A literal value. The literal value is used only in literals to store the value represented by this node (\texttt{int, float, bool})
+        \end{itemize}
+
+    \item \texttt{symtable\_t} used to model the variables that are in scope. It's implementation for now is based on a linear array, and thus has linear search time performance.
+        A hashmap could be used to improve the lookup performance.
+    \item \texttt{ast\_traversal\_t} is a context state for traversing a fully expanded AST.
+    \item \texttt{codegen\_ctx\_t} is a context state for tracking already used 3AC variable names.
+\end{itemize}
+
+
+\dots
 
 Talk about common types: \texttt{ast\_node\_t}, \texttt{token\_t} and how they are mapped to the bison, flex equivalent.
 How they are used and how they flow in the system. Explain that Bison is mostly used as a syntax
 checker + symtable analysis, each node is defined and the pushed. Most complex type checking and
 code generation steps are instead implemented somewhere else. Explain why you didn't implement
 the necessary code right inside the bison grammar file.
+
+\dots
 
 \subsection{The input stage of the compiler}
 This is the simplest part of the compiler. At the time of writing the \textbf{dpcc} compiler
@@ -456,7 +495,7 @@ rules to match the variable encoding of UTF-8 \textbf{This allows variable names
     are updated and are resetted at each newline.
 \item Support for C-style strings containing escape sequences.
 \item Support for C-style single line comments
-\item Support for binary and hexadecimal integers. Support for C-style floating point numbers with the exponent and optional terminating \texttt{`f'} character.
+\item Support for binary and hexadecimal integers. Support for C-style floating point numbers with the exponent and an optional terminating \texttt{`f'} character.
 \item All the remaining tokens are pretty standard and uninstering.
 \end{itemize}
 
@@ -481,14 +520,19 @@ So upon encountering a new token the following things happen:
 \item The lexeme is interned, and the old lexeme pointer is stomped in favour of the interned one.
 \item It allocates a new \texttt{token\_t} and set's up the lexeme pointer, it's location and some other metadata
 \item It allocates a \texttt{ast\_node\_t} and attaches the token to it. The \texttt{ast\_node\_t} is what will be
-    used by Bison and later stages to generate the AST and to perform the analysis and the code generation.
+    used by Bison and later stages to generate the AST and to perform the analysis and the code generation. The node
+    kind is instead left un-initialized for now. It will be set by the \textbf{Bison} parser later, where more semantic context is available.
 \item It signals to bison the new lexeme kind by simply \texttt{return}-ing from the \texttt{lex()} procedure (Bison calls flex in a coroutine mode)
 \end{itemize}
 
 
 \subsection{Parser}
+The unfamiliar user can refer to the \urlref{https://www.gnu.org/software/bison/manual/bison.html}{Bison manual}.
+The \textt{yylval} is aliased to be equivalent to \texttt{ast\_node\_t*}. The base case for a generation of an
+\texttt{ast\_node\_t*} is handled inside \textbf{Flex}.
 
-The Ast marks each node with an \texttt{ast\_node\_kind\_t} so that we can disambiguage easier in later
+
+The Ast marks each node with an \texttt{ast\_node\_kind\_t} so that we can disambiguate easier in later
 stages what code should be generated for this node
 
 \subsection{Code Generation}
