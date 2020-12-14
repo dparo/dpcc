@@ -529,11 +529,30 @@ So upon encountering a new token the following things happen:
 \subsection{Parser}
 The unfamiliar user can refer to the \urlref{https://www.gnu.org/software/bison/manual/bison.html}{Bison manual}.
 The \textt{yylval} is aliased to be equivalent to \texttt{ast\_node\_t*}. The base case for a generation of an
-\texttt{ast\_node\_t*} is handled inside \textbf{Flex}.
+\texttt{ast\_node\_t*} is handled inside \textbf{Flex}. In the implementation of \textbf{dpcc}, \textbf{Bison}
+is merely used as a syntax analysis tool, and for resolving symbols declarations and/or invalid uses of undeclared symbols.
+That means that the \textbf{Bison} file mostly defines the precedence of the operator and the grammar, while instead
+the actions are pretty simple and mostly contain no code at all.
 
+In fact almost all actions in the bison file, call some C functions defined somewhere else: \texttt{NEW\_NODE, push\_child, push\_childs}.
+These C functions are used to create a new node and to set it's type, and to append the corresponding childs to this new node.
+This keeps the bison file simple and concise since most of the heavyweight code is defined somewhere else.
+
+The advantage of this method is: simplicity, abstraction, code decoupling, and code scaling. The disadvantage is that in order
+to generate the code, at least 1 more AST pass is required, and thus could be potentially slower, than a single
+pass compiler.
+
+Also implementing concept logic directly inside the bison file, or implementing all the steps required for a modern
+compiler (type deduction, type checking) in a single becomes quickly tedious at best, if not nearly impossible.
+
+The \textbf{LAC} (Lookahead Correction) mechanism is enabled in the Bison file, since according to the Bison manual can provide
+identification of the error location, and thus better error messages, at the cost of a very negligable runtime speed penalty.
 
 The Ast marks each node with an \texttt{ast\_node\_kind\_t} so that we can disambiguate easier in later
-stages what code should be generated for this node
+stages what code should be generated for this node.
+
+Also custom error reporting is used to replace the \textbf{Bison} default one (\texttt{yyreport_syntax_error}). The implemented custom error reporting
+supports a GCC style error/warning and colored output and it it thus more user friendly.
 
 \subsection{Code Generation}
 
