@@ -771,6 +771,67 @@ The python script then proceeds to call the compiler on that small program and v
 produces the expected output, or in the case of invalid programs it rejects it without crashing.
 
 
+This is an example taken directly from \texttt{test/valid.dpl}:
+
+\begin{lstlisting}[language=DPL]
+//@ Boolean var decls
+//@ t = 1
+//@ 0
+
+print("\n\nBoolean var decls\n");
+{
+    let t = true;
+    print(t);
+    print(false);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+//@ Integer array type deduction
+//@ a = [ 10, 20, 30, 40, 50 ]
+//@ a = [ 10, 20, 30, 40, 100 ]
+
+print("\n\nInteger array type deduction\n");
+{
+    let a = [ 10, 20, 30, 40, 50 ];
+    print(a);
+    a[4] = 100;
+    print(a);
+}
+///////////////////////////////////////////////////////////////////////////////
+\end{lstlisting}
+
+Notice the program separator and how the metadata is instead listed in a comment beginning with \texttt{//@}.
+
+Here's instead some examples from \texttt{test/invalid.dpl}:
+
+\begin{lstlisting}[language=DPL]
+// Integer is too large
+{
+    let a = 10000000000000000000;
+    print(a);
+}
+///////////////////////////////////////////////////////////////////////////////
+
+// Arrays with no RHS must be sized
+{
+    let b: int[];
+}
+///////////////////////////////////////////////////////////////////////////////
+
+// Arrays must have reasoanble size
+{
+    let a: int[-1];
+}
+///////////////////////////////////////////////////////////////////////////////
+
+// Array with RHS must have correct size
+{
+    let a: int[3] = [ 2, 3 ];
+}
+///////////////////////////////////////////////////////////////////////////////
+\end{lstlisting}
+
 
 \section{Performance results}
 
