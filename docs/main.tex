@@ -386,8 +386,9 @@ of this section is to characterize some core major concepts that are distinguish
 
 \begin{itemize}
     \item Comments start with `\texttt{//}'
-    \item Identifiers start with a letter, an underscore or an extened non ASCII UTF-8 character. After the first
+    \item Identifiers start with a letter or an extened non ASCII UTF-8 character. After the first
         character an identifier can contain any alphanumerical character excluding spaces and any punctuation character.
+        \textbf{Notice that names beginning with an underscore are reserved for compiler use and will be rejected}.
     \item Strings are enclosed in \texttt{"} (double quotes) and can contain valid ASCII escape sequences like
         in any traditional C-derived language
     \item Print statement unlike in C are allowed to print any variable, and can deduce what should be printed
@@ -702,7 +703,10 @@ Given the nature of the short living time that this compiler is, this was probab
 \subsubsection{Typescript code generation}
 
 Without going too further in the details, some part of the C source code composing the compilers are in fact
-generated using a \textbf{Typescript} program. Now at the end this turned out to be moslty overkilled given
+generated using a \textbf{Typescript} program. Now at the end this turned out to be mostly lacks proper features to be useful as an everyday productive language overkilled given (procedure calls are a must)
+and a proper real-world efficient backend should be implemented. Unfortunately now a days due also to the complexity
+of modern CPU architectures writing a compiler backend is no easy task. In fact most modern languages
+nowadays rely on external backends such as \textbf{LLVM} to deal with the actual machine code output.
 the size of this project, but nonetheless it was a cute little trick that I wanted to try and it was cool
 after all.
 
@@ -746,9 +750,6 @@ const MATH_EXPR = new Expr (
 \subsection{Testing framework}
 
 
-\section{Encountered problems}
-
-
 \section{Performance results}
 
 \begin{figure}[H]
@@ -775,8 +776,30 @@ const MATH_EXPR = new Expr (
 
 \section{Conclusions}
 
-...
+The \textbf{DPL} language and the \textbf{dpcc} compiler are far from being useful and/or complete.
+They were implemented as part of a course in Compilers, so it is mostly a proof of concept. But still
+this proof of concept apply some modern concepts that languages like C lacks in its standard (type deduction, proper precedence table, proper fixed sized integers).
 
+That being said I find that in this project report, and in the implementation available in the \urlref{https://github.com/dparo/dpcc}{Github Repo}
+provides concepts that are still applicable to a proper compiler implementation.
+The language mostly lacks proper features to be useful as an everyday productive language (procedure calls are a must)
+and a proper real-world efficient backend should be implemented. Unfortunately now a days due also to the complexity
+of modern CPU architectures writing a compiler backend is no easy task. In fact most modern languages
+nowadays rely on external backends such as \textbf{LLVM}\footnote{\urlref{https://llvm.org/}{LLVM Website}} to deal with the actual machine code output.
+
+It would be cool to extend this language and bring it further. It would probably need some code refactoring/cleanup first,
+but the testing framework should help in that. Some cool concepts that could be investigated further:
+
+\begin{itemize}
+\item \textbf{FUNCTIONS !!!}
+\item More basic types
+\item Custom definable types: struct, unions, possibly classes
+\item Namespaces to avoid the dependency hell that C has
+\item Proper metaprogramming system which is language and type aware (avoid C preprocessors macros)
+\item Proper module system
+\item Infrastracture: build system, package manager, tooling, and more \dots
+\item \dots
+\end{itemize}
 
 \clearpage
 \section{Appendix A: Structure of the Intermediate Code}
