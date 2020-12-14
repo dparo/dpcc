@@ -906,12 +906,13 @@ but the testing framework should help in that. Some cool concepts that could be 
 \label{appendix_a}
 
 \clearpage
-\section{Appendix B: Example Program Iterative Merge Sort}
+\section{Appendix B: Example Program: Iterative Merge Sort}
 \label{appendix_b}
+
+\subsection{Input DPL source}
 
 \begin{lstlisting}[language=DPL]
 let len = 32;
-
 let array = [
     15, 59, 61, 75, 12, 71,  5, 35, 44,
     6, 98, 17, 81, 56, 53, 31, 20, 11,
@@ -920,60 +921,364 @@ let array = [
 ];
 
 
-for (let cs = 1; cs < len; cs = 2 * cs) {
-    for (let l = 0; l < len - 1; l = l + 2 * cs) {
-        let m = len - 1;
+print("Un-sorted array\n");
+print(array);
 
-        if ((l + cs - 1) < len - 1) {
-            m = l + cs - 1;
-        }
-
-        let r = len - 1;
-
-        if ((l + 2 * cs - 1) < len - 1) {
-            r = l + 2 * cs - 1;
-        }
-
-        let n1 = m - l + 1;
-        let n2 = r - m;
-
-        let L: int[1024];
-        let R: int[1024];
-
-        for (let i = 0; i < n1; i++) {
-            L[i] = array[l + i];
-        }
-
-        for (let i = 0; i < n2; i++) {
-            R[i] = array[m + 1 + i];
-        }
+{
+    for (let cs = 1; cs < len; cs = 2 * cs) {
+        for (let l = 0; l < len - 1; l = l + 2 * cs) {
+            let m = len - 1;
+            if ((l + cs - 1) < len - 1) {
+                m = l + cs - 1;
+            }
+            let r = len - 1;
+            if ((l + 2 * cs - 1) < len - 1) {
+                r = l + 2 * cs - 1;
+            }
 
 
-        let i = 0;
-        let j = 0;
-        let k = l;
+            let n1 = m - l + 1;
+            let n2 = r - m;
 
-        while (i < n1 && j < n2) {
-            if (L[i] <= R[j]) {
+            let L: int[1024];
+            let R: int[1024];
+
+            // Copy to temp arrays
+            for (let i = 0; i < n1; i++) {
+                L[i] = array[l + i];
+            }
+            for (let i = 0; i < n2; i++) {
+                R[i] = array[m + 1 + i];
+            }
+
+
+            let i = 0;
+            let j = 0;
+            let k = l;
+            while (i < n1 && j < n2) {
+                if (!(L[i] > R[j])) {
+                    array[k++] = L[i++];
+                } else {
+                    array[k++] = R[j++];
+                }
+            }
+
+            while (i < n1) {
                 array[k++] = L[i++];
-            } else {
+            }
+            while (j < n2) {
                 array[k++] = R[j++];
             }
-        }
-
-        while (i < n1) {
-            array[k++] = L[i++];
-        }
-        while (j < n2) {
-            array[k++] = R[j++];
         }
     }
 }
 
-print("Sorted array\n");
+print("\nSorted array\n");
 print(array);
 \end{lstlisting}
 
+\clearpage
+
+\subsection{Obtained output}
+\begin{lstlisting}
+Un-sorted array
+array = [ 15, 59, 61, 75, 12, 71, 5, 35, 44, 6, 98, 17, 81, 56, 53, 31, 20, 11, 45, 80, 8, 34, 71, 83, 64, 28, 3, 88, 50, 48, 80, 5 ]
+
+Sorted array
+array = [ 3, 5, 5, 6, 8, 11, 12, 15, 17, 20, 28, 31, 34, 35, 44, 45, 48, 50, 53, 56, 59, 61, 64, 71, 71, 75, 80, 80, 81, 83, 88, 98 ]
+\end{lstlisting}
+
+
+
+\subsection{Emitted 3AC code}
+
+
+\begin{lstlisting}[language=C]
+
+// Special variable used to implemenent INC (x++) and dec (x--)
+// It is used to temporary hold the result of the INC/DEC in order to perform the side effect
+int32_t _vspcIncDec;
+// Special variable used for the negation of control statements (if, for, ...)
+// As an example the for loop needs to negate the user provided condition
+bool    _vspcNeg;
+
+// 3AC Var decls
+int32_t _vi0 = 0;
+int32_t _vi1 = 0;
+int32_t _vi2 = 0;
+int32_t _vi3 = 0;
+int32_t _vi4 = 0;
+int32_t _vi5 = 0;
+int32_t _vi6 = 0;
+int32_t _vi7 = 0;
+int32_t _vi8 = 0;
+int32_t _vi9 = 0;
+int32_t _vi10 = 0;
+int32_t _vi11 = 0;
+int32_t _vi12 = 0;
+int32_t _vi13 = 0;
+int32_t _vi14 = 0;
+int32_t _vi15 = 0;
+int32_t _vi16 = 0;
+int32_t _vi17 = 0;
+int32_t _vi18 = 0;
+int32_t _vi19 = 0;
+int32_t _vi20 = 0;
+int32_t _vi21 = 0;
+int32_t _vi22 = 0;
+int32_t _vi23 = 0;
+int32_t _vi24 = 0;
+int32_t _vi25 = 0;
+int32_t _vi26 = 0;
+int32_t _vi27 = 0;
+int32_t _vi28 = 0;
+int32_t _vi29 = 0;
+int32_t _vi30 = 0;
+int32_t _vi31 = 0;
+int32_t _vi32 = 0;
+int32_t _vi33 = 0;
+int32_t _vi34 = 0;
+int32_t _vi35 = 0;
+int32_t _vi36 = 0;
+int32_t _vi37 = 0;
+int32_t _vi38 = 0;
+int32_t _vi39 = 0;
+int32_t _vi40 = 0;
+int32_t _vi41 = 0;
+int32_t _vi42 = 0;
+int32_t _vi43 = 0;
+int32_t _vi44 = 0;
+int32_t _vi45 = 0;
+int32_t _vi46 = 0;
+int32_t _vi47 = 0;
+int32_t _vi48 = 0;
+int32_t _vi49 = 0;
+int32_t _vi50 = 0;
+int32_t _vi51 = 0;
+int32_t _vi52 = 0;
+int32_t _vi53 = 0;
+int32_t _vi54 = 0;
+int32_t _vi55 = 0;
+int32_t _vi56 = 0;
+int32_t _vi57 = 0;
+bool    _vb0 = false;
+bool    _vb1 = false;
+bool    _vb2 = false;
+bool    _vb3 = false;
+bool    _vb4 = false;
+bool    _vb5 = false;
+bool    _vb6 = false;
+bool    _vb7 = false;
+bool    _vb8 = false;
+bool    _vb9 = false;
+bool    _vb10 = false;
+bool    _vb11 = false;
+bool    _vb12 = false;
+
+_scope_begin();
+    _var_decl("len", _kI32, 1);
+    _var_init("len", _kI32, 1, (int32_t[]) {32});
+    _var_decl("array", _kI32, 32);
+    _var_init("array", _kI32, 32, (int32_t[]) {15, 59, 61, 75, 12, 71, 5, 35, 44, 6, 98, 17, 81, 56, 53, 31, 20, 11, 45, 80, 8, 34, 71, 83, 64, 28, 3, 88, 50, 48, 80, 5});
+    printf("%s", "Un-sorted array\n");
+    print_sym("array");
+    _scope_begin();
+        _scope_begin();
+            _var_decl("cs", _kI32, 1);
+            _var_init("cs", _kI32, 1, (int32_t[]) {1});
+            _lbl18:
+            _vb0 = _var_get_kI32("cs", 0) < _var_get_kI32("len", 0);
+            _vspcNeg = !_vb0;
+            if (_vspcNeg) goto _lbl19;
+            _scope_begin();
+                _scope_begin();
+                    _var_decl("l", _kI32, 1);
+                    _var_init("l", _kI32, 1, (int32_t[]) {0});
+                    _lbl16:
+                    _vi0 = _var_get_kI32("len", 0) - 1;
+                    _vb1 = _var_get_kI32("l", 0) < _vi0;
+                    _vspcNeg = !_vb1;
+                    if (_vspcNeg) goto _lbl17;
+                    _scope_begin();
+                        _var_decl("m", _kI32, 1);
+                        _vi1 = _var_get_kI32("len", 0) - 1;
+                        _var_init("m", _kI32, 1, (int32_t[]) {_vi1});
+                        _vi2 = _var_get_kI32("l", 0) + _var_get_kI32("cs", 0);
+                        _vi3 = _vi2 - 1;
+                        _vi4 = _var_get_kI32("len", 0) - 1;
+                        _vb2 = _vi3 < _vi4;
+                        _vspcNeg = !_vb2;
+                        if (_vspcNeg) goto _lbl1;
+                        _scope_begin();
+                            _vi5 = _var_get_kI32("l", 0) + _var_get_kI32("cs", 0);
+                            _vi6 = _vi5 - 1;
+                            _vi7 = _var_set_kI32("m", 0, _vi6);
+                        _scope_end();
+                        _lbl1:
+                        _var_decl("r", _kI32, 1);
+                        _vi8 = _var_get_kI32("len", 0) - 1;
+                        _var_init("r", _kI32, 1, (int32_t[]) {_vi8});
+                        _vi9 = 2 * _var_get_kI32("cs", 0);
+                        _vi10 = _var_get_kI32("l", 0) + _vi9;
+                        _vi11 = _vi10 - 1;
+                        _vi12 = _var_get_kI32("len", 0) - 1;
+                        _vb3 = _vi11 < _vi12;
+                        _vspcNeg = !_vb3;
+                        if (_vspcNeg) goto _lbl3;
+                        _scope_begin();
+                            _vi13 = 2 * _var_get_kI32("cs", 0);
+                            _vi14 = _var_get_kI32("l", 0) + _vi13;
+                            _vi15 = _vi14 - 1;
+                            _vi16 = _var_set_kI32("r", 0, _vi15);
+                        _scope_end();
+                        _lbl3:
+                        _var_decl("n1", _kI32, 1);
+                        _vi17 = _var_get_kI32("m", 0) - _var_get_kI32("l", 0);
+                        _vi18 = _vi17 + 1;
+                        _var_init("n1", _kI32, 1, (int32_t[]) {_vi18});
+                        _var_decl("n2", _kI32, 1);
+                        _vi19 = _var_get_kI32("r", 0) - _var_get_kI32("m", 0);
+                        _var_init("n2", _kI32, 1, (int32_t[]) {_vi19});
+                        _var_decl("L", _kI32, 1024);
+                        _var_decl("R", _kI32, 1024);
+                        _scope_begin();
+                            _var_decl("i", _kI32, 1);
+                            _var_init("i", _kI32, 1, (int32_t[]) {0});
+                            _lbl4:
+                            _vb4 = _var_get_kI32("i", 0) < _var_get_kI32("n1", 0);
+                            _vspcNeg = !_vb4;
+                            if (_vspcNeg) goto _lbl5;
+                            _scope_begin();
+                                _vi20 = _var_get_kI32("L", _var_get_kI32("i", 0));
+                                _vi21 = _var_get_kI32("l", 0) + _var_get_kI32("i", 0);
+                                _vi22 = _var_get_kI32("array", _vi21);
+                                _vi23 = _var_set_kI32("L", _var_get_kI32("i", 0), _vi22);
+                            _scope_end();
+                            _vi24 = _var_get_kI32("i", 0);
+                            _vspcIncDec = _var_get_kI32("i", 0) + 1;
+                            _var_set_kI32("i", 0, _vspcIncDec);
+                            goto _lbl4;
+                            _lbl5:
+                        _scope_end();
+                        _scope_begin();
+                            _var_decl("i", _kI32, 1);
+                            _var_init("i", _kI32, 1, (int32_t[]) {0});
+                            _lbl6:
+                            _vb5 = _var_get_kI32("i", 0) < _var_get_kI32("n2", 0);
+                            _vspcNeg = !_vb5;
+                            if (_vspcNeg) goto _lbl7;
+                            _scope_begin();
+                                _vi25 = _var_get_kI32("R", _var_get_kI32("i", 0));
+                                _vi26 = _var_get_kI32("m", 0) + 1;
+                                _vi27 = _vi26 + _var_get_kI32("i", 0);
+                                _vi28 = _var_get_kI32("array", _vi27);
+                                _vi29 = _var_set_kI32("R", _var_get_kI32("i", 0), _vi28);
+                            _scope_end();
+                            _vi30 = _var_get_kI32("i", 0);
+                            _vspcIncDec = _var_get_kI32("i", 0) + 1;
+                            _var_set_kI32("i", 0, _vspcIncDec);
+                            goto _lbl6;
+                            _lbl7:
+                        _scope_end();
+                        _var_decl("i", _kI32, 1);
+                        _var_init("i", _kI32, 1, (int32_t[]) {0});
+                        _var_decl("j", _kI32, 1);
+                        _var_init("j", _kI32, 1, (int32_t[]) {0});
+                        _var_decl("k", _kI32, 1);
+                        _var_init("k", _kI32, 1, (int32_t[]) {_var_get_kI32("l", 0)});
+                        _lbl10:
+                        _vb6 = _var_get_kI32("i", 0) < _var_get_kI32("n1", 0);
+                        _vb7 = _var_get_kI32("j", 0) < _var_get_kI32("n2", 0);
+                        _vb8 = _vb6 && _vb7;
+                        _vspcNeg = !_vb8;
+                        if (_vspcNeg) goto _lbl11;
+                        _scope_begin();
+                            _vi31 = _var_get_kI32("L", _var_get_kI32("i", 0));
+                            _vi32 = _var_get_kI32("R", _var_get_kI32("j", 0));
+                            _vb9 = _vi31 > _vi32;
+                            _vb10 = ! _vb9;
+                            _vspcNeg = !_vb10;
+                            if (_vspcNeg) goto _lbl8;
+                            _scope_begin();
+                                _vi33 = _var_get_kI32("k", 0);
+                                _vspcIncDec = _var_get_kI32("k", 0) + 1;
+                                _var_set_kI32("k", 0, _vspcIncDec);
+                                _vi34 = _var_get_kI32("array", _vi33);
+                                _vi35 = _var_get_kI32("i", 0);
+                                _vspcIncDec = _var_get_kI32("i", 0) + 1;
+                                _var_set_kI32("i", 0, _vspcIncDec);
+                                _vi36 = _var_get_kI32("L", _vi35);
+                                _vi37 = _var_set_kI32("array", _vi33, _vi36);
+                            _scope_end();
+                            goto _lbl9;
+                            _lbl8:
+                            _scope_begin();
+                                _vi38 = _var_get_kI32("k", 0);
+                                _vspcIncDec = _var_get_kI32("k", 0) + 1;
+                                _var_set_kI32("k", 0, _vspcIncDec);
+                                _vi39 = _var_get_kI32("array", _vi38);
+                                _vi40 = _var_get_kI32("j", 0);
+                                _vspcIncDec = _var_get_kI32("j", 0) + 1;
+                                _var_set_kI32("j", 0, _vspcIncDec);
+                                _vi41 = _var_get_kI32("R", _vi40);
+                                _vi42 = _var_set_kI32("array", _vi38, _vi41);
+                            _scope_end();
+                            _lbl9:
+                        _scope_end();
+                        goto _lbl10;
+                        _lbl11:
+                        _lbl12:
+                        _vb11 = _var_get_kI32("i", 0) < _var_get_kI32("n1", 0);
+                        _vspcNeg = !_vb11;
+                        if (_vspcNeg) goto _lbl13;
+                        _scope_begin();
+                            _vi43 = _var_get_kI32("k", 0);
+                            _vspcIncDec = _var_get_kI32("k", 0) + 1;
+                            _var_set_kI32("k", 0, _vspcIncDec);
+                            _vi44 = _var_get_kI32("array", _vi43);
+                            _vi45 = _var_get_kI32("i", 0);
+                            _vspcIncDec = _var_get_kI32("i", 0) + 1;
+                            _var_set_kI32("i", 0, _vspcIncDec);
+                            _vi46 = _var_get_kI32("L", _vi45);
+                            _vi47 = _var_set_kI32("array", _vi43, _vi46);
+                        _scope_end();
+                        goto _lbl12;
+                        _lbl13:
+                        _lbl14:
+                        _vb12 = _var_get_kI32("j", 0) < _var_get_kI32("n2", 0);
+                        _vspcNeg = !_vb12;
+                        if (_vspcNeg) goto _lbl15;
+                        _scope_begin();
+                            _vi48 = _var_get_kI32("k", 0);
+                            _vspcIncDec = _var_get_kI32("k", 0) + 1;
+                            _var_set_kI32("k", 0, _vspcIncDec);
+                            _vi49 = _var_get_kI32("array", _vi48);
+                            _vi50 = _var_get_kI32("j", 0);
+                            _vspcIncDec = _var_get_kI32("j", 0) + 1;
+                            _var_set_kI32("j", 0, _vspcIncDec);
+                            _vi51 = _var_get_kI32("R", _vi50);
+                            _vi52 = _var_set_kI32("array", _vi48, _vi51);
+                        _scope_end();
+                        goto _lbl14;
+                        _lbl15:
+                    _scope_end();
+                    _vi53 = 2 * _var_get_kI32("cs", 0);
+                    _vi54 = _var_get_kI32("l", 0) + _vi53;
+                    _vi55 = _var_set_kI32("l", 0, _vi54);
+                    goto _lbl16;
+                    _lbl17:
+                _scope_end();
+            _scope_end();
+            _vi56 = 2 * _var_get_kI32("cs", 0);
+            _vi57 = _var_set_kI32("cs", 0, _vi56);
+            goto _lbl18;
+            _lbl19:
+        _scope_end();
+    _scope_end();
+    printf("%s", "\nSorted array\n");
+    print_sym("array");
+_scope_end();
+\end{lstlisting}
 
 % \section{Appendix: test cases} % Optional
 %
