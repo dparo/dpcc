@@ -551,8 +551,9 @@ identification of the error location, and thus better error messages, at the cos
 The Ast marks each node with an \texttt{ast\_node\_kind\_t} so that we can disambiguate easier in later
 stages what code should be generated for this node.
 
-Also custom error reporting is used to replace the \textbf{Bison} default one (\texttt{yyreport_syntax_error}). The implemented custom error reporting
+Also custom error reporting is used to replace the \textbf{Bison} default one (\texttt{yyreport\_syntax\_error}). The implemented custom error reporting
 supports a GCC style error/warning and colored output and it it thus more user friendly.
+One noticeable feature is that \textbf{dpcc} compiler can warn when a variable is declared but never used.
 
 \subsection{Code Generation}
 
@@ -585,11 +586,46 @@ Given the nature of the short living time that this compiler is, this was probab
 
 \subsubsection{Typescript code generation}
 
-Mostly overkill, but allows to generate C code for checking the type of the expressions.
-It allows to quickly generate bake the preamble and postamble C code required by the compiler
-to be emitted when called with \texttt{`./dpcc c <input>'} mode. The preamble and postamble
-are read from this script as a normal C files, and are converted into C arrays, dumped
-into a file so that they can finally be embedded at compilation in the final executable.
+Without going too further in the details, some part of the C source code composing the compilers are in fact
+generated using a \textbf{Typescript} program. Now at the end this turned out to be moslty overkilled given
+the size of this project, but nonetheless it was a cute little trick that I wanted to try and it was cool
+after all.
+
+Without spending too much time the \textbf{Typescript} program is used to do two things:
+
+\begin{itemize}
+    \item To generate the code for the type deduction and type checking of the each expression operator. It takes
+        some \textbf{meta-representation} of what each expression accept as input types and which output type it produces
+        and it generates a C function called \texttt{typecheck\_expr\_and\_operators} and some other utilities in a separate C file which is then compiled.
+        An example of such \textbf{meta-representation} is:
+        \begin{lstlisting}[language=JS]
+const MATH_EXPR = new Expr (
+    [
+        "ExprAdd", "ExprSub", "ExprMul", "ExprDiv", "ExprPow",
+        "ExprInc", "ExprDec", "ExprPos", "ExprNeg",
+    ],
+    [
+        new ExprTypeRule("int", ["int", "int"]),
+        new ExprTypeRule("float", ["float", "int"]),
+        new ExprTypeRule("float", ["int", "float"]),
+        new ExprTypeRule("float", ["float", "float"]),
+
+        new ExprTypeRule("int", ["int"]),
+        new ExprTypeRule("float", ["float"]),
+    ]
+);
+        \end{lstlisting}
+
+    which rougly says that operators such as \texttt{+, -, *, /, **, ++, \dots} can either take integers or floats as inputs,
+    and depending on which input types are provided, it either produces an \texttt{int} or \texttt{float} type as output.
+
+    \item To embed the required preamble and postamble C code inside the \texttt{dpcc} executable. The preamble and
+        postamble code that are outputted when calling \texttt{`./dpcc c <input>'} are in fact written
+        into two separate files. The typescript program reads these two files and generate two header files
+        containing two \texttt{uint8\_t[]} arrays that each encode the content of each respective file.
+\end{itemize}
+
+
 
 \subsubsection{Ast traversal functions}
 
