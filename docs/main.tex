@@ -513,6 +513,9 @@ thanks to string interning strings are uniquely identified by the memory address
 This feature is then used in the parser
 to quickly lookup the identifiers in the symbol table.
 
+For implementing \textbf{string interning} the amazing \urlref{https://github.com/nothings/stb/blob/master/stb_ds.h}{stb\_ds.h} single-file header
+from  the awesome Sean Barrett's \urlref{https://github.com/nothings/stb}{stb libraries} is used as an hashmap implementation.
+
 So upon encountering a new token the following things happen:
 
 \begin{itemize}
@@ -539,7 +542,7 @@ These C functions are used to create a new node and to set it's type, and to app
 This keeps the bison file simple and concise since most of the heavyweight code is defined somewhere else.
 
 The advantage of this method is: simplicity, abstraction, code decoupling, and code scaling. The disadvantage is that in order
-to generate the code, at least 1 more AST pass is required, and thus could be potentially slower, than a single
+to generate the code, at least one more AST pass is required, and thus could be potentially slower, than a single
 pass compiler.
 
 Also implementing concept logic directly inside the bison file, or implementing all the steps required for a modern
@@ -557,10 +560,122 @@ One noticeable feature is that \textbf{dpcc} compiler can warn when a variable i
 
 \subsection{Code Generation}
 
-Order of the childs of each node \textbf{Matters} a lot.
-The order of the childs in each node \textbf{is very important} and it drives
-the correctness of the final output. In this way we can use simple printf to generate
-the code each time we find something while traversing the tree
+This is the most long and complicated part of the pipeline of \texttt{dpcc} compiler.
+This section will be kept as concise as possible and will only tell the reader the minimum essential that is required
+to understand the core concepts.
+
+For simplicity reasons the codegen emission of the \texttt{3AC} requires \textbf{2 AST passes}. Probably the code generation
+phase could be implemented in only a single AST pass, but this possibility was not explored.
+
+\begin{itemize}
+    \item \textbf{First AST pass}. Type checking and type deduction and forward validation of the input source is performed. For example the input program may be refused due to type mismatch or also abuse of language features. For example it is not possible to declare a zero or negative sized array. In this pass also, for each node some metadata is associated that will guide the code generation in the second phase.
+    \item \textbf{Second AST pass}. If the previous pass successed we can assume that the code is syntatically valid and semantically valid. This is the pass where the actual 3AC get's outputted.
+\end{itemize}
+
+How this is achieved is thanks to 2 utilities functions: \texttt{ast\_traversal\_begin, ast\_traversal\_next}. This 2 functions together
+allow to fully traverse each node composing the AST. In practice it works in the following way: each time \texttt{ast\_traversal\_next} is called a pointer to a node
+and an integer index is returned with the following semantics:
+\begin{enumerate}
+    \item \textbf{Base Case}. If the node is a leaf of the AST, \texttt{ast\_traversal\_next} returns the pointer to the node and an index set to \texttt{0 (zero)}.
+    \item \textbf{Recursive Case}. For each non-leaf node, \texttt{ast\_traversal\_next} will return the pointer to the node multiple times. The index is respectively
+        set to:
+        \begin{itemize}
+            \item \texttt{0 (zero)}. First time encountering this node. All childs still need to be visited.
+            \item \texttt{1}. Second time encountering this node. The first child was visited.
+            \item \texttt{2}. Third time encountering this node. The first, and second childs were visited.
+            \item \texttt{3}. Fourth time encountering this node. The first, second, and third childs were visited.
+            \item \dots
+        \end{itemize}
+
+        until all the number of childs are exhausted.
+
+\end{enumerate}
+
+Code generation starts by operating on an empty string. New 3AC that needs to be emitted \textbf{is always concatenated} to the output string (like in a \texttt{printf}).
+The fact that new code must always be concatenated to the previous code is a very important concept to note. It means
+that when visiting each node of the AST code must be generated and outputtted right now, \textbf{meaning that the order of the childs of each node is significant}.
+How the childs are order play an important role on the semantics and the validity of the final generated 3AC output.
+If one was willing to take a performance hit and implement in the compiler the ability to generate code on temporary strings at will and then combine them at will, the order of the childs at that point wouldn't be relevant.
+
+Here follows an example program and it's associate compiled 3AC:
+
+\begin{lstlisting}[language=DPL]
+let a = [10, 20, 30, 40, 50];
+let b = [1, 2, 3, 4, 5];
+let result: int[5];
+
+for (let i = 0; i < 5; i++) {
+    result[i] = a[i] * b[i];
+    if (i % 2 == 0) {
+        print("YAAY -- ");
+        print(i);
+    }
+}
+
+print("Dot product result:\n");
+print(result);
+\end{lstlisting}
+
+
+\begin{lstlisting}[language=C]
+// Special variable used to implemenent INC (x++) and dec (x--)
+// It is used to temporary hold the result of the INC/DEC in order to perform the side effect
+int32_t _vspcIncDec;
+// Special variable used for the negation of control statements (if, for, ...)
+// As an example the for loop needs to negate the user provided condition
+bool    _vspcNeg;
+
+// 3AC Var decls
+int32_t _vi0 = 0;
+int32_t _vi1 = 0;
+int32_t _vi2 = 0;
+int32_t _vi3 = 0;
+int32_t _vi4 = 0;
+int32_t _vi5 = 0;
+int32_t _vi6 = 0;
+bool    _vb0 = false;
+bool    _vb1 = false;
+
+_scope_begin();
+    _var_decl("a", _kI32, 5);
+    _var_init("a", _kI32, 5, (int32_t[]) {10, 20, 30, 40, 50});
+    _var_decl("b", _kI32, 5);
+    _var_init("b", _kI32, 5, (int32_t[]) {1, 2, 3, 4, 5});
+    _var_decl("result", _kI32, 5);
+    _scope_begin();
+        _var_decl("i", _kI32, 1);
+        _var_init("i", _kI32, 1, (int32_t[]) {0});
+        _lbl2:
+        _vb0 = _var_get_kI32("i", 0) < 5;
+        _vspcNeg = !_vb0;
+        if (_vspcNeg) goto _lbl3;
+        _scope_begin();
+            _vi0 = _var_get_kI32("result", _var_get_kI32("i", 0));
+            _vi1 = _var_get_kI32("a", _var_get_kI32("i", 0));
+            _vi2 = _var_get_kI32("b", _var_get_kI32("i", 0));
+            _vi3 = _vi1 * _vi2;
+            _vi4 = _var_set_kI32("result", _var_get_kI32("i", 0), _vi3);
+            _vi5 = _var_get_kI32("i", 0) % 2;
+            _vb1 = _vi5 == 0;
+            _vspcNeg = !_vb1;
+            if (_vspcNeg) goto _lbl1;
+            _scope_begin();
+                printf("%s", "YAAY -- ");
+                print_sym("i");
+            _scope_end();
+            _lbl1:
+        _scope_end();
+        _vi6 = _var_get_kI32("i", 0);
+        _vspcIncDec = _var_get_kI32("i", 0) + 1;
+        _var_set_kI32("i", 0, _vspcIncDec);
+        goto _lbl2;
+        _lbl3:
+    _scope_end();
+    printf("%s", "Dot product result:\n");
+    print_sym("result");
+_scope_end();
+\end{lstlisting}
+
 
 \subsection{Utilities and Misc}
 \subsubsection{Custom logging}
@@ -583,9 +698,6 @@ print(3.5 << 8);
 
 Allows to clear the allocators at specific synchronization point in the compiler.
 Given the nature of the short living time that this compiler is, this was probably not required
-
-\subsubsection{Ast traversal functions}
-
 
 \subsubsection{Typescript code generation}
 
