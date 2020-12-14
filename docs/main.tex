@@ -584,6 +584,9 @@ print(3.5 << 8);
 Allows to clear the allocators at specific synchronization point in the compiler.
 Given the nature of the short living time that this compiler is, this was probably not required
 
+\subsubsection{Ast traversal functions}
+
+
 \subsubsection{Typescript code generation}
 
 Without going too further in the details, some part of the C source code composing the compilers are in fact
@@ -595,8 +598,8 @@ Without spending too much time the \textbf{Typescript} program is used to do two
 
 \begin{itemize}
     \item To generate the code for the type deduction and type checking of the each expression operator. It takes
-        some \textbf{meta-representation} of what each expression accept as input types and which output type it produces
-        and it generates a C function called \texttt{typecheck\_expr\_and\_operators} and some other utilities in a separate C file which is then compiled.
+        some \textbf{meta-representation} of what each expression accept as input types and which output type it produces.
+        Given these \textbf{meta-representation} it generates a C function called \texttt{typecheck\_expr\_and\_operators} and some other utilities in a separate C file which is then compiled in the final executable.
         An example of such \textbf{meta-representation} is:
         \begin{lstlisting}[language=JS]
 const MATH_EXPR = new Expr (
@@ -627,7 +630,6 @@ const MATH_EXPR = new Expr (
 
 
 
-\subsubsection{Ast traversal functions}
 
 \subsection{Testing framework}
 
