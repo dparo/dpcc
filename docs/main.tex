@@ -598,6 +598,10 @@ that when visiting each node of the AST code must be generated and outputtted ri
 How the childs are order play an important role on the semantics and the validity of the final generated 3AC output.
 If one was willing to take a performance hit and implement in the compiler the ability to generate code on temporary strings at will and then combine them at will, the order of the childs at that point wouldn't be relevant.
 
+In any case this ingeger information is exploited to emit code snippets "in the middle" of partially evaluating a node. For
+example the code generation for an \texttt{while} statement might want to insert a label before evaluating the expression,
+and a jump back after it's code block child has been evaluated and emitted.
+
 Here follows an example program and it's associate compiled 3AC:
 
 \begin{lstlisting}[language=DPL]
@@ -694,11 +698,6 @@ print(3.5 << 8);
         \caption{\texttt{dpcc} custom logging showoff}
     \end{figure}
 
-\subsubsection{Custom allocator wrapper}
-
-
-Allows to clear the allocators at specific synchronization point in the compiler.
-Given the nature of the short living time that this compiler is, this was probably not required
 
 \subsubsection{Typescript code generation}
 
@@ -745,12 +744,52 @@ const MATH_EXPR = new Expr (
 \end{itemize}
 
 
+\subsubsection{Custom allocator wrapper}
+
+In order to track allocations inside the compiler a custom very simple allocator is implemented.
+In practice this allocator just wraps the standard C allocator (\texttt{malloc}) and stores each allocation
+in a list. The reason for this is that one can simply allocate memory as he likes without worrying about freeing
+such memory. If the structure of the program is correctly thought out, one can simply define good synchronization
+point where it is safe to clear the entire allocator. This makes the entire allocations made up to this point
+be freed all at once. One can also use multiple allocators to model different lifetime semantics for objects
+that must live longer or shorter.
+
+The custom allocator lives in \texttt{src/utils.c} and the notable functions are:\texttt{dallnew, dallrsz, dalldel, dallclr, dallarr, \dots}.
 
 
 \subsection{Testing framework}
 
+The \texttt{dpcc} compiler has unit testing framework setup to make sure that the compiler works as expected.
+The library \urlref{https://github.com/ThrowTheSwitch/Unity}{Unity} is a standalone unit framework written C. The
+\texttt{dpcc} uses this library to test some utilities freestanding functions in isolation.
+
+Most of the testing horsepower is provided by a python script: \texttt{test/compile\_test.py}.
+This script reads 2 files: \texttt{test/valid.dpl, test/invalid.dpl} which list respectively some valid and invalid dpl programs.
+Each program is separated by a long sequence of characters \texttt{`//'}. The python script extract each program
+separatily, for each program it extract some metadata from the comments which list the expected output of the program.
+The python script then proceeds to call the compiler on that small program and verifies that either the program
+produces the expected output, or in the case of invalid programs it rejects it without crashing.
+
+
 
 \section{Performance results}
+
+\urlref{https://www.valgrind.org/}{Valgrind} is a very useful tool for C development. It is an emulator that provides among
+all the features a memory corruption checker, and a performance profiler. By calling \textbf{valgrind} with
+\texttt{valgrind --tool=callgrind --dump-instr=yes --simulate-cache=yes --collect-jumps=yes -- \dots} one can analyse
+the performance of the executable.
+
+This profiling was also done for \texttt{dpcc} and as it turned out, currently the compiler has not satisfactory performance.
+At the current implementation of the custom allocator, which employes linear scanning everytime a reallocation of a block
+of memory must occur, it plays an important piece of the entire runtime of the executable.
+
+As one can see from the below images, the \texttt{dallrsz} function, and in particular the linear scanning of the allocation
+consitutes the \textbf{99\%} of the total running time of the executable.
+
+This is something that should be addressed before calling the compiler a usable program.
+
+Unfortunately this performance problem didn't allow me to take some snaphsots about the running time of the compiler
+for a program of always increasing length.
 
 \begin{figure}[H]
     \centering
@@ -761,17 +800,17 @@ const MATH_EXPR = new Expr (
 
 \begin{figure}[H]
     \centering
-    \includegraphics{imgs/dallrsz_code_usage.png}
-    \caption{Performance issue in \texttt{dallrsz} utility function}
+    \includegraphics[scale=0.85]{imgs/dallrsz_callgraph.png}
+    \caption{Performance issue same as previous image but more understandable}
 \end{figure}
-
 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.85]{imgs/dallrsz_callgraph.png}
-    \caption{Performance issue in \texttt{dallrsz} utility function}
+    \includegraphics{imgs/dallrsz_code_usage.png}
+    \caption{The for loop, which is taken tramendous amount of time for basically no gain}
 \end{figure}
+
 
 
 \section{Conclusions}
@@ -804,30 +843,6 @@ but the testing framework should help in that. Some cool concepts that could be 
 \clearpage
 \section{Appendix A: Structure of the Intermediate Code}
 \label{appendix_a}
-
-\section{Appendix: program text}
-
-% Here you should include the program text.
-% Do NOT use screenshots or similar methods.
-% Below you can see how to use \lstinputlisting{}.
-
-
-
-\begin{lstlisting}[language=DPL]
-let a: int[] = 10;
-let s = "Hello world";
-{
-
-}
-\end{lstlisting}
-
-\begin{lstlisting}[language=C]
-int main() {
-
-}
-char **argv;
-\end{lstlisting}
-
 
 \clearpage
 \section{Appendix B: Example Program Iterative Merge Sort}
