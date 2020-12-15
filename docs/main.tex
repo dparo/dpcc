@@ -465,33 +465,33 @@ The \texttt{dpcc} compilers models the entire program mostly using the following
 
 \subsection{The input stage of the compiler}
 This is the simplest part of the compiler. At the time of writing the \textbf{dpcc} compiler
-allows only loading of files. In particular it reads an entire file into memory before continuining
-with the rest of the piepeline. The input stage does not support URI, file downloads, any type of protocol
-that would require realtime on stream code generation, and linux sockets. That is the
-parser can open anything that looks like a file that has a finite determinable start, an end,
+allows only for the loading of files. In particular it reads an entire file into memory before continuining
+with the rest of the piepeline. The input stage does not support any form of \textbf{URI}, file downloads, any type of protocol
+that would require realtime on stream code generation, linux sockets, \dots etc. That is the
+compiler can open anything that looks like a file that has a finite determinable start, an end
 and a finite number of bytes.
 
 \subsection{Lexer}
 
 \urlref{https://github.com/westes/flex/}{Flex} is used to implement the lexer/tokenizer. Lexers are pretty simple to understand and
-are particulary easy to develop if easing a tool like Flex. One can read the \urlref{https://www.cs.virginia.edu/~cr4bd/flex-manual/}{Flex Manual}.
+are particulary easy to develop if easing a tool like Flex. The unfamiliar reader with Flex can read the \urlref{https://www.cs.virginia.edu/~cr4bd/flex-manual/}{Flex Manual}.
 
 The things that are worth noting about the \textbf{dpcc} tokenizer are:
 
 \begin{itemize}
-\item The lexer is completely UTF-8 aware, and UTF-8 symbols can be used to declare identifiers.UTF-8 aware and has particular
-rules to match the variable encoding of UTF-8 \textbf{This allows variable names to include emojis}. Why? Cause it's cool \smiley
-\item The lexer tracks line and column locations thanks to the \texttt{yylloc} exposed from bison. These
-    variable is updated accordingly in the flex file whenever any token is encoutered the column information
-    are updated and are resetted at each newline.
-\item Support for C-style strings containing escape sequences.
-\item Support for C-style single line comments
+\item The lexer is completely UTF-8 aware, and UTF-8 symbols can be used to declare identifiers. This is achieved
+    by having particular Flex rules to match the variable encoding nature of UTF-8.
+    \textbf{This allows a DPL program to declare variable names including emojis}. Why? Cause they're cool \smiley
+\item The lexer tracks line and column locations thanks to the global variable \texttt{yylloc} exposed from Bison (when enabling \texttt{\%locations}).
+    This variable is updated accordingly in each rule, the line column and lines information are updated on each newline.
+\item Support for both Unix and MS-DOS style newlines.
+\item Support for C-style strings (can contain escape sequences).
+\item Support for C-style single line comments.
 \item Support for binary and hexadecimal integers. Support for C-style floating point numbers with the exponent and an optional terminating \texttt{`f'} character.
-\item All the remaining tokens are pretty standard and uninstering.
 \end{itemize}
 
-This module is mostly un-interesting. Flex is used mainly as a token recognizer since most of the logic is implemented outside the flex
-file anyway. One of the most notable feature that is implemented outside the lex file and used,
+Flex is used mainly as a token recognizer since most of the logic is implemented outside the flex
+file anyway. One of the most notable feature that is implemented outside,
 is what's called \textbf{String interning}\footnote{\urlref{https://en.wikipedia.org/wiki/String_interning}{String Interning Wikipedia Article}}.
 \textbf{String iterning} is a common technique used in compilers design that allows the compiler to
 store and cache lexemes in a common place. Since in typical source files
@@ -510,11 +510,11 @@ from  the awesome Sean Barrett's \urlref{https://github.com/nothings/stb}{stb li
 So upon encountering a new token the following things happen:
 
 \begin{itemize}
-\item It updates correctly the state required in order to track the location of each token in the source file.
+\item Locations information (line, column) are updated correctly.
 \item The lexeme is interned, and the old lexeme pointer is stomped in favour of the interned one.
-\item It allocates a new \texttt{token\_t} and set's up the lexeme pointer, it's location and some other metadata
-\item It allocates a \texttt{ast\_node\_t} and attaches the token to it. The \texttt{ast\_node\_t} is what will be
-    used by Bison and later stages to generate the AST and to perform the analysis and the code generation. The node
+\item A new \texttt{token\_t} is allocated and filled with the lexeme pointer, the location and some other metadata.
+\item A new \texttt{ast\_node\_t} is allocated and the corresponding token is referenced. The \texttt{ast\_node\_t} will be
+    used by Bison and later stages to generate the AST and to perform the analysis in the code generation phase. The node
     kind is instead left un-initialized for now. It will be set by the \textbf{Bison} parser later, where more semantic context is available.
 \item It signals to bison the new lexeme kind by simply \texttt{return}-ing from the \texttt{lex()} procedure (Bison calls flex in a coroutine mode)
 \end{itemize}
