@@ -982,8 +982,8 @@ static void second_ast_pass(void)
     EMIT("// Special variable used to implemenent INC (x++) and dec (x--)\n");
     EMIT("// It is used to temporary hold the result of the INC/DEC in order to perform the side effect\n");
     EMIT("int32_t _vspcIncDec;\n");
-    EMIT("// Special variable used to the negation for control statements (if, for, ...)\n");
-    EMIT("// For example the for loop needs to negate the user provided condition\n");
+    EMIT("// Special variable used for the negation of control statements (if, for, ...)\n");
+    EMIT("// As an example the for loop needs to negate the user provided condition\n");
     EMIT("bool    _vspcNeg;\n");
     EMIT("\n");
 

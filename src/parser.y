@@ -50,7 +50,7 @@
         // prior to do expolarion it can lead to better identification of
         // the token causing the syntax error
 %define parse.lac   full
-%define parse.error custom       // detailed
+%define parse.error custom
 
         // API.token.raw: Makes the entry of the enum `yytokentype`
         // (exported in the h file and used by flex) to make them identical 1:1
