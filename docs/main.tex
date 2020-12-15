@@ -565,13 +565,12 @@ This are the things worth noting about the \textbf{Bison} file used in the \text
 
 \subsection{Code Generation}
 
-This is the most long and complicated part of the pipeline of \texttt{dpcc} compiler.
-This section will be kept as concise as possible and will only tell the reader the minimum essential that is required
-to understand the core concepts.
+This is the longest and complicated part of the pipeline of the \texttt{dpcc} compiler.
+This section will be kept as concise as possible and only the basic concepts will be explained.
 
-For simplicity reasons the codegen emission of the \texttt{3AC} requires \textbf{2 AST passes}. Probably the code generation
-phase could be implemented in only a single AST pass, but this possibility was not explored.
-
+For simplicity reasons the current codegen emission implementation requires \textbf{two AST passes}. Whether
+the implementation of the code generation could be restructured in order to do the same things
+in \textbf{single pass} is subject to discussion, but this has not yet been tested.
 
 
 \begin{itemize}
