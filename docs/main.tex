@@ -521,8 +521,9 @@ So upon encountering a new token the following things happen:
 
 
 \subsection{Parser}
+
 The unfamiliar user can refer to the \urlref{https://www.gnu.org/software/bison/manual/bison.html}{Bison manual}.
-The \textt{yylval} is aliased to be equivalent to \texttt{ast\_node\_t*}. The base case for a generation of an
+The \texttt{yylval} is aliased to be equivalent to \texttt{ast\_node\_t*}. The base case for a generation of an
 \texttt{ast\_node\_t*} is handled inside \textbf{Flex}. In the implementation of \textbf{dpcc}, \textbf{Bison}
 is merely used as a syntax analysis tool, and for resolving symbols declarations and/or invalid uses of undeclared symbols.
 That means that the \textbf{Bison} file mostly defines the precedence of the operator and the grammar, while instead
@@ -558,6 +559,8 @@ to understand the core concepts.
 For simplicity reasons the codegen emission of the \texttt{3AC} requires \textbf{2 AST passes}. Probably the code generation
 phase could be implemented in only a single AST pass, but this possibility was not explored.
 
+
+
 \begin{itemize}
     \item \textbf{First AST pass}. Type checking and type deduction and forward validation of the input source is performed. For example the input program may be refused due to type mismatch or also abuse of language features. For example it is not possible to declare a zero or negative sized array. In this pass also, for each node some metadata is associated that will guide the code generation in the second phase.
     \item \textbf{Second AST pass}. If the previous pass successed we can assume that the code is syntatically valid and semantically valid. This is the pass where the actual 3AC get's outputted.
@@ -587,6 +590,13 @@ The fact that new code must always be concatenated to the previous code is a ver
 that when visiting each node of the AST code must be generated and outputtted right now, \textbf{meaning that the order of the childs of each node is significant}.
 How the childs are order play an important role on the semantics and the validity of the final generated 3AC output.
 If one was willing to take a performance hit and implement in the compiler the ability to generate code on temporary strings at will and then combine them at will, the order of the childs at that point wouldn't be relevant.
+
+At the end this turned out to be mostly lacks proper features to be useful as an everyday productive language overkilled given (procedure calls are a must)
+and a proper real-world efficient backend should be implemented. Unfortunately now a days due also to the complexity
+of modern CPU architectures writing a compiler backend is no easy task. In fact most modern languages
+nowadays rely on external backends such as \textbf{LLVM} to deal with the actual machine code output.
+the size of this project, but nonetheless it was a cute little trick that I wanted to try and it was cool
+after all.
 
 In any case this ingeger information is exploited to emit code snippets "in the middle" of partially evaluating a node. For
 example the code generation for an \texttt{while} statement might want to insert a label before evaluating the expression,
@@ -676,7 +686,8 @@ _scope_end();
 \subsubsection{Custom logging}
 Custom logging is implemented to override the default Bison logging, and is used also manually in the type checking
 stage of the compiler to complain abot possible misuses.
-Custom logging with colorized output and display of location where error occured, similar to \textbf{GCC}. Here it follows an example program that makes the \texttt{dpcc} compiler complain:
+The output is inspireb from the \textbf{GCC} log output. Each message is colorized according to the severity, and
+it contains the filanem and the location of where the error/warning occurs. Here it follows an example program that makes the \texttt{dpcc} compiler complain:
 \begin{lstlisting}[language=DPL]
 let array: int[2];
 print(array[4]);
@@ -691,20 +702,20 @@ print(3.5 << 8);
 
 \subsubsection{Typescript code generation}
 
-Without going too further in the details, some part of the C source code composing the compilers are in fact
-generated using a \textbf{Typescript} program. Now at the end this turned out to be mostly lacks proper features to be useful as an everyday productive language overkilled given (procedure calls are a must)
-and a proper real-world efficient backend should be implemented. Unfortunately now a days due also to the complexity
-of modern CPU architectures writing a compiler backend is no easy task. In fact most modern languages
-nowadays rely on external backends such as \textbf{LLVM} to deal with the actual machine code output.
-the size of this project, but nonetheless it was a cute little trick that I wanted to try and it was cool
-after all.
+Without going too much deeper on the details, some part of the C source code composing the compiler is in fact
+generated using a \textbf{Typescript} program. Having now more knowledge about how the compiler source code
+turned out to be at the end, the decision of generating some part of the compiler turned
+out to be mostly \textbf{overkill}; especially considering the small size of the project. But anyway this
+trick is something that I wanted to try and see if it works. I didn't gain much using this code generation
+trick but I still think that theoretically speaking it could help in managing
+the source code of the compiler as it increases in scale.
 
-Without spending too much time the \textbf{Typescript} program is used to do two things:
+Without spending too much time on this section, the \textbf{Typescript} program is used to do two things:
 
 \begin{itemize}
     \item To generate the code for the type deduction and type checking of the each expression operator. It takes
-        some \textbf{meta-representation} of what each expression accept as input types and which output type it produces.
-        Given these \textbf{meta-representation} it generates a C function called \texttt{typecheck\_expr\_and\_operators} and some other utilities in a separate C file which is then compiled in the final executable.
+        some \textbf{meta-representations} of what each expression accept as input types and which output type it produces.
+        Given these \textbf{meta-representations} it generates a C function called \texttt{typecheck\_expr\_and\_operators} and some other utilities in a separate C file which is then compiled in the final executable.
         An example of such \textbf{meta-representation} is:
         \begin{lstlisting}[language=JS]
 const MATH_EXPR = new Expr (
@@ -730,7 +741,8 @@ const MATH_EXPR = new Expr (
     \item To embed the required preamble and postamble C code inside the \texttt{dpcc} executable. The preamble and
         postamble code that are outputted when calling \texttt{`./dpcc c <input>'} are in fact written
         into two separate files. The typescript program reads these two files and generate two header files
-        containing two \texttt{uint8\_t[]} arrays that each encode the content of each respective file.
+        containing two \texttt{uint8\_t[]} arrays that each encode the content of each respective file. Then
+        these two generated \texttt{uint8\_t} arrays are then embedded in the final executable.
 \end{itemize}
 
 
@@ -822,6 +834,8 @@ Here's instead some examples from \texttt{test/invalid.dpl}:
 ///////////////////////////////////////////////////////////////////////////////
 \end{lstlisting}
 
+
+\clearpage
 
 \section{Performance results}
 
