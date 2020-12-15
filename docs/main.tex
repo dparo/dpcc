@@ -522,7 +522,10 @@ So upon encountering a new token the following things happen:
 
 \subsection{Parser}
 
-The unfamiliar user can refer to the \urlref{https://www.gnu.org/software/bison/manual/bison.html}{Bison manual}.
+\textbf{Bison} is used to aid in the implementation of the syntax analysis stage.
+The unfamiliar user can refer to the \urlref{https://www.gnu.org/software/bison/manual/bison.html}{manual} to learn
+about Bison.
+
 The \texttt{yylval} is aliased to be equivalent to \texttt{ast\_node\_t*}. The base case for a generation of an
 \texttt{ast\_node\_t*} is handled inside \textbf{Flex}. In the implementation of \textbf{dpcc}, \textbf{Bison}
 is merely used as a syntax analysis tool, and for resolving symbols declarations and/or invalid uses of undeclared symbols.
