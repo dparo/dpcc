@@ -183,9 +183,9 @@ That being said \textbf{DPCC} (all UPPERCASE) and \textbf{dpcc} (all lowercase) 
 
 \subsection{DPL: Structure of the language}
 
-\textbf{DPL} is mostly a C-alike compatible language, since it borrows most of its syntax and semantics.
-It also borrows some syntax from \textbf{Rust} \&
-\textbf{JS} especially in how the variables are declared (usage of the keyword \textbf{let}).
+\textbf{DPL} is mostly a C-alike compatible language, in fact it borrows most of its syntax and semantics.
+\textbf{DPL} is also inspired by the following programming languag: \textbf{Rust} \&
+\textbf{JS} especially in the syntax used to perform variable declarations (usage of the keyword \textbf{let}).
 
 \textbf{Rust} is a modern system programming language with strong typing guarantees.
 Among all the interesting features that Rust provides one of them is type deduction.
@@ -328,10 +328,10 @@ they can only be used as a parameter to the print statement.
 \subsection{DPCC: Using the compiler}
 
 The \textbf{dpcc} compiler is written in the \textbf{C} language. Unfortunately at the current time
-of writing \textbf{dpcc} works only under Unix like operatins systems. The compiler has
-been tested under Ubuntu 20.10, Ubuntu 20.04, and macOS 10.15. The
-compiler was developed by his author using an Ubuntu 20.10 machine, while the other distro/OS
-were tested thanks to Github Actions automated build-check cycles. Windows builds
+of writing \textbf{dpcc} works only under Unix like operating systems. The compiler has
+been tested under \textbf{Ubuntu 20.10}, Ubuntu 20.04, and macOS 10.15. The
+compiler was developed by his author using an \textbf{Ubuntu 20.10} machine, while the other distro/OS
+were tested thanks to \emph{Github Actions} automated build-check cycles. Windows builds
 failed due to MSVC rejecting the source code of \textbf{dpcc} cause it contains some GCC
 extensions and some hard coded unix syscalls.
 In short words \textbf{dpcc} can be only compiled with either GCC or CLANG compilers
@@ -378,29 +378,29 @@ otherwise the compiler will complain with either warnings or errors.
 
 Providing a full language specification is beyond the scope of this project report. In particular
 this section will not list the entire grammar of the language. Thus, it is assumed
-that the reader has a common basic programming language knowledge. It is also assumeed that he/she has some experience
+that the reader has a common basic programming knowledge. It is also assumeed that he/she has some experience
 with at least one C-alike language. If the reader satisfies these requirements, he/she can use
 basic reasoning and code examples to deduce the specification of the language. Thus the purpose
-of this section is to characterize some core major concepts that are distinguish
-\textbf{DPL} from other languages and that not easily inferable:
+of this section is to characterize some core major concepts that distinguish
+\textbf{DPL} from other languages and that are not easily inferable:
 
 \begin{itemize}
     \item Comments start with `\texttt{//}'
     \item Identifiers start with a letter or an extened non ASCII UTF-8 character. After the first
-        character an identifier can contain any alphanumerical character excluding spaces and any punctuation character.
+        character an identifier can contain any alphanumerical character excluding spaces and punctuation characters.
         \textbf{Notice that names beginning with an underscore are reserved for compiler use and will be rejected}.
     \item Strings are enclosed in \texttt{"} (double quotes) and can contain valid ASCII escape sequences like
-        in any traditional C-derived language
+        in any traditional C-derived language.
     \item Print statement unlike in C are allowed to print any variable, and can deduce what should be printed
         based on the type of the variable that is passed.
     \item Most of the grammar is C-inspired, and in fact all control flow statements have
-        the same syntax of any C derived language.
+        the same syntax of C (or of any C-derived language).
     \item The precedence of the operators are taken directly from the \urlref{https://en.cppreference.com/w/c/language/operator_precedence}{C precedence table}.
         The only \textbf{modification that DPL does differently than C} is that bitwise operators (\texttt{\&, |, \^})
         have higher precedence than the compare operators (\texttt{==, !=, \dots}). Most modern languages
         adopt this convenient change, because it makes the precedence of the bitwise operators behave in the same
         way that normal mathematical operators work (\texttt{=, +, -, <<, >>}).
-        In fact also \textbf{the Rust language employes this same modification}.
+        In fact also \textbf{the Rust language employes} \urlref{https://doc.rust-lang.org/1.22.1/reference/expressions/operator-expr.html\#operator-precedence}{this same modification}.
     \item A \textbf{DPL} program starts either in 2 ways. The first more idiomatic way is to just start
         writing statements directly:
         \begin{lstlisting}[language=DPL]
@@ -418,7 +418,7 @@ fn main() {
         \end{lstlisting}
 
     \textbf{Since DPL does not support functions yet} the main function is mostly ignored but it is still
-    part of the grammar for consistency reason.
+    part of the grammar for consistency reasons.
     \item \textbf{DPL} is a strongly typed language. Currently only 5 types are supported: \texttt{bool, int, float, string, bool[], int[], float[]}. Which
         as we talked about in previous sections \texttt{string} types behave a little bit different way.
 
