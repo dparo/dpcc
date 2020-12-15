@@ -839,22 +839,24 @@ Here's instead some examples from \texttt{test/invalid.dpl}:
 
 \section{Performance results}
 
-\urlref{https://www.valgrind.org/}{Valgrind} is a very useful tool for C development. It is an emulator that provides among
-all the features a memory corruption checker, and a performance profiler. By calling \textbf{valgrind} with
-\texttt{valgrind --tool=callgrind --dump-instr=yes --simulate-cache=yes --collect-jumps=yes -- \dots} one can analyse
-the performance of the executable.
+\urlref{https://www.valgrind.org/}{Valgrind} is a very useful tool for C development mainly used for
+memory debugging (memory corruptions, invalid writes accces), finding memory leaks, and for
+profiling (timing, cache hit rate, branch prediction, \dots). Some memory bugs were totally eliminated
+inside the compiler thanks to this tool. Thanks to \textbf{valgrind}, also, some performance analysis abot the
+total running time of the compilar were analysed (\texttt{valgrind --tool=callgrind --dump-instr=yes --simulate-cache=yes --collect-jumps=yes -- \dots}).
 
-This profiling was also done for \texttt{dpcc} and as it turned out, currently the compiler has not satisfactory performance.
-At the current implementation of the custom allocator, which employes linear scanning everytime a reallocation of a block
-of memory must occur, it plays an important piece of the entire runtime of the executable.
+As it turned out from the analysis currently the compiler has un-satisfactory performance. The performance analysis
+highlighted the current custom allocator implementation to be the \textbf{bottleneck} of the compiler. Most
+of the running time of the compiler is \textbf{wasted} on performing linear searches for allocation resizes.
 
 As one can see from the below images, the \texttt{dallrsz} function, and in particular the linear scanning of the allocation
 consitutes the \textbf{99\%} of the total running time of the executable.
 
-This is something that should be addressed before calling the compiler a usable program.
+This problem is something that should totally be addressed before shipping a compiler to a final user.
 
-Unfortunately this performance problem didn't allow me to take some snaphsots about the running time of the compiler
-for a program of always increasing length.
+Also I wanted to take some snapshots about the running time of the compilar when runned with source code input
+of different sizes. Unfortunately since the current implementation of the allocator is \textbf{slow}, such snapshots
+wouldn't provide much information about how fast the compilation process is.
 
 \begin{figure}[H]
     \centering
@@ -877,6 +879,7 @@ for a program of always increasing length.
 \end{figure}
 
 
+\clearpage
 
 \section{Conclusions}
 
