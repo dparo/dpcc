@@ -568,18 +568,43 @@ This are the things worth noting about the \textbf{Bison} file used in the \text
 This is the longest and complicated part of the pipeline of the \texttt{dpcc} compiler.
 This section will be kept as concise as possible and only the basic concepts will be explained.
 
-For simplicity reasons the current codegen emission implementation requires \textbf{two AST passes}. Whether
+For simplicity reasons the current codegen implementation requires \textbf{two AST passes}. Whether
 the implementation of the code generation could be restructured in order to do the same things
-in \textbf{single pass} is subject to discussion, but this has not yet been tested.
+in a \textbf{single pass} has not yet been tested and it is subject to discussion.
 
 
 \begin{itemize}
-    \item \textbf{First AST pass}. Type checking and type deduction and forward validation of the input source is performed. For example the input program may be refused due to type mismatch or also abuse of language features. For example it is not possible to declare a zero or negative sized array. In this pass also, for each node some metadata is associated that will guide the code generation in the second phase.
-    \item \textbf{Second AST pass}. If the previous pass successed we can assume that the code is syntatically valid and semantically valid. This is the pass where the actual 3AC get's outputted.
+\item \textbf{First AST pass}. In the first AST pass 3 major things are done: type deduction, type checking and semantic validation.
+  In fact, the input program may be refused due to either type mismatch or in general due to abuse of language features that cannot
+  be easily checked in the parsing stage. As an example, it is not possible to declare a zero or negative sized array.
+  Also, during this pass some metadata is initiliazed in each node. This metadata will guide the code generation in the second pass.
+\item \textbf{Second AST pass}. If the previous pass successed, we can assume that the code is syntatically valid and semantically valid. This is the pass where the actual 3AC gets outputted.
 \end{itemize}
 
-How this is achieved is thanks to 2 utilities functions: \texttt{ast\_traversal\_begin, ast\_traversal\_next}. This 2 functions together
-allow to fully traverse each node composing the AST. In practice it works in the following way: each time \texttt{ast\_traversal\_next} is called a pointer to a node
+Type deduction works in the following easy to under stand way:
+\begin{enumerate}
+\item \textbf{Base Cases}:
+  \begin{enumerate}
+  \item Statements, control flow and similar, do not have a meaningful type
+  \item The type of an \texttt{int}, \texttt{float}, \texttt{string}, \dots  \textbf{literal} are trivial.
+  \item The type of the output of a casting operator is trivial. Casting operators force the conversion.
+  \item Variable delcarations \textbf{with a user listed type} are trivial. In this case type checking still needs
+    to be performed in case the variable declaration has a \texttt{RHS} initialization. If the type check
+    fails the compiler emits an error.
+  \end{enumerate}
+  \item \textbf{Recursive Cases}:
+    \begin{enumerate}
+    \item Variable declaration with no user listed type inherit the type from the \texttt{RHS}. In case
+      no \texttt{RHS} is provided, the compiler defaults the type to \texttt{int}.
+    \item The type of each expression is harder to deduce and check. Each expression has its own possible
+      rules that describes which child types are allowed and which output type is generated for each case. If
+      no rule match, than the compiler triggers a \textbf{type mismatch} error, otherwise it figures out
+      the output type of the expression using the rule.
+    \end{enumerate}
+\end{enumerate}
+
+How all of this is achieved is thanks to two utility functions: \texttt{ast\_traversal\_begin, ast\_traversal\_next}. This two functions together
+allow to fully traverse each node composing the AST. It works in the following way: each time \texttt{ast\_traversal\_next} is called a pointer to a node
 and an integer index is returned with the following semantics:
 \begin{enumerate}
     \item \textbf{Base Case}. If the node is a leaf of the AST, \texttt{ast\_traversal\_next} returns the pointer to the node and an index set to \texttt{0 (zero)}.
@@ -599,9 +624,9 @@ and an integer index is returned with the following semantics:
 
 Code generation starts by operating on an empty string. New 3AC that needs to be emitted \textbf{is always concatenated} to the output string (like in a \texttt{printf}).
 The fact that new code must always be concatenated to the previous code is a very important concept to note. It means
-that when visiting each node of the AST code must be generated and outputtted right now, \textbf{meaning that the order of the childs of each node is significant}.
+that when visiting each node of the AST code must be generated and outputtted right away, \textbf{meaning that the order of the childs of each node is significant}.
 How the childs are order play an important role on the semantics and the validity of the final generated 3AC output.
-If one was willing to take a performance hit and implement in the compiler the ability to generate code on temporary strings at will and then combine them at will, the order of the childs at that point wouldn't be relevant.
+If one was willing to take a performance hit and implement in the compiler the ability to generate code on temporary strings, one could then combine them at will, at that point, the order of the childs wouldn't be relevant anymore.
 
 At the end this turned out to be mostly lacks proper features to be useful as an everyday productive language overkilled given (procedure calls are a must)
 and a proper real-world efficient backend should be implemented. Unfortunately now a days due also to the complexity
