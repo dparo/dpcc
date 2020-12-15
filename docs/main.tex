@@ -419,8 +419,8 @@ fn main() {
 
     \textbf{Since DPL does not support functions yet} the main function is mostly ignored but it is still
     part of the grammar for consistency reasons.
-    \item \textbf{DPL} is a strongly typed language. Currently only 5 types are supported: \texttt{bool, int, float, string, bool[], int[], float[]}. Which
-        as we talked about in previous sections \texttt{string} types behave a little bit different way.
+    \item \textbf{DPL} is a strongly typed language. Currently only 5 types are supported: \texttt{bool, int, float, string, bool[], int[], float[]}.
+    As we talked about in previous sections \texttt{string} types behave a little bit different way.
 
 
     \item Code blocks are enclosed in braces `\texttt{\{ \dots \ \}}'. Each code block define a new scope where variables can
@@ -435,43 +435,33 @@ fn main() {
 \clearpage
 \section{DPCC compiler Implementation Details}
 
-In this section it is briefly described the input stage, the lexer stage, and the syntax analysis stage (parser).
+This section describes how the \texttt{dpcc} compiler is composed: the input stage, the lexer stage, and the syntax analysis stage (parser), and
+the final code generator.
 \textbf{Flex} and \textbf{Bison} are used as tools for aiding in the boilerplate code generation of respectively the lexer and the parser.
 
-The compiler internally used 2 main types to model the source code of the input program: \texttt{token\_t}, \texttt{ast\_node\_t}.
 
+The \texttt{dpcc} compilers models the entire program mostly using the following \textbf{C types}:
 
 \begin{itemize}
     \item \texttt{token\_t} is basically a book-keeping type. It is meant to store metadata for each token. The most fundamental
-        fields that it stores are the \texttt{lexeme}, and the kind of each token (comment, identifier, string literal, \dots). It also stores the location of each token within the file \texttt{(line:column)}
-    \item \texttt{ast\_node\_t} is instead the core type of the compiler. Multiple \texttt{ast\_node\_t}'s consitutes an AST node. When parsing
-        with \textbf{Bison}, nodes are chained together in a parent/child relationship. Each node has the following fields:
+        fields that it stores are: the \texttt{lexeme}, and the kind of each token (comment, identifier, string literal, \dots). It also stores the location of each token within the file \texttt{(line:column)}
+    \item \texttt{ast\_node\_t} is the \textbf{main core} type of the compiler. Multiple \texttt{ast\_node\_t}'s consitutes a full AST tree.
+        When performing parsing using \textbf{Bison}, nodes are linked together in a parent/child relationship. Each node has the following fields:
         \begin{itemize}
             \item A pointer to a token.
             \item The node kind. The node kind is used to disambiguate the kind of the node (\texttt{Stmt, VarDeclStmt, Expr, \dots}). It's one of the most important fields used in the code generation phase.
             \item The codegen metadata. The codegen metadata is filled and used only in the last code generation phase of the compiler.
-            \item A list of pointers to child nodes (if any).
+            \item Multiple pointers to child nodes (if any).
             \item A backpointer to the parent node (if any).
             \item A pointer to the declaration node, used only for identifiers to lookup where they were declared.
-            \item A literal value. The literal value is used only in literals to store the value represented by this node (\texttt{int, float, bool})
+            \item A literal value. The literal value is used only in literals to store the value represented by this node (\texttt{int, float, bool}).
         \end{itemize}
 
     \item \texttt{symtable\_t} used to model the variables that are in scope. It's implementation for now is based on a linear array, and thus has linear search time performance.
         A hashmap could be used to improve the lookup performance.
-    \item \texttt{ast\_traversal\_t} is a context state for traversing a fully expanded AST.
+    \item \texttt{ast\_traversal\_t} is a book-keeping context state used for traversing an AST.
     \item \texttt{codegen\_ctx\_t} is a context state for tracking already used 3AC variable names.
 \end{itemize}
-
-
-\dots
-
-Talk about common types: \texttt{ast\_node\_t}, \texttt{token\_t} and how they are mapped to the bison, flex equivalent.
-How they are used and how they flow in the system. Explain that Bison is mostly used as a syntax
-checker + symtable analysis, each node is defined and the pushed. Most complex type checking and
-code generation steps are instead implemented somewhere else. Explain why you didn't implement
-the necessary code right inside the bison grammar file.
-
-\dots
 
 \subsection{The input stage of the compiler}
 This is the simplest part of the compiler. At the time of writing the \textbf{dpcc} compiler
