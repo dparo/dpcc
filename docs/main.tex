@@ -839,43 +839,43 @@ Here's instead some examples from \texttt{test/invalid.dpl}:
 
 \section{Performance results}
 
-\urlref{https://www.valgrind.org/}{Valgrind} is a very useful tool for C development mainly used for
-memory debugging (memory corruptions, invalid writes accces), finding memory leaks, and for
+\urlref{https://www.valgrind.org/}{Valgrind} is a very useful tool for C development. It is primarily used for
+memory debugging (memory corruptions, invalid writes acccess, \dots), finding memory leaks, and for
 profiling (timing, cache hit rate, branch prediction, \dots). Some memory bugs were totally eliminated
 inside the compiler thanks to this tool. Thanks to \textbf{valgrind}, also, some performance analysis abot the
 total running time of the compilar were analysed (\texttt{valgrind --tool=callgrind --dump-instr=yes --simulate-cache=yes --collect-jumps=yes -- \dots}).
 
 As it turned out from the analysis currently the compiler has un-satisfactory performance. The performance analysis
-highlighted the current custom allocator implementation to be the \textbf{bottleneck} of the compiler. Most
+highlighted the current custom allocator implementation is the \textbf{bottleneck} of the compiler. Most
 of the running time of the compiler is \textbf{wasted} on performing linear searches for allocation resizes.
 
 As one can see from the below images, the \texttt{dallrsz} function, and in particular the linear scanning of the allocation
-consitutes the \textbf{99\%} of the total running time of the executable.
+consitutes more than \textbf{99\%} of the total running time of the executable.
 
-This problem is something that should totally be addressed before shipping a compiler to a final user.
+This problem is something that should totally be addressed before shipping the \texttt{dpcc} compiler to a final user.
 
-Also I wanted to take some snapshots about the running time of the compilar when runned with source code input
-of different sizes. Unfortunately since the current implementation of the allocator is \textbf{slow}, such snapshots
+Also I wanted to take some snapshots about the running time of the compilar as a function of the  source code input
+size. Unfortunately since the current implementation of the allocator is \textbf{slow}, such snapshots
 wouldn't provide much information about how fast the compilation process is.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{imgs/dallrsz_performance_issue.png}
-    \caption{Performance issue in \texttt{dallrsz} utility function}
+    \caption{Performance issue in \texttt{dallrsz} utility function.}
 \end{figure}
 
 
 \begin{figure}[H]
     \centering
     \includegraphics[scale=0.85]{imgs/dallrsz_callgraph.png}
-    \caption{Performance issue same as previous image but more understandable}
+    \caption{Performance issue same as previous image but in a graph form.}
 \end{figure}
 
 
 \begin{figure}[H]
     \centering
     \includegraphics{imgs/dallrsz_code_usage.png}
-    \caption{The for loop, which is taken tramendous amount of time for basically no gain}
+    \caption{The linear search allocation scanning. The loop is taken tramendous amount of time for basically no useful reason.}
 \end{figure}
 
 
@@ -885,17 +885,17 @@ wouldn't provide much information about how fast the compilation process is.
 
 The \textbf{DPL} language and the \textbf{dpcc} compiler are far from being useful and/or complete.
 They were implemented as part of a course in Compilers, so it is mostly a proof of concept. But still
-this proof of concept apply some modern concepts that languages like C lacks in its standard (type deduction, proper precedence table, proper fixed sized integers).
+this proof of concept apply some modern features that languages
+like C lacks in its standard (type deduction, proper precedence table, proper fixed sized integers).
 
-That being said I find that in this project report, and in the implementation available in the \urlref{https://github.com/dparo/dpcc}{Github Repo}
-provides concepts that are still applicable to a proper compiler implementation.
-The language mostly lacks proper features to be useful as an everyday productive language (procedure calls are a must)
-and a proper real-world efficient backend should be implemented. Unfortunately now a days due also to the complexity
-of modern CPU architectures writing a compiler backend is no easy task. In fact most modern languages
+That being said, I still find that both this implementation and project report provide some concepts that are still applicable in a proper language \& compiler implementation.
+The language mostly lacks proper features to be useful as an everyday productive language (procedure calls are a must).
+Also the compiler lacks a  real-world efficient code generation backend. Unfortunately nowadays, due to the complexity
+of modern CPU architectures, writing a compiler backend is not an easy task. In fact most modern languages
 nowadays rely on external backends such as \textbf{LLVM}\footnote{\urlref{https://llvm.org/}{LLVM Website}} to deal with the actual machine code output.
 
 It would be cool to extend this language and bring it further. It would probably need some code refactoring/cleanup first,
-but the testing framework should help in that. Some cool concepts that could be investigated further:
+but the unit testing framework should help in that. Some cool concepts that could be investigated further are:
 
 \begin{itemize}
 \item \textbf{FUNCTIONS !!!}
