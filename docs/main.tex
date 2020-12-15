@@ -524,34 +524,48 @@ So upon encountering a new token the following things happen:
 
 \textbf{Bison} is used to aid in the implementation of the syntax analysis stage.
 The unfamiliar user can refer to the \urlref{https://www.gnu.org/software/bison/manual/bison.html}{manual} to learn
-about Bison.
+about Bison. In the \texttt{dpcc} compiler \textbf{Bison} is used only for defining the grammar, and
+the \texttt{parse()} function generated from \textbf{Bison} is mostly used for syntax checking the input source.
 
-The \texttt{yylval} is aliased to be equivalent to \texttt{ast\_node\_t*}. The base case for a generation of an
-\texttt{ast\_node\_t*} is handled inside \textbf{Flex}. In the implementation of \textbf{dpcc}, \textbf{Bison}
-is merely used as a syntax analysis tool, and for resolving symbols declarations and/or invalid uses of undeclared symbols.
-That means that the \textbf{Bison} file mostly defines the precedence of the operator and the grammar, while instead
-the actions are pretty simple and mostly contain no code at all.
+In each \textbf{Bison} action rule the things worth noting that could occur are:
+\begin{itemize}
+\item A new \texttt{ast\_node\_t} is allocated and chained with other AST nodes in order to compose the full AST tree
+\item A scope defines a new scope where variable declarations can occur
+\item A new variable declaration pushes a symbol into the symbol table
+\item Each identifier used is looked up in the symbol table. If it's not found, then the parser errors out and refuses the program.
+\end{itemize}
 
-In fact almost all actions in the bison file, call some C functions defined somewhere else: \texttt{NEW\_NODE, push\_child, push\_childs}.
+That is in \texttt{dpcc}, \textbf{Bison} is used only for defining the grammar and for checking if a program is syntactically valid.
+Apart for the extraordinary case that deals with the symbol table updates and checks, most of the compiler logic \textbf{is not implemented inside the bison file}.
+
+Instead it is preferred to define most of the logic somewhere else, and to setup the necessary AST in order to defer
+more passes on the AST later. This makes bison actions very simple and contain merely no code at all. In fact almost all actions
+in the bison file, call some C functions defined somewhere else: \texttt{NEW\_NODE, push\_child, push\_childs}.
 These C functions are used to create a new node and to set it's type, and to append the corresponding childs to this new node.
 This keeps the bison file simple and concise since most of the heavyweight code is defined somewhere else.
 
 The advantage of this method is: simplicity, abstraction, code decoupling, and code scaling. The disadvantage is that in order
-to generate the code, at least one more AST pass is required, and thus could be potentially slower, than a single
-pass compiler.
+to emit the final code from the compiler, at least one more AST pass is required, and thus could be potentially slower, than a single
+pass compiler. Also implementing difficult logic directly inside the bison file, or implementing all the steps required for a modern
+compiler (type deduction, type checking) in a single pass becomes quickly tedious at best, if not nearly impossible.
 
-Also implementing concept logic directly inside the bison file, or implementing all the steps required for a modern
-compiler (type deduction, type checking) in a single becomes quickly tedious at best, if not nearly impossible.
 
-The \textbf{LAC} (Lookahead Correction) mechanism is enabled in the Bison file, since according to the Bison manual can provide
-identification of the error location, and thus better error messages, at the cost of a very negligable runtime speed penalty.
+This are the things worth noting about the \textbf{Bison} file used in the \texttt{dpcc} compiler:
 
-The Ast marks each node with an \texttt{ast\_node\_kind\_t} so that we can disambiguate easier in later
-stages what code should be generated for this node.
+\begin{itemize}
+\item The \texttt{yylval} is aliased to be equivalent to \texttt{ast\_node\_t*}. Each node contains a field \texttt{kind} of type \texttt{ast\_node\_kind\_t}
+  which is initialized in the \textbf{Bison} file when a new node is created. This field allows later
+  stages of the compiler match what code should be generated for this node.
+\item Location tracking is turned (\texttt{\%locations}). This allows \textbf{Bison} to declare the global variable \texttt{yylloc}
+  which is used from the lexer to setup the location of each token
+\item \textbf{LAC} (Lookahead Correction) mechanism is turned on. According to the Bison manual can provide
+  identification of the error location, and thus better error messages, at the cost of a very negligable runtime speed penalty.
+\item Custom error reporting logging is enabled (\texttt{\%define parse.error custom}). The function \texttt{yyreport\_syntax\_error}
+  is defined accordingly. The implemented custom error reporting
+  supports a GCC style error/warning and colored output and it it thus more user friendly. One noticeable feature is that \textbf{dpcc} compiler can warn when a variable is declared but never used.
+\end{itemize}
 
-Also custom error reporting is used to replace the \textbf{Bison} default one (\texttt{yyreport\_syntax\_error}). The implemented custom error reporting
-supports a GCC style error/warning and colored output and it it thus more user friendly.
-One noticeable feature is that \textbf{dpcc} compiler can warn when a variable is declared but never used.
+
 
 \subsection{Code Generation}
 
