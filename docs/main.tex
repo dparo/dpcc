@@ -565,29 +565,31 @@ This are the things worth noting about the \textbf{Bison} file used in the \text
 
 \subsection{Code Generation}
 
-This is the longest and complicated part of the pipeline of the \texttt{dpcc} compiler.
-This section will be kept as concise as possible and only the basic concepts will be explained.
+This is the longest and most complicated part of the pipeline of the \texttt{dpcc} compiler.
+This section will be kept as concise as possible. Only the core concepts will be explained.
 
 For simplicity reasons the current codegen implementation requires \textbf{two AST passes}. Whether
-the implementation of the code generation could be restructured in order to do the same things
+the implementation of the code generation could be re-structured in order to do the same things
 in a \textbf{single pass} has not yet been tested and it is subject to discussion.
 
 
 \begin{itemize}
-\item \textbf{First AST pass}. In the first AST pass 3 major things are done: type deduction, type checking and semantic validation.
-  In fact, the input program may be refused due to either type mismatch or in general due to abuse of language features that cannot
+\item \textbf{First AST pass}. In the first AST pass, three major things are done: type deduction, type checking and semantic validation.
+  The input program may be refused due to either type mismatch or in general due to abuse of language features that cannot
   be easily checked in the parsing stage. As an example, it is not possible to declare a zero or negative sized array.
   Also, during this pass some metadata is initiliazed in each node. This metadata will guide the code generation in the second pass.
 \item \textbf{Second AST pass}. If the previous pass successed, we can assume that the code is syntatically valid and semantically valid. This is the pass where the actual 3AC gets outputted.
+  This pass is \textbf{not allowed to fail}.
 \end{itemize}
 
-Type deduction works in the following easy to under stand way:
+\textbf{Type deduction} works in the following easy to understand way:
+
 \begin{enumerate}
 \item \textbf{Base Cases}:
   \begin{enumerate}
   \item Statements, control flow and similar, do not have a meaningful type
   \item The type of an \texttt{int}, \texttt{float}, \texttt{string}, \dots  \textbf{literal} are trivial.
-  \item The type of the output of a casting operator is trivial. Casting operators force the conversion.
+  \item The type that a casting operator produces is trivial. Casting operators force the conversion.
   \item Variable delcarations \textbf{with a user listed type} are trivial. In this case type checking still needs
     to be performed in case the variable declaration has a \texttt{RHS} initialization. If the type check
     fails the compiler emits an error.
@@ -597,15 +599,16 @@ Type deduction works in the following easy to under stand way:
     \item Variable declaration with no user listed type inherit the type from the \texttt{RHS}. In case
       no \texttt{RHS} is provided, the compiler defaults the type to \texttt{int}.
     \item The type of each expression is harder to deduce and check. Each expression has its own possible
-      rules that describes which child types are allowed and which output type is generated for each case. If
+      rules that describes which child types are allowed as inputs and which output type is generated for each case. If
       no rule match, than the compiler triggers a \textbf{type mismatch} error, otherwise it figures out
-      the output type of the expression using the rule.
+      the output type of the expression using a rule.
     \end{enumerate}
 \end{enumerate}
 
 How all of this is achieved is thanks to two utility functions: \texttt{ast\_traversal\_begin, ast\_traversal\_next}. This two functions together
 allow to fully traverse each node composing the AST. It works in the following way: each time \texttt{ast\_traversal\_next} is called a pointer to a node
 and an integer index is returned with the following semantics:
+
 \begin{enumerate}
     \item \textbf{Base Case}. If the node is a leaf of the AST, \texttt{ast\_traversal\_next} returns the pointer to the node and an index set to \texttt{0 (zero)}.
     \item \textbf{Recursive Case}. For each non-leaf node, \texttt{ast\_traversal\_next} will return the pointer to the node multiple times. The index is respectively
@@ -622,24 +625,19 @@ and an integer index is returned with the following semantics:
 
 \end{enumerate}
 
-Code generation starts by operating on an empty string. New 3AC that needs to be emitted \textbf{is always concatenated} to the output string (like in a \texttt{printf}).
-The fact that new code must always be concatenated to the previous code is a very important concept to note. It means
-that when visiting each node of the AST code must be generated and outputtted right away, \textbf{meaning that the order of the childs of each node is significant}.
-How the childs are order play an important role on the semantics and the validity of the final generated 3AC output.
-If one was willing to take a performance hit and implement in the compiler the ability to generate code on temporary strings, one could then combine them at will, at that point, the order of the childs wouldn't be relevant anymore.
+Code generation starts by operating on an empty string. Emission of new 3AC \textbf{is always concatenated} to the output string (like in a \texttt{printf}).
+The fact that new code must always be concatenated to the previous code is a very important concept to note and understand. It means
+that, when visiting each node of the AST, code must be generated and outputtted right away. This has the important
+consequence that \textbf{the order of the childs of each node is significant}.
+How the childs are ordered play an important role on the semantics and the validity of the final generated output.
+If one was willing to take a performance hit and implement in the compiler the ability to generate code on temporary strings, the compiler
+would then be able to combine those strings rearranging them in whichever order. At that point, the order of the childs wouldn't be relevant anymore.
 
-At the end this turned out to be mostly lacks proper features to be useful as an everyday productive language overkilled given (procedure calls are a must)
-and a proper real-world efficient backend should be implemented. Unfortunately now a days due also to the complexity
-of modern CPU architectures writing a compiler backend is no easy task. In fact most modern languages
-nowadays rely on external backends such as \textbf{LLVM} to deal with the actual machine code output.
-the size of this project, but nonetheless it was a cute little trick that I wanted to try and it was cool
-after all.
+The integer returned from \texttt{ast\_traverse\_next} is exploited in order to emit code snippets "in the middle" of partially evaluating/visiting a node.
+As an example of why this is important, the output that should be generated for a \texttt{while} statement wants to insert a \textbf{label} before evaluating the expression,
+and a \textbf{goto} to model the loop after the entire code block has been evaluated and emitted.
 
-In any case this ingeger information is exploited to emit code snippets "in the middle" of partially evaluating a node. For
-example the code generation for an \texttt{while} statement might want to insert a label before evaluating the expression,
-and a jump back after it's code block child has been evaluated and emitted.
-
-Here follows an example program and it's associate compiled 3AC:
+Here follows an example program and its associate compiled 3AC:
 
 \begin{lstlisting}[language=DPL]
 let a = [10, 20, 30, 40, 50];
