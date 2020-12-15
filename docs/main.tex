@@ -8,10 +8,6 @@
 \newcommand{\secref}[3][green]{\href{#2}{\color{#1}{#3}}}%
 \newcommand{\urlref}[3][blue]{\href{#2}{\color{#1}{#3}}}%
 
-
-
-
-
 \usepackage{wasysym}
 
 \lstset{
@@ -519,7 +515,6 @@ So upon encountering a new token the following things happen:
 \item It signals to bison the new lexeme kind by simply \texttt{return}-ing from the \texttt{lex()} procedure (Bison calls flex in a coroutine mode)
 \end{itemize}
 
-
 \subsection{Parser}
 
 \textbf{Bison} is used to aid in the implementation of the syntax analysis stage.
@@ -527,27 +522,27 @@ The unfamiliar user can refer to the \urlref{https://www.gnu.org/software/bison/
 about Bison. In the \texttt{dpcc} compiler \textbf{Bison} is used only for defining the grammar, and
 the \texttt{parse()} function generated from \textbf{Bison} is mostly used for syntax checking the input source.
 
-In each \textbf{Bison} action rule the things worth noting that could occur are:
+In each \textbf{Bison} action the things worth noting that could occur are:
 \begin{itemize}
-\item A new \texttt{ast\_node\_t} is allocated and chained with other AST nodes in order to compose the full AST tree
-\item A scope defines a new scope where variable declarations can occur
-\item A new variable declaration pushes a symbol into the symbol table
+\item A new \texttt{ast\_node\_t} is allocated and chained with other AST nodes in order to compose the full AST tree.
+\item Code blocks define a new scope where variable declarations can occur.
+\item A new variable declaration pushes a symbol into the symbol table.
 \item Each identifier used is looked up in the symbol table. If it's not found, then the parser errors out and refuses the program.
 \end{itemize}
 
 That is in \texttt{dpcc}, \textbf{Bison} is used only for defining the grammar and for checking if a program is syntactically valid.
-Apart for the extraordinary case that deals with the symbol table updates and checks, most of the compiler logic \textbf{is not implemented inside the bison file}.
+Apart for the extraordinary case that deals with the symbol table check \& update, most of the compiler logic \textbf{is not implemented inside the bison file}.
 
-Instead it is preferred to define most of the logic somewhere else, and to setup the necessary AST in order to defer
-more passes on the AST later. This makes bison actions very simple and contain merely no code at all. In fact almost all actions
+Instead it is preferred to define most of the logic somewhere else, and to just setup the necessary AST to
+execute the logic later. This makes bison actions very simple and each action contain merely no code at all. In fact almost all actions
 in the bison file, call some C functions defined somewhere else: \texttt{NEW\_NODE, push\_child, push\_childs}.
 These C functions are used to create a new node and to set it's type, and to append the corresponding childs to this new node.
 This keeps the bison file simple and concise since most of the heavyweight code is defined somewhere else.
 
-The advantage of this method is: simplicity, abstraction, code decoupling, and code scaling. The disadvantage is that in order
-to emit the final code from the compiler, at least one more AST pass is required, and thus could be potentially slower, than a single
-pass compiler. Also implementing difficult logic directly inside the bison file, or implementing all the steps required for a modern
-compiler (type deduction, type checking) in a single pass becomes quickly tedious at best, if not nearly impossible.
+The \textbf{advantage} of composing a full AST and deferring the execution of the logic to later stages are: simplicity, abstraction, code decoupling, and code scaling.
+The \textbf{disadvantage} instead, is that in order to emit the final code from the compiler, at least one more AST pass is required. Thus multiple passes could be potentially slower, than a single
+pass compiler. Also implementing difficult logic directly inside the bison file, or implementing all the features required for a modern
+compiler (type deduction, type checking) in a single pass inside the \textbf{Bison file} becomes quickly tedious at best, if not nearly impossible.
 
 
 This are the things worth noting about the \textbf{Bison} file used in the \texttt{dpcc} compiler:
@@ -555,14 +550,15 @@ This are the things worth noting about the \textbf{Bison} file used in the \text
 \begin{itemize}
 \item The \texttt{yylval} is aliased to be equivalent to \texttt{ast\_node\_t*}. Each node contains a field \texttt{kind} of type \texttt{ast\_node\_kind\_t}
   which is initialized in the \textbf{Bison} file when a new node is created. This field allows later
-  stages of the compiler match what code should be generated for this node.
+  stages of the compiler to match what code should be generated for this node.
 \item Location tracking is turned (\texttt{\%locations}). This allows \textbf{Bison} to declare the global variable \texttt{yylloc}
-  which is used from the lexer to setup the location of each token
+  which is used from the lexer to setup the location of each token.
 \item \textbf{LAC} (Lookahead Correction) mechanism is turned on. According to the Bison manual can provide
-  identification of the error location, and thus better error messages, at the cost of a very negligable runtime speed penalty.
-\item Custom error reporting logging is enabled (\texttt{\%define parse.error custom}). The function \texttt{yyreport\_syntax\_error}
+  better identification of the error location and thus better error messages, at the cost of a very negligable runtime speed penalty.
+\item Custom error reporting logging is enabled (\texttt{\%define parse.error custom}). The function
+  \texttt{yyreport\_syntax\_error}
   is defined accordingly. The implemented custom error reporting
-  supports a GCC style error/warning and colored output and it it thus more user friendly. One noticeable feature is that \textbf{dpcc} compiler can warn when a variable is declared but never used.
+  supports a GCC style error/warning and colored output and it is thus more user friendly. One noticeable feature is that \textbf{dpcc} compiler can warn when a variable is declared but never used.
 \end{itemize}
 
 
