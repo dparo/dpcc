@@ -748,12 +748,12 @@ const MATH_EXPR = new Expr (
 
 \subsubsection{Custom allocator wrapper}
 
-In order to track allocations inside the compiler a custom very simple allocator is implemented.
+In order to track allocations inside the compiler a simple custom allocator is implemented.
 In practice this allocator just wraps the standard C allocator (\texttt{malloc}) and stores each allocation
-in a list. The reason for this is that one can simply allocate memory as he likes without worrying about freeing
+in a list. The reason for this is that one can simply allocate memory as he/she likes without worrying about freeing
 such memory. If the structure of the program is correctly thought out, one can simply define good synchronization
-point where it is safe to clear the entire allocator. This makes the entire allocations made up to this point
-be freed all at once. One can also use multiple allocators to model different lifetime semantics for objects
+points where it is safe to clear the entire allocator. Thus all allocations made up to this point
+can all be freed at once. One can also use multiple allocators to model different lifetime semantics for objects
 that must live longer or shorter.
 
 The custom allocator lives in \texttt{src/utils.c} and the notable functions are:\texttt{dallnew, dallrsz, dalldel, dallclr, dallarr, \dots}.
@@ -768,7 +768,7 @@ The library \urlref{https://github.com/ThrowTheSwitch/Unity}{Unity} is a standal
 Most of the testing horsepower is provided by a python script: \texttt{test/compile\_test.py}.
 This script reads 2 files: \texttt{test/valid.dpl, test/invalid.dpl} which list respectively some valid and invalid dpl programs.
 Each program is separated by a long sequence of characters \texttt{`//'}. The python script extract each program
-separatily, for each program it extract some metadata from the comments which list the expected output of the program.
+separately, for each program it extract some metadata from the comments which list the expected output of the program.
 The python script then proceeds to call the compiler on that small program and verifies that either the program
 produces the expected output, or in the case of invalid programs it rejects it without crashing.
 
