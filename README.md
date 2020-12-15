@@ -10,4 +10,7 @@
 ```sh
 git clone --recursive https://github.com/dparo/dpcc
 ```
+
+Read the project report [here](https://github.com/dparo/dpcc/files/5697256/DPL_ProjectAssignmentReport.pdf)
 For **more details** refer to the [Project Wiki](https://github.com/dparo/dpcc/wiki)
+
