@@ -4,6 +4,8 @@
 \usepackage{microtype,etex,listings,color,parskip, graphicx, float}
 \usepackage[margin=2cm]{geometry}
 \usepackage[hidelinks]{hyperref}
+\usepackage[htt]{hyphenat}
+
 
 \newcommand{\secref}[3][green]{\href{#2}{\color{#1}{#3}}}%
 \newcommand{\urlref}[3][blue]{\href{#2}{\color{#1}{#3}}}%
@@ -625,6 +627,59 @@ and an integer index is returned with the following semantics:
 
 \end{enumerate}
 
+
+In order for the compiler  to achieve the correct code generation, in each \texttt{ast\_node\_t} it stores a structure called \texttt{codegen\_metadata\_t}
+which includes the following relevant fields:
+
+\begin{itemize}
+\item \texttt{type}. The type deduced in the first ast pass for this node.
+\item \texttt{array\_len}. The length of this array node if applicable. Used mainly in code generation when
+  declaring arrays. \textbf{Note that in code generation phase scalar types are emitted essentially as array of length 1}.
+\item \texttt{sym}. The most important field used in 3AC emission. This field is filled in the first ast pass and then used in the second pass. It allocates to each node the name
+  that should be emitted when it is encontoured.
+\item \texttt{jmp\_top}. Unique allocated label name at the top, it is filled in the first ast pass. The second ast pass
+  uses this field to emit correct 3AC. Only applicable for nodes of type: \texttt{for, do\{\}while}.
+\item \texttt{jmp\_bot}. Unique llocated label name at the bottom, it is filled in the first ast pass. The second ast pass
+  uses this field to emit correct 3AC. Only applicable for nodes of type: \texttt{for, while, if}.
+\item \texttt{jmp\_next}. Unique Allocated label name at the next block, it is filled in the first ast pass. The second ast pass
+  uses this field to emit the correct 3AC. Only applicable for nodes of type \texttt{if}. This field
+  is used to jump to the second \texttt{else if} (if any) in case the expression of the preceding \texttt{if} failed.
+\end{itemize}
+
+Jump labels are trivially initialized. When traversing the AST in the first pass, whenever the compiler
+finds a control flow node with uninitialized labels, it intializes it's label accordingly. It simply allocates
+a unique name which is automatically incremeted with a counter, for example: \texttt{\_lbl54}.
+
+The \texttt{sym} field is instead a little bit more complicated to explain how it is computed. These are roughly the rules used to initialize it:
+
+\begin{enumerate}
+  \item The current node is a leaf node, it refers to a user \textbf{integral} declared variable, and it \textbf{does not} appear at
+    the \texttt{RHS} of an assignment. The \texttt{sym} is initialized with something similar to this, depending on the type:
+    \texttt{\_var\_get\_kI32("symbolName", 0)}, or \texttt{\_var\_get\_kF32("symbolName", 0)}, or \texttt{\_var\_get\_kBOOL("symbolName", 0)}. This
+    means that at runtime the variable named \texttt{symbolName} should be looked up in the symbol table (memory
+    emulation) and accessing its index at position \texttt{0}. Integral variables are treated like arrays of length 1.
+  \item The current node is a leaf node, it refers to a user \textbf{integral} declared variable, and it \textbf{does} appear
+    at the \texttt{RHS} of an assignment. The \texttt{sym} is initalized with something similar to this, depending on the type:
+    \texttt{\_var\_set\_kI32("symbolName", 0, <val>)}, or \texttt{\_var\_set\_kF32("symbolName", 0, <val>)}, or \texttt{\_var\_set\_kBOOL("symbolName", 0, <val>)}.
+    Which is roughly the same case as above, but instead of getting the variable value, we set it instead.
+    The \textbf{<val>} refers to the symbol name of the \texttt{RHS} of the expression.
+  \item The current node is an \textbf{array subscript} operator, it refers to a user \textbf{integral} declared variable, and it \textbf{does not} appear at
+    the \texttt{RHS} of an assignment. It works exactly like the case \textbf{(1)}, but instead of using \texttt{0} as the index, we get it from the \texttt{RHS}
+    side of the cript operator.
+  \item The current node is an \textbf{array subscript} operator, it refers to a user \textbf{integral} declared variable, and it \textbf{does } appear at
+    the \texttt{RHS} of an assignment. It works exactly like the case \textbf{(2)}, but instead of using \texttt{0} as the index, we get it from
+    the \texttt{RHS} side of the subscript operator.
+  \item The current node is none of the above and it's a valid expression operator. For this type of nodes we allocate
+    a new unique temporary symbol name depending on the output type of the operator. Such examples are:
+    \texttt{\_vi789, \_vf789, \_vb789}, which are respectively \texttt{int}, \texttt{float}, \texttt{bool}. In
+    this case a counter is automatically incremented in order to guarantee unique name generations. Only
+    these 3 types are required since at the current time of writing \textbf{DPL} does not support operators
+    returning \texttt{arrays}.
+  \item None of the above. The \texttt{sym} is left \texttt{null} since it won't be used.
+\end{enumerate}
+
+
+
 Code generation starts by operating on an empty string. Emission of new 3AC \textbf{is always concatenated} to the output string (like in a \texttt{printf}).
 The fact that new code must always be concatenated to the previous code is a very important concept to note and understand. It means
 that, when visiting each node of the AST, code must be generated and outputtted right away. This has the important
@@ -800,7 +855,7 @@ The \texttt{dpcc} compiler has unit testing framework setup to make sure that th
 The library \urlref{https://github.com/ThrowTheSwitch/Unity}{Unity} is a standalone unit framework written C. The
 \texttt{dpcc} uses this library to test some utilities freestanding functions in isolation.
 
-Most of the testing horsepower is provided by a python script: \texttt{test/compile\_test.py}.
+Most of the testing horsepower is provided by a \urlref{https://www.python.org/}{Python} script: \texttt{test/compile\_test.py}.
 This script reads 2 files: \texttt{test/valid.dpl, test/invalid.dpl} which list respectively some valid and invalid dpl programs.
 Each program is separated by a long sequence of characters \texttt{`//'}. The python script extract each program
 separately, for each program it extract some metadata from the comments which list the expected output of the program.
