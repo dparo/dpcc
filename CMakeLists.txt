@@ -41,14 +41,10 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   endif()
 endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
-
-
-
-
+add_subdirectory(third_party)
 
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
-
 
 
 set(BISON_FLAGS "")
@@ -71,7 +67,7 @@ ADD_FLEX_BISON_DEPENDENCY(lexer parser)
 add_library(libstb STATIC
   third_party/stb_impl.c
   )
-target_include_directories(libstb PUBLIC third_party/stb)
+target_include_directories(libstb PUBLIC "${THIRD_PARTY_BASE_DIR}/stb-src")
 
 add_library(libdpcc STATIC
   src/dpcc.c src/dpcc.h src/globals.c src/utils.c src/log.c src/yacc_utils.c src/codegen.c
@@ -87,14 +83,12 @@ target_link_libraries(libdpcc PUBLIC libstb)
 add_subdirectory("${CMAKE_SOURCE_DIR}/generated_srcs")
 
 
-add_executable(dpcc src/main.c )
+add_executable(dpcc src/main.c)
 target_link_libraries(dpcc libdpcc)
 
-# Testing goes at the end boys
 include(CTest)
 
 if(BUILD_TESTING)
-  add_subdirectory("${CMAKE_SOURCE_DIR}/third_party/Unity")
   target_compile_definitions(unity PRIVATE UNITY_INCLUDE_PRINT_FORMATTED UNITY_OUTPUT_COLOR)
   add_subdirectory(tests)
 endif()
