@@ -3,16 +3,14 @@ include(FetchContent)
 
 FetchContent_Declare(stb
   GIT_REPOSITORY https://github.com/nothings/stb.git
-  #SOURCE_DIR "${CMAKE_SOURCE_DIR}/third_party/stb"
   PATCH_COMMAND ""
-  GIT_TAG origin/master
+  GIT_TAG b42009b3b9d4ca35bc703f5310eedc74f584be58
 )
 
 FetchContent_Declare(Unity
   GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity.git
-  #SOURCE_DIR "${CMAKE_SOURCE_DIR}/third_party/Unity"
   PATCH_COMMAND ""
-  GIT_TAG origin/master
+  GIT_TAG 386c540510929c0cf6f7b8d04cb4af40754bb822
 )
 
 FetchContent_MakeAvailable(stb Unity)
