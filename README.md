@@ -14,9 +14,18 @@ Read the project report [here](https://github.com/dparo/dpcc/releases/download/1
 For **more details** refer to the [Project Wiki](https://github.com/dparo/dpcc/wiki)
 
 
+## Building
 
-## Cloning
+- `CMake >= 3.11`
+- `Flex`
+- `Bison >= 3.6`
+- `GCC` or `Clang`
 
 ```sh
-git clone --recursive https://github.com/dparo/dpcc
+git clone https://github.com/dparo/dpcc
+cd dpcc
+mkdir -p build
+cd build
+cmake ../
+cmake --build ./
 ```
