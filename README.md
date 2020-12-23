@@ -7,11 +7,6 @@
 
 ![Example of running a DPL script](./gifs/showoff.gif)
 
-## Docs
-
-Read the project report [here](https://github.com/dparo/dpcc/releases/download/1.0.1/DPL_ProjectAssignmentReport.pdf).
-
-For **more details** refer to the [Project Wiki](https://github.com/dparo/dpcc/wiki)
 
 
 ## Building
@@ -29,3 +24,11 @@ cd build
 cmake ../
 cmake --build ./
 ```
+
+## Docs
+
+- [Flex File](https://github.com/dparo/dpcc/blob/main/src/lexer.l)
+- [Bison parser / grammar file](https://github.com/dparo/dpcc/blob/main/src/parser.y)
+- [Read the project report here](https://github.com/dparo/dpcc/releases/download/1.0.1/DPL_ProjectAssignmentReport.pdf).
+
+For **more details** refer to the [Project Wiki](https://github.com/dparo/dpcc/wiki)
