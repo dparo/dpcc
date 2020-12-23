@@ -11,10 +11,11 @@
 
 ## Building
 
+- `Linux` or `MacOS`
+- `GCC` or `Clang`
 - `CMake >= 3.11`
 - `Flex`
 - `Bison >= 3.6`
-- `GCC` or `Clang`
 
 ```sh
 git clone https://github.com/dparo/dpcc
