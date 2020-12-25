@@ -2,6 +2,15 @@
 set(FETCHCONTENT_QUIET off CACHE BOOL "" FORCE)
 set(FETCHCONTENT_UPDATES_DISCONNECTED on CACHE BOOL "" FORCE)
 
+## Note the difference between FetchContent `https://cmake.org/cmake/help/latest/module/FetchContent.html`
+## and ExternalProject `https://cmake.org/cmake/help/latest/module/ExternalProject.html`
+## is the following
+##
+# - FetchContent is only perfomed in **configure** steps, and it is not rerun at each build step
+# - ExternalProject is performed at every **build** step.
+#
+## Note that if the external third party content is touched or modified, it will
+## still be rebuilt regardless
 
 set(THIRD_PARTY_BASE_DIR
     "${CMAKE_SOURCE_DIR}/third_party/sources"
