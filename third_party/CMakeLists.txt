@@ -20,6 +20,16 @@ set(THIRD_PARTY_BASE_DIR
 
 find_package(Git REQUIRED)
 
+
+# Define custom Fetch function for submodules. If classical CMAKE FetchContent_Declare is used
+# to download git submodules, it will without prompting just delete the submodule
+# directory and start a new download from fresh each time Cmake configuration is perfomed.
+# This behaviour is unwanted since, somebody may have modified the source
+# code of a third party for testing reasons and cmake will happily delete it.
+# This is especially true for people which have a workflow/habit of deleting the
+# Cmake build directory. If the build directory is deleted, or a new build target
+# is created (eg Release, Debug, RelWithDebugInfo)... Cmake will just delete the
+# submodule directory contents and start a new clone... Very bad.
 function(FetchGitSubmodule GIT_REPOSITORY repo)
     get_filename_component(name "${repo}" NAME)
 
