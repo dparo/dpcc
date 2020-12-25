@@ -17,7 +17,7 @@ set(THIRD_PARTY_BASE_DIR
     CACHE STRING
     "Where third party sources should be downloaded and located")
 
-
+include(FetchContent)
 find_package(Git REQUIRED)
 
 
@@ -30,21 +30,16 @@ find_package(Git REQUIRED)
 # Cmake build directory. If the build directory is deleted, or a new build target
 # is created (eg Release, Debug, RelWithDebugInfo)... Cmake will just delete the
 # submodule directory contents and start a new clone... Very bad.
-function(FetchGitSubmodule GIT_REPOSITORY repo)
-    get_filename_component(name "${repo}" NAME)
+function(FetchGitSubmodule path)
+    get_filename_component(name "${path}" NAME)
 
     FetchContent_Declare(
         ${name}
-        DOWNLOAD_COMMAND ${GIT_EXECUTABLE} submodule update --init --depth 1 "${THIRD_PARTY_BASE_DIR}/${name}"
+        DOWNLOAD_COMMAND ${GIT_EXECUTABLE} submodule update --recursive --init --depth 1 "${path}"
         SOURCE_DIR "${THIRD_PARTY_BASE_DIR}/${name}"
     )
+    FetchContent_MakeAvailable("${name}")
 endfunction()
 
-
-include(FetchContent)
-
-FetchGitSubmodule(GIT_REPOSITORY https://github.com/nothings/stb)
-FetchGitSubmodule(GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity)
-
-FetchContent_MakeAvailable(stb)
-FetchContent_MakeAvailable(Unity)
+FetchGitSubmodule("${THIRD_PARTY_BASE_DIR}/stb")
+FetchGitSubmodule("${THIRD_PARTY_BASE_DIR}/Unity")
