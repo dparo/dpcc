@@ -22,7 +22,7 @@ git clone --depth 1 https://github.com/dparo/dpcc
 cd dpcc
 mkdir -p build
 cd build
-cmake ../
+cmake --configure Release ../
 cmake --build ./
 ```
 
