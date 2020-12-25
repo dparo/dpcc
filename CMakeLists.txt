@@ -67,7 +67,7 @@ ADD_FLEX_BISON_DEPENDENCY(lexer parser)
 add_library(libstb STATIC
   third_party/stb_impl.c
   )
-target_include_directories(libstb PUBLIC "${THIRD_PARTY_BASE_DIR}/stb-src")
+target_include_directories(libstb PUBLIC "${THIRD_PARTY_BASE_DIR}/stb")
 
 add_library(libdpcc STATIC
   src/dpcc.c src/dpcc.h src/globals.c src/utils.c src/log.c src/yacc_utils.c src/codegen.c
