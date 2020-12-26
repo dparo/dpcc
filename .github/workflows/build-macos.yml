@@ -20,7 +20,8 @@ jobs:
     - name: Install dependencies
       run: |
         brew install flex bison
-        brew link bison --force
+        brew link bison --force --overwrite
+        brew link flex --force --overwrite
 
     - name: Checkout submodules
       run: |
