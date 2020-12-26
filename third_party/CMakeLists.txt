@@ -36,7 +36,8 @@ function(FetchGitSubmodule path)
     FetchContent_Declare(
         ${name}
         DOWNLOAD_COMMAND ${GIT_EXECUTABLE} submodule update --recursive --init --depth 1 "${path}"
-        SOURCE_DIR "${THIRD_PARTY_BASE_DIR}/${name}"
+        DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}"
+        SOURCE_DIR "${path}"
     )
     FetchContent_MakeAvailable("${name}")
 endfunction()
