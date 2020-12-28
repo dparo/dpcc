@@ -1,4 +1,3 @@
-#set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/third_party/_deps" CACHE STRING "" FORCE)
 set(FETCHCONTENT_QUIET off CACHE BOOL "" FORCE)
 set(FETCHCONTENT_UPDATES_DISCONNECTED on CACHE BOOL "" FORCE)
 
@@ -13,12 +12,14 @@ set(FETCHCONTENT_UPDATES_DISCONNECTED on CACHE BOOL "" FORCE)
 ## still be rebuilt regardless
 
 set(THIRD_PARTY_BASE_DIR
-    "${CMAKE_SOURCE_DIR}/third_party/sources"
+    "${CMAKE_SOURCE_DIR}/third_party/"
     CACHE STRING
     "Where third party sources should be downloaded and located")
 
 include(FetchContent)
+include(ExternalProject)
 find_package(Git REQUIRED)
+find_program(MAKE_EXE NAMES gmake nmake make)
 
 
 # Define custom Fetch function for submodules. If classical CMAKE FetchContent_Declare is used
@@ -36,10 +37,44 @@ function(FetchGitSubmodule path)
     FetchContent_Declare(
         ${name}
         DOWNLOAD_COMMAND ${GIT_EXECUTABLE} submodule update --recursive --init --depth 1 "${path}"
-        SOURCE_DIR "${THIRD_PARTY_BASE_DIR}/${name}"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}"
+        SOURCE_DIR "${path}"
     )
     FetchContent_MakeAvailable("${name}")
 endfunction()
 
-FetchGitSubmodule("${THIRD_PARTY_BASE_DIR}/stb")
-FetchGitSubmodule("${THIRD_PARTY_BASE_DIR}/Unity")
+function(FetchArchiveConfigureAndMakeAndInstall name url)
+
+    if(NOT EXISTS "${CMAKE_SOURCE_DIR}/.local/third_party")
+        file(REMOVE_RECURSE "${THIRD_PARTY_BASE_DIR}/archives")
+    endif()
+
+    # In order to make find_package find the executables we need to run these download
+    # steps at configure time (since find_package works at configure time).
+    # Since `FetchContent_Declare` bans CONFIGURE_COMMAND, BUILD_COMMAND, INSTALL_COMMAND
+    # compared to the the ExternalProject_Add
+    # we are forced to combine all these commands inside the PATCH_COMMAND, which
+    # doesn't make much sense since the patch command is meant to just apply patches, but
+    # hey... whatever it works
+    FetchContent_Declare(
+            "${name}"
+            URL               "${url}"
+            SOURCE_DIR        "${THIRD_PARTY_BASE_DIR}/archives/${name}"
+            PATCH_COMMAND     cd "${THIRD_PARTY_BASE_DIR}/archives/${name}"
+                              && "${THIRD_PARTY_BASE_DIR}/archives/${name}/configure" --prefix "${CMAKE_SOURCE_DIR}/.local/third_party"
+                              && "${MAKE_EXE}" -C "${THIRD_PARTY_BASE_DIR}/archives/${name}" all
+                              && "${MAKE_EXE}" -C "${THIRD_PARTY_BASE_DIR}/archives/${name}" install
+    )
+    if(NOT EXISTS "${THIRD_PARTY_BASE_DIR}/archives/${name}")
+        FetchContent_MakeAvailable("${name}")
+    endif()
+endfunction()
+
+FetchGitSubmodule("${THIRD_PARTY_BASE_DIR}/submodules/stb")
+FetchGitSubmodule("${THIRD_PARTY_BASE_DIR}/submodules/Unity")
+
+if(UNIX AND NOT APPLE)
+  FetchArchiveConfigureAndMakeAndInstall(Flex "https://github.com/westes/flex/releases/download/v2.6.3/flex-2.6.3.tar.gz")
+  FetchArchiveConfigureAndMakeAndInstall(Bison "http://ftp.gnu.org/gnu/bison/bison-3.7.tar.gz")
+endif()

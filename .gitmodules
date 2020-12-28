@@ -1,6 +1,6 @@
 [submodule "third_party/sources/stb"]
-	path = third_party/sources/stb
+	path = third_party/submodules
 	url = https://github.com/nothings/stb
 [submodule "third_party/sources/Unity"]
-	path = third_party/sources/Unity
+	path = third_party/submodules/Unity
 	url = https://github.com/ThrowTheSwitch/Unity

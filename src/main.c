@@ -5,8 +5,6 @@
 #include <libgen.h>
 
 #include "dpcc.h"
-#include "lexer.h"
-#include "parser.h"
 
 typedef struct {
     char *mode;

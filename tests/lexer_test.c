@@ -3,7 +3,6 @@
 #include <stdint.h>
 
 #include "dpcc.h"
-#include "globals.h"
 #include "parser.h"
 #include "tests_common.h"
 
