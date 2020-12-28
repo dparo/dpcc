@@ -47,6 +47,11 @@ find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
 
+set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/.local;${CMAKE_SOURCE_DIR}/.local/third_party;${CMAKE_PREFIX_PATH}")
+find_package(BISON 3.6 REQUIRED)
+find_package(FLEX 2.6 REQUIRED)
+
+
 set(BISON_FLAGS "")
 
 if (LINUX)
@@ -67,7 +72,7 @@ ADD_FLEX_BISON_DEPENDENCY(lexer parser)
 add_library(libstb STATIC
   third_party/stb_impl.c
   )
-target_include_directories(libstb PUBLIC "${THIRD_PARTY_BASE_DIR}/stb")
+target_include_directories(libstb PUBLIC "${THIRD_PARTY_BASE_DIR}/submodules/stb")
 
 add_library(libdpcc STATIC
   src/dpcc.c src/dpcc.h src/globals.c src/utils.c src/log.c src/yacc_utils.c src/codegen.c
