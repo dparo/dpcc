@@ -15,16 +15,9 @@
 - `GCC` or `Clang`
 - `CMake >= 3.11`
 - `Flex`
-- `Bison >= 3.6`
+- `Bison`
 
-```sh
-git clone --depth 1 https://github.com/dparo/dpcc
-cd dpcc
-mkdir -p build
-cd build
-cmake --configure Release ../
-cmake --build ./
-```
+Please refer to [this guide to build the project](https://github.com/dparo/dpcc/wiki/clone-and-build)
 
 ## Docs
 
