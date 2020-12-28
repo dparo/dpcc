@@ -25,4 +25,5 @@ Please refer to [this guide to build the project](https://github.com/dparo/dpcc/
 - [Bison parser / grammar file](https://github.com/dparo/dpcc/blob/main/src/parser.y)
 - [Read the project report here](https://github.com/dparo/dpcc/releases/download/1.0.1/DPL_ProjectAssignmentReport.pdf).
 
-For **more details** refer to [this guide](https://github.com/dparo/dpcc/wiki/Running-the-Compiler) for running the compiler.
+For **more details** refer to [this guide](https://github.com/dparo/dpcc/wiki/Running-the-Compiler) for running and using the compiler.
+ a
