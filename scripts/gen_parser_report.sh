@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 mkdir -p report
 
 echo "Calling Bison (Generate verbose output, XML report, and GRAPH representation)..."
-../.local/third_party/bin/bison -Wall -Wother -Wcounterexamples -Wdangling-alias \
+../.local/third_party/bin/bison -Wall -Wother -Wcounterexamples -Wdangling-alias -Wmidrule-value \
       --color=auto \
       --color=auto \
       -fcaret -ffixit \
