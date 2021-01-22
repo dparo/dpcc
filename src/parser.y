@@ -190,6 +190,7 @@
 %left                   AR_SUBSCR
 
 
+%precedence ")"
 %precedence "else"
 
 
@@ -361,10 +362,8 @@ for_3: expr
 
 if_stmt:         "if"[op] "(" expr[e] ")" body[cb]                                              { $$ = NEW_NODE($op->tok, IfStmt); push_childs($$, 3, YYANARRAY { $e, $cb, NULL}); }
         |        "if"[op] "(" expr[e] ")" body[cbi] "else" body[cbe]                      { $$ = NEW_NODE($op->tok, IfStmt); push_childs($$, 3, YYANARRAY { $e, $cbi, $cbe}); }
-        |        "if"[op] "(" expr[e] ")" body[cb] "else" if_stmt[car]                          { $$ = NEW_NODE($op->tok, IfStmt); push_childs($$, 3, YYANARRAY { $e, $cb, $car}); }
         |        "if"[op] "(" error ")" body[cb]                                                {  }
         |        "if"[op] "(" error ")" body[cbi] "else" body[cbe]                        {  }
-        |        "if"[op] "("error ")" body[cb] "else" if_stmt[car]                             {  }
         ;
 
 for_stmt:       "for"[op] "(" { symtable_begin_block(); } for_1[f1] ";" for_2[f2] ";" for_3[f3] ")" body[cb]        { symtable_end_block(); $$ = NEW_NODE($op->tok, ForStmt); push_childs($$, 4, YYANARRAY {$f1, $f2, $cb, $f3} ); }
