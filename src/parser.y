@@ -190,6 +190,9 @@
 %left                   AR_SUBSCR
 
 
+%precedence "else"
+
+
         // When error recovery, bison may want to discard some symbols. So
         // it is generally good practice to free any allocated memory here.
 
@@ -262,16 +265,22 @@ stmts:          stmts[car] stmt[self]                        { $$ = $car; push_c
         ;
 
 
-stmt:           expr[c] ";"[op]                   { $$ = NEW_NODE($op->tok, Stmt); push_child($$, $c); }
+one_stmt:
+                expr[c] ";"[op]                   { $$ = NEW_NODE($op->tok, Stmt); push_child($$, $c); }
         |       print_stmt[c] ";"[op]             { $$ = NEW_NODE($op->tok, Stmt); push_child($$, $c); }
         |       decl[c] ";"[op]                   { $$ = NEW_NODE($op->tok, Stmt); push_child($$, $c); }
         |       if_stmt[c]                        { $$ = NEW_NODE($c->tok, Stmt); push_child($$, $c); }
         |       for_stmt[c]                       { $$ = NEW_NODE($c->tok, Stmt); push_child($$, $c); }
         |       while_stmt[c]                     { $$ = NEW_NODE($c->tok, Stmt); push_child($$, $c); }
         |       do_while_stmt[c]                  { $$ = NEW_NODE($c->tok, Stmt); push_child($$, $c); }
-        |       code_block[c]                     { $$ = NEW_NODE($c->tok, Stmt); push_child($$, $c); }
         |       ";"                               { $$ = NULL; }
         |       error                             {  }
+        ;
+
+
+stmt:
+                one_stmt
+        |       code_block[c]                     { $$ = NEW_NODE($c->tok, Stmt); push_child($$, $c); }
         ;
 
 assignment:     expr[lhs] "="[op] expr[rhs]                   { $$ = NEW_NODE($op->tok, ExprAssign); push_childs($$, 2, YYANARRAY {$lhs, $rhs}); }
@@ -334,6 +343,11 @@ code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                 
         |      "{"[op] "}" { $$ = NEW_NODE($op->tok, CodeBlock); }
         ;
 
+body:
+       code_block
+    |  one_stmt
+    ;
+
 for_1: decl
      | assignment
      | %empty { $$ = NULL; }
@@ -345,22 +359,22 @@ for_3: expr
      | %empty { $$ = NULL; }
      ;
 
-if_stmt:         "if"[op] "(" expr[e] ")" code_block[cb]                                              { $$ = NEW_NODE($op->tok, IfStmt); push_childs($$, 3, YYANARRAY { $e, $cb, NULL}); }
-        |        "if"[op] "(" expr[e] ")" code_block[cbi] "else" code_block[cbe]                      { $$ = NEW_NODE($op->tok, IfStmt); push_childs($$, 3, YYANARRAY { $e, $cbi, $cbe}); }
-        |        "if"[op] "(" expr[e] ")" code_block[cb] "else" if_stmt[car]                          { $$ = NEW_NODE($op->tok, IfStmt); push_childs($$, 3, YYANARRAY { $e, $cb, $car}); }
-        |        "if"[op] "(" error ")" code_block[cb]                                                {  }
-        |        "if"[op] "(" error ")" code_block[cbi] "else" code_block[cbe]                        {  }
-        |        "if"[op] "("error ")" code_block[cb] "else" if_stmt[car]                             {  }
+if_stmt:         "if"[op] "(" expr[e] ")" body[cb]                                              { $$ = NEW_NODE($op->tok, IfStmt); push_childs($$, 3, YYANARRAY { $e, $cb, NULL}); }
+        |        "if"[op] "(" expr[e] ")" body[cbi] "else" body[cbe]                      { $$ = NEW_NODE($op->tok, IfStmt); push_childs($$, 3, YYANARRAY { $e, $cbi, $cbe}); }
+        |        "if"[op] "(" expr[e] ")" body[cb] "else" if_stmt[car]                          { $$ = NEW_NODE($op->tok, IfStmt); push_childs($$, 3, YYANARRAY { $e, $cb, $car}); }
+        |        "if"[op] "(" error ")" body[cb]                                                {  }
+        |        "if"[op] "(" error ")" body[cbi] "else" body[cbe]                        {  }
+        |        "if"[op] "("error ")" body[cb] "else" if_stmt[car]                             {  }
         ;
 
-for_stmt:       "for"[op] "(" { symtable_begin_block(); } for_1[f1] ";" for_2[f2] ";" for_3[f3] ")" code_block[cb]        { symtable_end_block(); $$ = NEW_NODE($op->tok, ForStmt); push_childs($$, 4, YYANARRAY {$f1, $f2, $cb, $f3} ); }
-        |       "for" "(" error ")" code_block            {  }
+for_stmt:       "for"[op] "(" { symtable_begin_block(); } for_1[f1] ";" for_2[f2] ";" for_3[f3] ")" body[cb]        { symtable_end_block(); $$ = NEW_NODE($op->tok, ForStmt); push_childs($$, 4, YYANARRAY {$f1, $f2, $cb, $f3} ); }
+        |       "for" "(" error ")" body            {  }
         ;
-while_stmt:     "while"[op] "(" expr[e] ")" code_block[cb]           { $$ = NEW_NODE($op->tok, WhileStmt); push_childs($$, 2, YYANARRAY {$e, $cb} ); }
-        |       "while" "(" error ")" code_block          {  }
+while_stmt:     "while"[op] "(" expr[e] ")" body[cb]           { $$ = NEW_NODE($op->tok, WhileStmt); push_childs($$, 2, YYANARRAY {$e, $cb} ); }
+        |       "while" "(" error ")" body          {  }
         ;
-do_while_stmt:  "do"[op] code_block[cb] "while" "(" expr[e] ")" ";"  { $$ = NEW_NODE($op->tok, DoWhileStmt); push_childs($$, 2, YYANARRAY {$cb, $e} ); }
-        |       "do" code_block "while" "(" error ")" ";" {  }
+do_while_stmt:  "do"[op] body[cb] "while" "(" expr[e] ")" ";"  { $$ = NEW_NODE($op->tok, DoWhileStmt); push_childs($$, 2, YYANARRAY {$cb, $e} ); }
+        |       "do" body "while" "(" error ")" ";" {  }
         ;
 
 
