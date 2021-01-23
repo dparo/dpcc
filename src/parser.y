@@ -266,8 +266,9 @@ stmts:          stmts[car] stmt[self]                        { $$ = $car; push_c
         ;
 
 
-one_stmt:
+stmt:
                 expr[c] ";"[op]                   { $$ = NEW_NODE($op->tok, Stmt); push_child($$, $c); }
+        |       code_block[c]                     { $$ = NEW_NODE($c->tok, Stmt); push_child($$, $c); }
         |       print_stmt[c] ";"[op]             { $$ = NEW_NODE($op->tok, Stmt); push_child($$, $c); }
         |       decl[c] ";"[op]                   { $$ = NEW_NODE($op->tok, Stmt); push_child($$, $c); }
         |       if_stmt[c]                        { $$ = NEW_NODE($c->tok, Stmt); push_child($$, $c); }
@@ -276,12 +277,6 @@ one_stmt:
         |       do_while_stmt[c]                  { $$ = NEW_NODE($c->tok, Stmt); push_child($$, $c); }
         |       ";"                               { $$ = NULL; }
         |       error                             {  }
-        ;
-
-
-stmt:
-                one_stmt
-        |       code_block[c]                     { $$ = NEW_NODE($c->tok, Stmt); push_child($$, $c); }
         ;
 
 assignment:     expr[lhs] "="[op] expr[rhs]                   { $$ = NEW_NODE($op->tok, ExprAssign); push_childs($$, 2, YYANARRAY {$lhs, $rhs}); }
@@ -345,8 +340,7 @@ code_block:    "{"[op] {symtable_begin_block(); } stmts[ss] "}"                 
         ;
 
 body:
-       code_block
-    |  one_stmt
+       stmt
     ;
 
 for_1: decl
